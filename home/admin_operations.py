@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import redirect, render
@@ -55,17 +54,16 @@ def admin_operations_center(request):
                 agent.user.is_active = enabled
                 agent.user.save(update_fields=["is_active"])
 
-                LogEntry.objects.log_action(
+                LogEntry.objects.log_actions(
                     user_id=request.user.pk,
-                    content_type_id=ContentType.objects.get_for_model(agent).pk,
-                    object_id=agent.pk,
-                    object_repr=str(agent),
+                    queryset=[agent],
                     action_flag=CHANGE,
                     change_message=(
                         "Staff application verified and approved by admin."
                         if enabled
                         else "Staff application kept inactive/deactivated by admin."
                     ),
+                    single_object=True,
                 )
 
                 if enabled:

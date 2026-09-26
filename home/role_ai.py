@@ -23,7 +23,13 @@ def _seller_snapshot(seller):
     products = Product.objects.filter(seller=seller)
     items = OrderItem.objects.filter(seller=seller)
     orders = Order.objects.filter(items__seller=seller).distinct()
-    wallet, _ = SellerWallet.objects.get_or_create(seller=seller)
+    wallet = SellerWallet.objects.filter(seller=seller).only(
+        "pending_balance", "available_balance", "total_sales", "total_commission"
+    ).first()
+    pending_balance = wallet.pending_balance if wallet else Decimal("0.00")
+    available_balance = wallet.available_balance if wallet else Decimal("0.00")
+    total_sales = wallet.total_sales if wallet else Decimal("0.00")
+    total_commission = wallet.total_commission if wallet else Decimal("0.00")
     since = timezone.now() - timedelta(days=30)
     restock = []
     for product in products.filter(is_active=True):
@@ -51,10 +57,10 @@ def _seller_snapshot(seller):
             "delivered": orders.filter(status="delivered").count(),
         },
         "wallet": {
-            "pending_balance": str(wallet.pending_balance),
-            "available_balance": str(wallet.available_balance),
-            "total_sales": str(wallet.total_sales),
-            "total_commission": str(wallet.total_commission),
+            "pending_balance": str(pending_balance),
+            "available_balance": str(available_balance),
+            "total_sales": str(total_sales),
+            "total_commission": str(total_commission),
         },
     }
 
@@ -63,7 +69,13 @@ def _seller_fallback(question, seller):
     q = question.lower()
     products = Product.objects.filter(seller=seller, is_active=True)
     orders = Order.objects.filter(items__seller=seller).distinct()
-    wallet, _ = SellerWallet.objects.get_or_create(seller=seller)
+    wallet = SellerWallet.objects.filter(seller=seller).only(
+        "pending_balance", "available_balance", "total_sales", "total_commission"
+    ).first()
+    pending_balance = wallet.pending_balance if wallet else Decimal("0.00")
+    available_balance = wallet.available_balance if wallet else Decimal("0.00")
+    total_sales = wallet.total_sales if wallet else Decimal("0.00")
+    total_commission = wallet.total_commission if wallet else Decimal("0.00")
 
     if "restock" in q or "re-stock" in q or "running out" in q:
         since = timezone.now() - timedelta(days=30)
@@ -102,13 +114,13 @@ def _seller_fallback(question, seller):
 
     if any(word in q for word in ("sales", "revenue", "earnings", "earned")):
         return (
-            f"Your recorded sales are KSh {wallet.total_sales:,.2f}. "
-            f"Your pending seller balance is KSh {wallet.pending_balance:,.2f}, "
-            f"and your available payout balance is KSh {wallet.available_balance:,.2f}."
+            f"Your recorded sales are KSh {total_sales:,.2f}. "
+            f"Your pending seller balance is KSh {pending_balance:,.2f}, "
+            f"and your available payout balance is KSh {available_balance:,.2f}."
         )
 
     if any(word in q for word in ("commission", "fee", "shopiva fee")):
-        return f"Shopiva has recorded KSh {wallet.total_commission:,.2f} in platform commission against your sales."
+        return f"Shopiva has recorded KSh {total_commission:,.2f} in platform commission against your sales."
 
     if any(word in q for word in ("product", "listing", "catalog")) and any(
         word in q for word in ("how many", "count", "total", "number")

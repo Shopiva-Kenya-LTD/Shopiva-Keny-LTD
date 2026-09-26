@@ -1,4 +1,5 @@
 import os
+import secrets
 from pathlib import Path
 
 import dj_database_url
@@ -12,7 +13,7 @@ DEBUG = os.getenv("DEBUG", "false").lower() == "true"
 secret_key = os.getenv("SECRET_KEY", "").strip()
 if not secret_key:
     if DEBUG:
-        secret_key = "django-insecure-local-development-only"
+        secret_key = secrets.token_urlsafe(50)
     else:
         raise RuntimeError("SECRET_KEY is required. Set it in the deployment environment.")
 SECRET_KEY = secret_key
