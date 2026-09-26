@@ -28,7 +28,11 @@ def _voice_auth_error(request):
             {"ok": False, "error": "Authentication is required for Shopiva voice AI."},
             status=401,
         )
-    if getattr(user, "delivery_agent_profile", None) is not None and not user.is_staff:
+    try:
+        delivery_profile = user.delivery_agent_profile
+    except DeliveryAgent.DoesNotExist:
+        delivery_profile = None
+    if delivery_profile is not None and not user.is_staff:
         return JsonResponse(
             {"ok": False, "error": "Voice AI is not available for delivery accounts."},
             status=403,
