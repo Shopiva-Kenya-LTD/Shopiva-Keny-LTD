@@ -9,7 +9,7 @@ from django.http import FileResponse, JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 
 from .ai import _catalog
-from .models import Order, OrderItem, Product, PaymentTransaction, SellerProfile
+from .models import DeliveryAgent, Order, OrderItem, Product, PaymentTransaction, SellerProfile
 
 
 VOICE_RATE_WINDOW_SECONDS = int(os.getenv("NIA_VOICE_RATE_WINDOW_SECONDS", "60"))
@@ -242,7 +242,6 @@ Product catalogue:
 """
 
 
-@csrf_exempt
 def realtime_call(request):
     auth_error = _voice_auth_error(request)
     if auth_error:
