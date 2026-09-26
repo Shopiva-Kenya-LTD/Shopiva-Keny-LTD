@@ -421,12 +421,15 @@ class DeliveryRegistrationTests(TestCase):
             password="StrongPass123!",
         )
         DeliveryAgent.objects.create(user=user, phone="254711111111", is_active=False)
-        self.client.post(
+        response = self.client.post(
             reverse("delivery_login"),
             {"username": "pending_rider", "password": "StrongPass123!"},
         )
         self.assertNotIn("_auth_user_id", self.client.session)
-        self.assertContains(self.client.get(reverse("delivery_login")), "Your delivery partner account is inactive.")
+        self.assertContains(
+            response,
+            "Your staff application is registered and awaiting administrator verification.",
+        )
 
 class DeliveryGpsCertificationTests(TestCase):
     def setUp(self):
