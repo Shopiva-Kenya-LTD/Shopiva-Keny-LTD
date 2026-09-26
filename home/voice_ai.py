@@ -4,13 +4,76 @@ import tempfile
 import urllib.request
 import uuid
 
-from django.contrib.auth.decorators import login_required
+from django.core.cache import cache
 from django.http import FileResponse, JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from .ai import _catalog
-from .models import Order, OrderItem, Product, PaymentTransaction, SellerProfile
+from .models import DeliveryAgent, Order, OrderItem, Product, PaymentTransaction, SellerProfile
+
+
+VOICE_RATE_WINDOW_SECONDS = int(os.getenv("NIA_VOICE_RATE_WINDOW_SECONDS", "60"))
+VOICE_RATE_LIMITS = {
+    "realtime_call": int(os.getenv("NIA_VOICE_REALTIME_LIMIT", "5")),
+    "transcribe_voice": int(os.getenv("NIA_VOICE_TRANSCRIBE_LIMIT", "10")),
+    "speak_text": int(os.getenv("NIA_VOICE_SPEAK_LIMIT", "20")),
+}
+
+
+def _voice_auth_error(request):
+    """Return a JSON authorization error for browser and API voice callers."""
+    user = getattr(request, "user", None)
+    if not user or not user.is_authenticated or not user.is_active:
+        return JsonResponse(
+            {"ok": False, "error": "Authentication is required for Shopiva voice AI."},
+            status=401,
+        )
+    try:
+        delivery_profile = user.delivery_agent_profile
+    except DeliveryAgent.DoesNotExist:
+        delivery_profile = None
+    if delivery_profile is not None and not user.is_staff:
+        return JsonResponse(
+            {"ok": False, "error": "Voice AI is not available for delivery accounts."},
+            status=403,
+        )
+    return None
+
+
+def _voice_client_key(request, endpoint):
+    user_id = getattr(getattr(request, "user", None), "pk", None) or "unknown"
+    ip = request.META.get("REMOTE_ADDR", "unknown")
+    return f"nia-voice:{endpoint}:user:{user_id}:ip:{ip}"
+
+
+def _voice_rate_limit(request, endpoint):
+    """Fixed-window throttling for expensive voice endpoints."""
+    limit = max(1, VOICE_RATE_LIMITS[endpoint])
+    window = max(1, VOICE_RATE_WINDOW_SECONDS)
+    key = _voice_client_key(request, endpoint)
+    current = cache.get(key)
+    if current is None:
+        if cache.add(key, 1, timeout=window):
+            current = 1
+        else:
+            current = cache.get(key, 1)
+    else:
+        try:
+            current = cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, timeout=window)
+            current = 1
+
+    if int(current) > limit:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "Voice AI request limit reached. Please wait a moment and try again.",
+            },
+            status=429,
+            headers={"Retry-After": str(window)},
+        )
+    return None
 
 
 def _openai_multipart_sdp(sdp, session):
@@ -179,8 +242,15 @@ Product catalogue:
 """
 
 
-@csrf_exempt
 def realtime_call(request):
+    auth_error = _voice_auth_error(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
+    rate_limit = _voice_rate_limit(request, "realtime_call")
+    if rate_limit:
+        return rate_limit
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "POST required."}, status=405)
 
@@ -514,6 +584,14 @@ def realtime_action(request):
 
 
 def transcribe_voice(request):
+    auth_error = _voice_auth_error(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
+    rate_limit = _voice_rate_limit(request, "transcribe_voice")
+    if rate_limit:
+        return rate_limit
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "POST required."}, status=405)
     if not os.getenv("OPENAI_API_KEY", "").strip():
@@ -544,6 +622,14 @@ def transcribe_voice(request):
 
 
 def speak_text(request):
+    auth_error = _voice_auth_error(request)
+    if auth_error:
+        return auth_error
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
+    rate_limit = _voice_rate_limit(request, "speak_text")
+    if rate_limit:
+        return rate_limit
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "POST required."}, status=405)
     if not os.getenv("OPENAI_API_KEY", "").strip():
