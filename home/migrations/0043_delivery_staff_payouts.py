@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
                     models.CheckConstraint(condition=models.Q(amount__gt=0), name="deliverypayout_amount_gt_0"),
                 ],
                 "indexes": [
-                    models.Index(fields=("agent", "status", "created_at"), name="home_delive_agent_i_99ebdb_idx"),
+                    models.Index(fields=("agent", "status", "created_at"), name="home_delive_agent_i_9923fd_idx"),
                 ],
             },
         ),
@@ -132,7 +132,7 @@ class Migration(migrations.Migration):
                     models.CheckConstraint(condition=models.Q(total_amount__gt=0), name="deliveryearning_total_gt_0"),
                 ],
                 "indexes": [
-                    models.Index(fields=("agent", "status", "earned_at"), name="home_delive_agent_s_8b3d15_idx"),
+                    models.Index(fields=("agent", "status", "earned_at"), name="home_delive_agent_i_51f3ad_idx"),
                 ],
             },
         ),
