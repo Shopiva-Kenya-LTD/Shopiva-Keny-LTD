@@ -106,11 +106,13 @@ class DeliveryPayoutTests(TestCase):
         wallet.payout_phone = "0712345678"
         wallet.save(update_fields=("auto_payout_threshold", "payout_phone", "updated_at"))
 
+        self.profile.minimum_payout = Decimal("1000.00")
+        self.profile.save(update_fields=("minimum_payout", "updated_at"))
         with self.assertRaises(ValueError):
             queue_delivery_payout(self.agent, automatic=False)
 
-        wallet.auto_payout_threshold = Decimal("100.00")
-        wallet.save(update_fields=("auto_payout_threshold", "updated_at"))
+        self.profile.minimum_payout = Decimal("500.00")
+        self.profile.save(update_fields=("minimum_payout", "updated_at"))
         payout = queue_delivery_payout(self.agent, automatic=False)
         self.assertIsNotNone(payout)
         self.assertEqual(payout.phone, "254712345678")
