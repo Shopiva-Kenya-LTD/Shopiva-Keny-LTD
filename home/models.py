@@ -527,7 +527,7 @@ class DeliveryEarning(models.Model):
         (STATUS_REVERSED, "Reversed"),
     )
 
-    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="delivery_earning")
+    order = models.OneToOneField("Order", on_delete=models.CASCADE, related_name="delivery_earning")
     agent = models.ForeignKey(DeliveryAgent, on_delete=models.PROTECT, related_name="earnings")
     pay_profile = models.ForeignKey(DeliveryPayProfile, on_delete=models.PROTECT, related_name="earnings")
     distance_km = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
