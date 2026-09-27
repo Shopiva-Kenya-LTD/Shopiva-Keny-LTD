@@ -415,6 +415,146 @@ class DeliveryAgent(models.Model):
         return self.display_name
 
 
+class DeliveryPayProfile(models.Model):
+    name = models.CharField(max_length=120, unique=True)
+    base_per_delivery = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("100.00"))
+    per_km_rate = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("15.00"))
+    minimum_payout = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"))
+    auto_payout_enabled = models.BooleanField(default=True)
+    auto_payout_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"))
+    notes = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ("-is_active", "-updated_at")
+        constraints = [
+            models.CheckConstraint(condition=models.Q(base_per_delivery__gte=0), name="deliverypay_base_gte_0"),
+            models.CheckConstraint(condition=models.Q(per_km_rate__gte=0), name="deliverypay_km_gte_0"),
+            models.CheckConstraint(condition=models.Q(minimum_payout__gt=0), name="deliverypay_min_payout_gt_0"),
+            models.CheckConstraint(condition=models.Q(auto_payout_threshold__gt=0), name="deliverypay_auto_threshold_gt_0"),
+        ]
+
+    def __str__(self):
+        return self.name
+
+
+class DeliveryWallet(models.Model):
+    agent = models.OneToOneField(DeliveryAgent, on_delete=models.CASCADE, related_name="wallet")
+    payout_phone = models.CharField(max_length=30, blank=True)
+    available_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    pending_payout_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    auto_payout_enabled = models.BooleanField(default=True)
+    auto_payout_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"))
+    last_payout_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(condition=models.Q(available_balance__gte=0), name="deliverywallet_available_gte_0"),
+            models.CheckConstraint(condition=models.Q(pending_payout_balance__gte=0), name="deliverywallet_pending_gte_0"),
+            models.CheckConstraint(condition=models.Q(total_earned__gte=0), name="deliverywallet_earned_gte_0"),
+            models.CheckConstraint(condition=models.Q(total_paid__gte=0), name="deliverywallet_paid_gte_0"),
+            models.CheckConstraint(condition=models.Q(auto_payout_threshold__gt=0), name="deliverywallet_auto_threshold_gt_0"),
+        ]
+
+    def __str__(self):
+        return f"{self.agent} wallet"
+
+
+class DeliveryPayout(models.Model):
+    STATUS_QUEUED = "queued"
+    STATUS_PROCESSING = "processing"
+    STATUS_PAID = "paid"
+    STATUS_FAILED = "failed"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_CHOICES = (
+        (STATUS_QUEUED, "Queued"),
+        (STATUS_PROCESSING, "Processing"),
+        (STATUS_PAID, "Paid"),
+        (STATUS_FAILED, "Failed"),
+        (STATUS_CANCELLED, "Cancelled"),
+    )
+    TRIGGER_AUTOMATIC = "automatic"
+    TRIGGER_MANUAL = "manual"
+    TRIGGER_ADMIN = "admin"
+    TRIGGER_CHOICES = (
+        (TRIGGER_AUTOMATIC, "Automatic"),
+        (TRIGGER_MANUAL, "Rider requested"),
+        (TRIGGER_ADMIN, "Admin"),
+    )
+
+    agent = models.ForeignKey(DeliveryAgent, on_delete=models.PROTECT, related_name="payouts")
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    phone = models.CharField(max_length=30)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_QUEUED)
+    trigger = models.CharField(max_length=20, choices=TRIGGER_CHOICES, default=TRIGGER_AUTOMATIC)
+    provider = models.CharField(max_length=30, default="mpesa_b2c")
+    provider_reference = models.CharField(max_length=120, blank=True)
+    provider_response = models.JSONField(default=dict, blank=True)
+    failure_reason = models.CharField(max_length=255, blank=True)
+    idempotency_key = models.CharField(max_length=120, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name="deliverypayout_amount_gt_0"),
+        ]
+        indexes = [
+            models.Index(fields=("agent", "status", "created_at")),
+        ]
+
+    def __str__(self):
+        return f"Delivery payout #{self.id} — {self.agent} — KSh {self.amount}"
+
+
+class DeliveryEarning(models.Model):
+    STATUS_AVAILABLE = "available"
+    STATUS_RESERVED = "reserved"
+    STATUS_PAID = "paid"
+    STATUS_REVERSED = "reversed"
+    STATUS_CHOICES = (
+        (STATUS_AVAILABLE, "Available"),
+        (STATUS_RESERVED, "Reserved for payout"),
+        (STATUS_PAID, "Paid"),
+        (STATUS_REVERSED, "Reversed"),
+    )
+
+    order = models.OneToOneField("Order", on_delete=models.CASCADE, related_name="delivery_earning")
+    agent = models.ForeignKey(DeliveryAgent, on_delete=models.PROTECT, related_name="earnings")
+    pay_profile = models.ForeignKey(DeliveryPayProfile, on_delete=models.PROTECT, related_name="earnings")
+    distance_km = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    distance_source = models.CharField(max_length=30, default="estimated")
+    base_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    distance_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_AVAILABLE)
+    payout = models.ForeignKey(DeliveryPayout, on_delete=models.SET_NULL, null=True, blank=True, related_name="earnings")
+    earned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-earned_at",)
+        constraints = [
+            models.CheckConstraint(condition=models.Q(distance_km__gte=0), name="deliveryearning_distance_gte_0"),
+            models.CheckConstraint(condition=models.Q(base_amount__gte=0), name="deliveryearning_base_gte_0"),
+            models.CheckConstraint(condition=models.Q(distance_amount__gte=0), name="deliveryearning_distance_amt_gte_0"),
+            models.CheckConstraint(condition=models.Q(total_amount__gt=0), name="deliveryearning_total_gt_0"),
+        ]
+        indexes = [
+            models.Index(fields=("agent", "status", "earned_at")),
+        ]
+
+    def __str__(self):
+        return f"Earning #{self.id} — Order #{self.order_id} — KSh {self.total_amount}"
+
+
 class Order(models.Model):
     STATUS_CHOICES = [("pending", "Placed / Pending"), ("confirmed", "Confirmed"), ("paid", "Paid"), ("packed", "Packed"), ("processing", "Processing"), ("shipped", "Shipped"), ("out_for_delivery", "Out for Delivery"), ("delivered", "Delivered"), ("cancelled", "Cancelled")]
     PAYMENT_STATUS_CHOICES = [("unpaid", "Unpaid"), ("pending", "Payment Pending"), ("paid", "Paid"), ("failed", "Failed"), ("refunded", "Refunded")]
