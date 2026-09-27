@@ -1,4 +1,6 @@
 from decimal import Decimal
+import json
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
@@ -125,6 +127,123 @@ class DeliveryPayoutTests(TestCase):
         self.assertIsNotNone(payout)
         self.assertEqual(payout.phone, "254712345678")
         self.assertEqual(payout.amount, Decimal("700.00"))
+
+
+    @patch.dict(
+        "os.environ",
+        {
+            "MPESA_B2C_ENABLED": "true",
+            "MPESA_ENV": "sandbox",
+            "MPESA_CONSUMER_KEY": "consumer",
+            "MPESA_CONSUMER_SECRET": "secret",
+            "MPESA_B2C_INITIATOR_NAME": "ShopivaTest",
+            "MPESA_B2C_SECURITY_CREDENTIAL": "credential",
+            "MPESA_B2C_SHORTCODE": "600000",
+            "MPESA_B2C_RESULT_URL": "https://example.com/payments/mpesa/b2c/result/",
+            "MPESA_B2C_TIMEOUT_URL": "https://example.com/payments/mpesa/b2c/timeout/",
+        },
+        clear=False,
+    )
+    @patch("home.delivery_payouts._daraja_access_token", return_value="token")
+    @patch(
+        "home.delivery_payouts._mpesa_b2c_request",
+        return_value=(200, {
+            "ResponseCode": "0",
+            "ConversationID": "conv-123",
+            "OriginatorConversationID": "origin-123",
+            "ResponseDescription": "Accept the service request successfully.",
+        }),
+    )
+    def test_automatic_payout_submits_to_b2c_when_enabled(self, _request_mock, _token_mock):
+        first = self.make_order("10.00", "123456")
+        second = self.make_order("20.00", "234567")
+        self.client.force_login(self.user)
+
+        self.client.post(
+            f"/delivery/order/{first.id}/action/",
+            {"action": "delivered", "code": "123456"},
+        )
+        self.client.post(
+            f"/delivery/order/{second.id}/action/",
+            {"action": "delivered", "code": "234567"},
+        )
+
+        payout = DeliveryPayout.objects.get(agent=self.agent)
+        self.assertEqual(payout.status, DeliveryPayout.STATUS_PROCESSING)
+        self.assertEqual(payout.provider, "mpesa_b2c")
+        self.assertEqual(payout.provider_reference, "conv-123")
+        self.assertEqual(payout.amount, Decimal("650.00"))
+
+    @patch("home.delivery_app.notify_user")
+    def test_b2c_result_callback_marks_payout_paid(self, _notify):
+        self.client.force_login(self.user)
+        order = self.make_order("10.00", "123456")
+        self.client.post(
+            f"/delivery/order/{order.id}/action/",
+            {"action": "delivered", "code": "123456"},
+        )
+        wallet = DeliveryWallet.objects.get(agent=self.agent)
+        wallet.payout_phone = "0712345678"
+        wallet.auto_payout_threshold = Decimal("9999.00")
+        wallet.save(update_fields=("payout_phone", "auto_payout_threshold", "updated_at"))
+        payout = queue_delivery_payout(self.agent, automatic=False, force=True)
+
+        response = self.client.post(
+            "/payments/mpesa/b2c/result/",
+            data=json.dumps({
+                "Result": {
+                    "ResultCode": 0,
+                    "ResultDesc": "The service request is processed successfully.",
+                    "ConversationID": "conv-123",
+                    "OriginatorConversationID": payout.idempotency_key,
+                    "TransactionID": "T12345",
+                }
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payout.refresh_from_db()
+        wallet.refresh_from_db()
+        self.assertEqual(payout.status, DeliveryPayout.STATUS_PAID)
+        self.assertEqual(payout.provider_reference, "T12345")
+        self.assertEqual(wallet.pending_payout_balance, Decimal("0.00"))
+        self.assertEqual(wallet.total_paid, Decimal("250.00"))
+        self.assertEqual(DeliveryEarning.objects.get(order=order).status, DeliveryEarning.STATUS_PAID)
+
+    @patch("home.delivery_app.notify_user")
+    def test_b2c_result_callback_failed_releases_balance(self, _notify):
+        self.client.force_login(self.user)
+        order = self.make_order("10.00", "123456")
+        self.client.post(
+            f"/delivery/order/{order.id}/action/",
+            {"action": "delivered", "code": "123456"},
+        )
+        wallet = DeliveryWallet.objects.get(agent=self.agent)
+        wallet.payout_phone = "0712345678"
+        wallet.auto_payout_threshold = Decimal("9999.00")
+        wallet.save(update_fields=("payout_phone", "auto_payout_threshold", "updated_at"))
+        payout = queue_delivery_payout(self.agent, automatic=False, force=True)
+
+        response = self.client.post(
+            "/payments/mpesa/b2c/result/",
+            data=json.dumps({
+                "Result": {
+                    "ResultCode": 2001,
+                    "ResultDesc": "The initiator information is invalid.",
+                    "OriginatorConversationID": payout.idempotency_key,
+                }
+            }),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payout.refresh_from_db()
+        wallet.refresh_from_db()
+        self.assertEqual(payout.status, DeliveryPayout.STATUS_FAILED)
+        self.assertEqual(wallet.pending_payout_balance, Decimal("0.00"))
+        self.assertEqual(wallet.available_balance, Decimal("250.00"))
+        self.assertEqual(DeliveryEarning.objects.get(order=order).status, DeliveryEarning.STATUS_AVAILABLE)
 
     def test_payout_success_and_failure_reconcile_wallet(self):
         order = self.make_order("10.00", "123456")
