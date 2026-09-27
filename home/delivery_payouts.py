@@ -1,5 +1,10 @@
 from decimal import Decimal, ROUND_HALF_UP
+import base64
+import json
+import os
 import re
+import urllib.error
+import urllib.request
 import uuid
 
 from django.db import transaction
@@ -172,6 +177,218 @@ def record_delivery_earning(order, agent, now=None):
         wallet.save(update_fields=("available_balance", "total_earned", "updated_at"))
 
         return earning
+
+
+def mpesa_b2c_ready():
+    """Return True only when Shopiva's dedicated rider B2C disbursement configuration is complete."""
+    if os.getenv("MPESA_B2C_ENABLED", "false").strip().lower() != "true":
+        return False
+    if os.getenv("MPESA_ENV", "sandbox").strip().lower() not in {"sandbox", "production"}:
+        return False
+    required = (
+        "MPESA_CONSUMER_KEY",
+        "MPESA_CONSUMER_SECRET",
+        "MPESA_B2C_INITIATOR_NAME",
+        "MPESA_B2C_SECURITY_CREDENTIAL",
+        "MPESA_B2C_SHORTCODE",
+        "MPESA_B2C_RESULT_URL",
+        "MPESA_B2C_TIMEOUT_URL",
+    )
+    return all(os.getenv(name, "").strip() for name in required)
+
+
+def _mpesa_b2c_base_url():
+    return (
+        "https://api.safaricom.co.ke"
+        if os.getenv("MPESA_ENV", "sandbox").strip().lower() == "production"
+        else "https://sandbox.safaricom.co.ke"
+    )
+
+
+def _mpesa_b2c_request(url, payload, token):
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            raw = response.read().decode("utf-8")
+            return response.status, json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            payload = {"error": raw}
+        return exc.code, payload
+
+
+def _daraja_access_token():
+    key = os.getenv("MPESA_CONSUMER_KEY", "").strip()
+    secret = os.getenv("MPESA_CONSUMER_SECRET", "").strip()
+    if not key or not secret:
+        raise RuntimeError("Daraja consumer credentials are not configured.")
+
+    auth = base64.b64encode(f"{key}:{secret}".encode("utf-8")).decode("ascii")
+    request = urllib.request.Request(
+        f"{_mpesa_b2c_base_url()}/oauth/v1/generate?grant_type=client_credentials",
+        method="GET",
+        headers={"Authorization": f"Basic {auth}"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            payload = json.loads(response.read().decode("utf-8") or "{}")
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            payload = {"error": raw}
+    token = payload.get("access_token")
+    if not token:
+        raise RuntimeError("Daraja authentication failed.")
+    return token
+
+
+def initiate_delivery_payout(payout):
+    """Submit a queued rider payout to Daraja B2C when explicitly enabled.
+
+    The provider result is asynchronous. A synchronous acceptance moves the
+    payout to processing; only the signed/known provider callback may mark it paid.
+    Network failures do not release the reserved balance because the provider
+    may still have accepted the request.
+    """
+    if not payout or not mpesa_b2c_ready():
+        return payout
+
+    with transaction.atomic():
+        locked = DeliveryPayout.objects.select_for_update().get(pk=payout.pk)
+        if locked.status == DeliveryPayout.STATUS_PAID:
+            return locked
+        if locked.status not in (DeliveryPayout.STATUS_QUEUED, DeliveryPayout.STATUS_PROCESSING):
+            return locked
+        originator_id = locked.idempotency_key
+        response_state = dict(locked.provider_response or {})
+        response_state["originator_conversation_id"] = originator_id
+        locked.status = DeliveryPayout.STATUS_PROCESSING
+        locked.provider = "mpesa_b2c"
+        locked.provider_response = response_state
+        locked.failure_reason = ""
+        locked.save(update_fields=("status", "provider", "provider_response", "failure_reason", "updated_at"))
+
+    payload = {
+        "OriginatorConversationID": originator_id,
+        "InitiatorName": os.getenv("MPESA_B2C_INITIATOR_NAME", "").strip(),
+        "SecurityCredential": os.getenv("MPESA_B2C_SECURITY_CREDENTIAL", "").strip(),
+        "CommandID": os.getenv("MPESA_B2C_COMMAND_ID", "BusinessPayment").strip() or "BusinessPayment",
+        "Amount": int(_money(payout.amount)),
+        "PartyA": os.getenv("MPESA_B2C_SHORTCODE", "").strip(),
+        "PartyB": payout.phone,
+        "Remarks": f"Shopiva delivery payout #{payout.id}",
+        "QueueTimeOutURL": os.getenv("MPESA_B2C_TIMEOUT_URL", "").strip(),
+        "ResultURL": os.getenv("MPESA_B2C_RESULT_URL", "").strip(),
+        "Occasion": f"Rider earnings payout #{payout.id}",
+    }
+    endpoint = os.getenv(
+        "MPESA_B2C_URL",
+        f"{_mpesa_b2c_base_url()}/mpesa/b2c/v3/paymentrequest",
+    ).strip()
+
+    try:
+        token = _daraja_access_token()
+        status, response = _mpesa_b2c_request(endpoint, payload, token)
+    except Exception as exc:
+        with transaction.atomic():
+            locked = DeliveryPayout.objects.select_for_update().get(pk=payout.pk)
+            state = dict(locked.provider_response or {})
+            state["submission_error"] = str(exc)[:500]
+            locked.provider_response = state
+            locked.save(update_fields=("provider_response", "updated_at"))
+            return locked
+
+    with transaction.atomic():
+        locked = DeliveryPayout.objects.select_for_update().get(pk=payout.pk)
+        state = dict(locked.provider_response or {})
+        state["submission_response"] = response
+
+        response_code = str(response.get("ResponseCode", "")).strip()
+        accepted = status in (200, 201) and response_code in {"0", ""}
+        if accepted:
+            locked.status = DeliveryPayout.STATUS_PROCESSING
+            provider_id = (
+                response.get("OriginatorConversationID")
+                or response.get("ConversationID")
+                or originator_id
+            )
+            locked.provider_reference = str(provider_id)
+            state["originator_conversation_id"] = originator_id
+            locked.provider_response = state
+            locked.failure_reason = ""
+            locked.save(update_fields=("status", "provider_reference", "provider_response", "failure_reason", "updated_at"))
+            return locked
+
+        locked.status = DeliveryPayout.STATUS_FAILED
+        locked.failure_reason = str(
+            response.get("errorMessage")
+            or response.get("ResponseDescription")
+            or response.get("error")
+            or f"Daraja B2C rejected the request (HTTP {status})."
+        )[:255]
+        locked.provider_response = state
+        locked.processed_at = timezone.now()
+        locked.save(update_fields=("status", "failure_reason", "provider_response", "processed_at", "updated_at"))
+
+    # Reconcile the reserved wallet only after a synchronous provider rejection.
+    return fail_delivery_payout(
+        locked,
+        locked.failure_reason or "Daraja B2C rejected the payout request.",
+    )
+
+
+def _find_payout_from_b2c_result(result):
+    originator = str(result.get("OriginatorConversationID") or "").strip()
+    conversation = str(result.get("ConversationID") or "").strip()
+    transaction_id = str(result.get("TransactionID") or "").strip()
+    candidates = [value for value in (originator, conversation, transaction_id) if value]
+    for reference in candidates:
+        payout = DeliveryPayout.objects.filter(provider_reference=reference).first()
+        if payout:
+            return payout
+        payout = DeliveryPayout.objects.filter(idempotency_key=reference).first()
+        if payout:
+            return payout
+    return None
+
+
+def handle_delivery_b2c_result(payload):
+    result = payload.get("Result") if isinstance(payload, dict) else None
+    if not isinstance(result, dict):
+        return None, "Invalid B2C callback payload."
+
+    payout = _find_payout_from_b2c_result(result)
+    if not payout:
+        return None, "Payout reference not recognised."
+
+    result_code = str(result.get("ResultCode", "")).strip()
+    transaction_id = str(result.get("TransactionID") or "").strip()
+    if result_code == "0":
+        paid = complete_delivery_payout(
+            payout,
+            provider_reference=transaction_id or payout.provider_reference,
+            provider_response=payload,
+        )
+        return paid, "paid"
+
+    failed = fail_delivery_payout(
+        payout,
+        str(result.get("ResultDesc") or "Daraja reported that the rider payout failed."),
+    )
+    return failed, "failed"
 
 
 def complete_delivery_payout(payout, provider_reference="", provider_response=None):
