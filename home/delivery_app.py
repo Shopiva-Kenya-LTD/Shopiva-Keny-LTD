@@ -188,6 +188,18 @@ def delivery_action(request, order_id):
             order.save(update_fields=["status", "delivered_at", "delivery_verification_attempts", "delivery_verification_locked_at"])
             OrderEvent.objects.create(order=order, event_type=event_type, note=note, actor=request.user, delivery_agent=agent)
 
+            rider_earning = record_delivery_earning(order, agent, now=now)
+            if rider_earning:
+                notifications.append((
+                    agent.user,
+                    "Delivery earnings credited",
+                    f"Order {order.tracking_code} is verified delivered. KSh {rider_earning.total_amount:,.2f} has been added to your rider wallet.",
+                    "payout",
+                    "/delivery/payouts/",
+                    "",
+                    agent.phone,
+                ))
+
             released = _release_seller_settlements(order, now)
             for settlement in released:
                 notifications.append((
