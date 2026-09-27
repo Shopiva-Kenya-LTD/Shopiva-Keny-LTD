@@ -25,7 +25,7 @@ from home.nia_phone import start_nia_call, nia_phone_answer, nia_phone_respond, 
 from home.nia_tasks import run_nia_tasks_endpoint
 from home.nia_admin import nia_dashboard_context
 from shopiva.health import health
-from home.delivery_app import delivery_login, delivery_signup, delivery_logout, delivery_action, delivery_status, delivery_history, delivery_payouts, delivery_update_location, delivery_ping_location
+from home.delivery_app import delivery_login, delivery_signup, delivery_logout, delivery_action, delivery_status, delivery_history, delivery_payouts, delivery_b2c_result, delivery_b2c_timeout, delivery_update_location, delivery_ping_location
 from home.delivery_platform import delivery_manifest, delivery_service_worker
 from home.admin_delivery_feed import admin_live_delivery_feed
 from home.admin_statistics import statistics_center
