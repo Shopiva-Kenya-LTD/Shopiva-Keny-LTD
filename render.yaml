@@ -107,3 +107,17 @@ services:
         sync: false
       - key: MPESA_CALLBACK_URL
         sync: false
+      - key: MPESA_B2C_ENABLED
+        value: "false"
+      - key: MPESA_B2C_INITIATOR_NAME
+        sync: false
+      - key: MPESA_B2C_SECURITY_CREDENTIAL
+        sync: false
+      - key: MPESA_B2C_SHORTCODE
+        sync: false
+      - key: MPESA_B2C_COMMAND_ID
+        value: "BusinessPayment"
+      - key: MPESA_B2C_RESULT_URL
+        value: "https://shopivakenya.top/payments/mpesa/b2c/result/"
+      - key: MPESA_B2C_TIMEOUT_URL
+        value: "https://shopivakenya.top/payments/mpesa/b2c/timeout/"
