@@ -232,6 +232,21 @@ def delivery_action(request, order_id):
         agent.status = "available" if target_status == "delivered" else "on_delivery"
         agent.save(update_fields=["status"])
 
+    try:
+        auto_payout = queue_delivery_payout(agent, automatic=True)
+    except ValueError:
+        auto_payout = None
+    if auto_payout:
+        notifications.append((
+            agent.user,
+            "Automatic payout queued",
+            f"Your Shopiva rider wallet reached its payout threshold. KSh {auto_payout.amount:,.2f} has been queued for payout.",
+            "payout",
+            "/delivery/payouts/",
+            "",
+            agent.phone,
+        ))
+
     for user, title, message, notification_type, link, email, phone in notifications:
         notify_user(user, notification_type, title, message, link=link, email=email, phone=phone)
 
