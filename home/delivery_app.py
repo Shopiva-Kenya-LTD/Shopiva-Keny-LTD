@@ -9,11 +9,21 @@ from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import DeliveryAgent, DeliveryLocationPing, DeliveryPayout, DeliveryWallet, Order, OrderEvent, SellerSettlement, SellerWallet
 from .notification_service import notify_user
 from .forms import DeliveryRegistrationForm
-from .delivery_payouts import normalize_payout_phone, get_active_delivery_pay_profile, get_or_create_delivery_wallet, queue_delivery_payout, record_delivery_earning
+from .delivery_payouts import (
+    normalize_payout_phone,
+    get_active_delivery_pay_profile,
+    get_or_create_delivery_wallet,
+    queue_delivery_payout,
+    record_delivery_earning,
+    initiate_delivery_payout,
+    handle_delivery_b2c_result,
+    handle_delivery_b2c_timeout,
+)
 
 
 DELIVERY_CODE_MAX_ATTEMPTS = 5
@@ -237,15 +247,27 @@ def delivery_action(request, order_id):
     except ValueError:
         auto_payout = None
     if auto_payout:
-        notifications.append((
-            agent.user,
-            "Automatic payout queued",
-            f"Your Shopiva rider wallet reached its payout threshold. KSh {auto_payout.amount:,.2f} has been queued for payout.",
-            "payout",
-            "/delivery/payouts/",
-            "",
-            agent.phone,
-        ))
+        submitted = initiate_delivery_payout(auto_payout)
+        if submitted and submitted.status == DeliveryPayout.STATUS_PROCESSING:
+            notifications.append((
+                agent.user,
+                "Automatic payout submitted",
+                f"Your Shopiva rider wallet reached its payout threshold. KSh {submitted.amount:,.2f} has been submitted for M-PESA payout and is awaiting provider confirmation.",
+                "payout",
+                "/delivery/payouts/",
+                "",
+                agent.phone,
+            ))
+        else:
+            notifications.append((
+                agent.user,
+                "Automatic payout queued",
+                f"Your Shopiva rider wallet reached its payout threshold. KSh {auto_payout.amount:,.2f} has been queued for payout.",
+                "payout",
+                "/delivery/payouts/",
+                "",
+                agent.phone,
+            ))
 
     for user, title, message, notification_type, link, email, phone in notifications:
         notify_user(user, notification_type, title, message, link=link, email=email, phone=phone)
@@ -265,6 +287,64 @@ def delivery_history(request):
         .order_by("-delivered_at", "-id")[:50]
     )
     return render(request, "delivery/history.html", {"agent": agent, "orders": orders})
+
+
+
+@csrf_exempt
+def delivery_b2c_result(request):
+    if request.method != "POST":
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "POST required."}, status=405)
+
+    import json
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (TypeError, ValueError):
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid JSON payload."}, status=400)
+
+    payout, status = handle_delivery_b2c_result(payload)
+    if payout is not None and status == "paid":
+        notify_user(
+            payout.agent.user,
+            "payout",
+            "Delivery payout paid",
+            f"Shopiva has confirmed payout #{payout.id} of KSh {payout.amount:,.2f}. M-PESA reference: {payout.provider_reference or 'received'}",
+            link="/delivery/payouts/",
+            phone=payout.agent.phone,
+        )
+    elif payout is not None and status == "failed":
+        notify_user(
+            payout.agent.user,
+            "payout",
+            "Delivery payout failed",
+            f"Shopiva could not complete payout #{payout.id} of KSh {payout.amount:,.2f}. {payout.failure_reason or 'Please review your payout details.'}",
+            link="/delivery/payouts/",
+            phone=payout.agent.phone,
+        )
+    return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted."})
+
+
+@csrf_exempt
+def delivery_b2c_timeout(request):
+    if request.method != "POST":
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "POST required."}, status=405)
+
+    import json
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (TypeError, ValueError):
+        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid JSON payload."}, status=400)
+
+    payout, status = handle_delivery_b2c_timeout(payload)
+    if payout is not None and status == "failed":
+        notify_user(
+            payout.agent.user,
+            "payout",
+            "Delivery payout timed out",
+            f"Shopiva did not receive a successful response for payout #{payout.id} of KSh {payout.amount:,.2f}. The amount has been returned to your available rider balance.",
+            link="/delivery/payouts/",
+            phone=payout.agent.phone,
+        )
+    return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted."})
 
 
 @login_required(login_url="delivery_login")
@@ -297,11 +377,14 @@ def delivery_payouts(request):
             except ValueError as exc:
                 message = str(exc)
             else:
-                message = (
-                    f"Payout #{payout.id} queued for KSh {payout.amount:,.2f}."
-                    if payout
-                    else "No payout was queued. Check your available balance or an existing pending payout."
-                )
+                if payout:
+                    payout = initiate_delivery_payout(payout)
+                    if payout.status == DeliveryPayout.STATUS_PROCESSING:
+                        message = f"Payout #{payout.id} submitted for M-PESA processing: KSh {payout.amount:,.2f}."
+                    else:
+                        message = f"Payout #{payout.id} queued for processing: KSh {payout.amount:,.2f}."
+                else:
+                    message = "No payout was queued. Check your available balance or an existing pending payout."
 
         wallet = DeliveryWallet.objects.get(agent=agent)
 
