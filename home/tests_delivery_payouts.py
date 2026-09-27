@@ -94,7 +94,7 @@ class DeliveryPayoutTests(TestCase):
         )
 
     def test_manual_payout_requires_and_uses_wallet_phone(self):
-        order = self.make_order("5.00", "123456")
+        order = self.make_order("40.00", "123456")
         self.client.force_login(self.user)
         self.client.post(
             f"/delivery/order/{order.id}/action/",
@@ -114,7 +114,7 @@ class DeliveryPayoutTests(TestCase):
         payout = queue_delivery_payout(self.agent, automatic=False)
         self.assertIsNotNone(payout)
         self.assertEqual(payout.phone, "254712345678")
-        self.assertEqual(payout.amount, Decimal("175.00"))
+        self.assertEqual(payout.amount, Decimal("700.00"))
 
     def test_payout_success_and_failure_reconcile_wallet(self):
         order = self.make_order("10.00", "123456")
