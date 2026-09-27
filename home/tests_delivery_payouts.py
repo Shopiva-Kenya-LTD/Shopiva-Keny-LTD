@@ -96,6 +96,12 @@ class DeliveryPayoutTests(TestCase):
     def test_manual_payout_requires_and_uses_wallet_phone(self):
         self.profile.auto_payout_enabled = False
         self.profile.save(update_fields=("auto_payout_enabled", "updated_at"))
+        wallet = DeliveryWallet.objects.create(
+            agent=self.agent,
+            payout_phone=self.agent.phone,
+            auto_payout_enabled=False,
+            auto_payout_threshold=Decimal("9999.00"),
+        )
         order = self.make_order("40.00", "123456")
         self.client.force_login(self.user)
         self.client.post(
