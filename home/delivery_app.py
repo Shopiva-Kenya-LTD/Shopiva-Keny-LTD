@@ -10,9 +10,10 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from .models import DeliveryAgent, DeliveryLocationPing, Order, OrderEvent, SellerSettlement, SellerWallet
+from .models import DeliveryAgent, DeliveryLocationPing, DeliveryPayout, DeliveryWallet, Order, OrderEvent, SellerSettlement, SellerWallet
 from .notification_service import notify_user
 from .forms import DeliveryRegistrationForm
+from .delivery_payouts import normalize_payout_phone, get_active_delivery_pay_profile, get_or_create_delivery_wallet, queue_delivery_payout, record_delivery_earning
 
 
 DELIVERY_CODE_MAX_ATTEMPTS = 5
@@ -237,6 +238,67 @@ def delivery_history(request):
         .order_by("-delivered_at", "-id")[:50]
     )
     return render(request, "delivery/history.html", {"agent": agent, "orders": orders})
+
+
+@login_required(login_url="delivery_login")
+def delivery_payouts(request):
+    agent = _agent(request)
+    if not agent:
+        return render(request, "delivery/not_authorized.html", status=403)
+
+    with transaction.atomic():
+        wallet = get_or_create_delivery_wallet(agent)
+
+    message = ""
+    if request.method == "POST":
+        action = request.POST.get("action", "").strip().lower()
+
+        if action == "save_phone":
+            raw_phone = request.POST.get("payout_phone", "").strip()
+            try:
+                phone = normalize_payout_phone(raw_phone)
+            except ValueError as exc:
+                message = str(exc)
+            else:
+                wallet.payout_phone = phone
+                wallet.save(update_fields=("payout_phone", "updated_at"))
+                message = "Payout phone number saved."
+
+        elif action == "request_payout":
+            try:
+                payout = queue_delivery_payout(agent, automatic=False)
+            except ValueError as exc:
+                message = str(exc)
+            else:
+                message = (
+                    f"Payout #{payout.id} queued for KSh {payout.amount:,.2f}."
+                    if payout
+                    else "No payout was queued. Check your available balance or an existing pending payout."
+                )
+
+        wallet = DeliveryWallet.objects.get(agent=agent)
+
+    pay_history = list(
+        DeliveryPayout.objects.filter(agent=agent).order_by("-created_at")[:25]
+    )
+    earnings = list(
+        agent.earnings.select_related("order", "pay_profile")
+        .order_by("-earned_at")[:50]
+    )
+    minimum_payout = get_active_delivery_pay_profile().minimum_payout
+
+    return render(
+        request,
+        "delivery/payouts.html",
+        {
+            "agent": agent,
+            "wallet": wallet,
+            "payouts": pay_history,
+            "earnings": earnings,
+            "minimum_payout": minimum_payout,
+            "message": message,
+        },
+    )
 
 @login_required(login_url="delivery_login")
 def delivery_status(request):
