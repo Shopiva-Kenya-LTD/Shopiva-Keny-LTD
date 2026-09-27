@@ -365,8 +365,15 @@ def _find_payout_from_b2c_result(result):
     return None
 
 
+def _b2c_result_object(payload):
+    if not isinstance(payload, dict):
+        return None
+    result = payload.get("Result")
+    return result if isinstance(result, dict) else payload
+
+
 def handle_delivery_b2c_result(payload):
-    result = payload.get("Result") if isinstance(payload, dict) else None
+    result = _b2c_result_object(payload)
     if not isinstance(result, dict):
         return None, "Invalid B2C callback payload."
 
@@ -387,6 +394,26 @@ def handle_delivery_b2c_result(payload):
     failed = fail_delivery_payout(
         payout,
         str(result.get("ResultDesc") or "Daraja reported that the rider payout failed."),
+    )
+    return failed, "failed"
+
+
+def handle_delivery_b2c_timeout(payload):
+    result = _b2c_result_object(payload)
+    if not isinstance(result, dict):
+        return None, "Invalid B2C timeout payload."
+
+    payout = _find_payout_from_b2c_result(result)
+    if not payout:
+        return None, "Payout reference not recognised."
+
+    failed = fail_delivery_payout(
+        payout,
+        str(
+            result.get("ResultDesc")
+            or result.get("ResponseDescription")
+            or "Daraja reported that the rider payout request timed out."
+        ),
     )
     return failed, "failed"
 
