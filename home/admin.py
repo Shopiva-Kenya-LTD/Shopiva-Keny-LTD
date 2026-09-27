@@ -20,9 +20,10 @@ from .voice_ai import speak_text, transcribe_voice
 from .nia_core import call_nia
 from .admin_operations import admin_operations_center
 from .payments import _create_seller_settlements
+from .delivery_payouts import cancel_delivery_payout, complete_delivery_payout, fail_delivery_payout
 from .notifications import notify_user
 from .notification_service import notify_wishlist_product_change
-from .models import CustomerAddress, DeliveryAgent, Order, OrderEvent, OrderItem, PaymentTransaction, Product, SellerPayoutRequest, SellerProfile, SellerSettlement, SellerWallet, WishlistItem, ProductReview, Notification, NotificationDelivery, DeliveryTariff, DeliveryHub, DeliveryPricingProfile, DeliveryPickupPoint, DeliveryRateCard, ShopivaBranch, ShopivaOutlet, NiaCallSession, NiaTask, NiaCallerVerification, NiaAuditLog
+from .models import CustomerAddress, DeliveryAgent, DeliveryEarning, DeliveryPayProfile, DeliveryPayout, DeliveryWallet, Order, OrderEvent, OrderItem, PaymentTransaction, Product, SellerPayoutRequest, SellerProfile, SellerSettlement, SellerWallet, WishlistItem, ProductReview, Notification, NotificationDelivery, DeliveryTariff, DeliveryHub, DeliveryPricingProfile, DeliveryPickupPoint, DeliveryRateCard, ShopivaBranch, ShopivaOutlet, NiaCallSession, NiaTask, NiaCallerVerification, NiaAuditLog
 
 
 class ProductForm(forms.ModelForm):
@@ -571,6 +572,96 @@ class DeliveryAgentAdmin(admin.ModelAdmin):
                     ),
                     link=approval_url,
                 )
+
+
+@admin.register(DeliveryPayProfile, site=shopiva_admin_site)
+class DeliveryPayProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        "name", "base_per_delivery", "per_km_rate", "minimum_payout",
+        "auto_payout_threshold", "auto_payout_enabled", "is_active", "updated_at",
+    )
+    list_filter = ("is_active", "auto_payout_enabled")
+    search_fields = ("name", "notes")
+    list_editable = (
+        "base_per_delivery", "per_km_rate", "minimum_payout",
+        "auto_payout_threshold", "auto_payout_enabled", "is_active",
+    )
+    ordering = ("-is_active", "-updated_at")
+    fieldsets = (
+        ("Rider earnings", {"fields": ("name", "base_per_delivery", "per_km_rate")}),
+        ("Payout policy", {"fields": ("minimum_payout", "auto_payout_enabled", "auto_payout_threshold")}),
+        ("Governance", {"fields": ("is_active", "notes")}),
+    )
+
+
+@admin.register(DeliveryWallet, site=shopiva_admin_site)
+class DeliveryWalletAdmin(admin.ModelAdmin):
+    list_display = (
+        "agent", "payout_phone", "available_balance", "pending_payout_balance",
+        "total_earned", "total_paid", "auto_payout_enabled", "last_payout_at",
+    )
+    list_filter = ("auto_payout_enabled",)
+    search_fields = ("agent__user__username", "agent__user__email", "agent__phone", "payout_phone")
+    list_editable = ("payout_phone", "auto_payout_enabled")
+    readonly_fields = ("agent", "available_balance", "pending_payout_balance", "total_earned", "total_paid", "last_payout_at", "updated_at")
+    list_per_page = 25
+
+
+@admin.register(DeliveryEarning, site=shopiva_admin_site)
+class DeliveryEarningAdmin(admin.ModelAdmin):
+    list_display = (
+        "id", "agent", "order", "distance_km", "base_amount",
+        "distance_amount", "total_amount", "status", "distance_source", "earned_at",
+    )
+    list_filter = ("status", "distance_source", "pay_profile")
+    search_fields = ("agent__user__username", "agent__user__email", "order__tracking_code")
+    readonly_fields = (
+        "agent", "order", "pay_profile", "distance_km", "distance_source",
+        "base_amount", "distance_amount", "total_amount", "status", "payout", "earned_at",
+    )
+    ordering = ("-earned_at",)
+    list_per_page = 50
+
+
+@admin.register(DeliveryPayout, site=shopiva_admin_site)
+class DeliveryPayoutAdmin(admin.ModelAdmin):
+    list_display = (
+        "id", "agent", "amount", "phone", "status", "trigger", "provider",
+        "provider_reference", "created_at", "processed_at", "paid_at",
+    )
+    list_filter = ("status", "trigger", "provider", "created_at")
+    search_fields = (
+        "agent__user__username", "agent__user__email", "phone",
+        "provider_reference", "idempotency_key",
+    )
+    readonly_fields = (
+        "agent", "amount", "phone", "trigger", "provider",
+        "provider_reference", "provider_response", "idempotency_key",
+        "created_at", "updated_at", "processed_at", "paid_at",
+    )
+    list_per_page = 25
+
+    def save_model(self, request, obj, form, change):
+        previous_status = None
+        if change and obj.pk:
+            previous_status = DeliveryPayout.objects.get(pk=obj.pk).status
+        super().save_model(request, obj, form, change)
+        if not change or previous_status == obj.status:
+            return
+        if obj.status == DeliveryPayout.STATUS_PAID:
+            complete_delivery_payout(obj, provider_reference=obj.provider_reference, provider_response=obj.provider_response)
+            notify_user(
+                obj.agent.user,
+                "payout",
+                "Delivery payout confirmed",
+                f"Your Shopiva delivery payout #{obj.id} for KSh {obj.amount:,.2f} has been marked paid.",
+                link="/delivery/payouts/",
+                phone=obj.agent.phone,
+            )
+        elif obj.status == DeliveryPayout.STATUS_FAILED:
+            fail_delivery_payout(obj, obj.failure_reason or "Payout marked failed by Shopiva admin.")
+        elif obj.status == DeliveryPayout.STATUS_CANCELLED:
+            cancel_delivery_payout(obj, obj.failure_reason or "Payout cancelled by Shopiva admin.")
 
 
 @admin.register(ShopivaBranch, site=shopiva_admin_site)
