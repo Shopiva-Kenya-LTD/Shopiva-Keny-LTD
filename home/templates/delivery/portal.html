@@ -13,7 +13,7 @@ window.SHOPIVA_MAP_ID = "{{ google_maps_map_id|escapejs }}";
 <body>
 <header class="top"><div class="bar">
 <div class="brand"><div class="brand-mark"><svg viewBox="0 0 128 128"><path d="M64 9l6 16 16-10-4 18 18 3-15 10 12 14-18-5-4 19-11-15-11 15-4-19-18 5 12-14-15-10 18-3-4-18 16 10z" fill="#ffd34f"/><path d="M27 48h50l12 11h12v27H91a12 12 0 0 1-24 0H55a12 12 0 0 1-24 0H23V58a10 10 0 0 1 4-10z" fill="#fff"/><circle cx="43" cy="86" r="8" fill="#06351f"/><circle cx="79" cy="86" r="8" fill="#06351f"/><path d="M38 64h31" stroke="#23d87b" stroke-width="7" stroke-linecap="round"/></svg></div><div class="brand-text">Shopiva <span>Delivery</span></div></div>
-<div class="nav"><a href="{% url 'delivery_history' %}">History</a><form method="post" action="{% url 'delivery_logout' %}" style="margin:0"><input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"><button class="logout" type="submit">Sign out</button></form></div>
+<div class="nav"><a href="{% url 'delivery_payouts' %}">Earnings & Payouts</a><a href="{% url 'delivery_history' %}">History</a><form method="post" action="{% url 'delivery_logout' %}" style="margin:0"><input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"><button class="logout" type="submit">Sign out</button></form></div>
 </div></header>
 <main class="wrap">
 <section class="hero"><div class="hero-inner"><div><div class="eyebrow">Private rider operations</div><h1>Good day, {{ agent.display_name }}.</h1><p>Your secure command workspace for live delivery operations.</p></div><div class="hero-chip">🛡️ Shopiva verified rider</div></div></section>
