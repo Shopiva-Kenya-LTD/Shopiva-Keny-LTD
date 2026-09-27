@@ -225,3 +225,26 @@ def fail_delivery_payout(payout, reason):
             payout=None,
         )
         return locked
+
+
+def cancel_delivery_payout(payout, reason="Cancelled by Shopiva admin."):
+    with transaction.atomic():
+        locked = DeliveryPayout.objects.select_for_update().select_related("agent").get(pk=payout.pk)
+        if locked.status in (DeliveryPayout.STATUS_PAID, DeliveryPayout.STATUS_CANCELLED):
+            return locked
+
+        wallet = get_or_create_delivery_wallet(locked.agent)
+        amount = _money(locked.amount)
+        locked.status = DeliveryPayout.STATUS_CANCELLED
+        locked.failure_reason = str(reason or "Payout cancelled.")[:255]
+        locked.processed_at = timezone.now()
+        locked.save(update_fields=("status", "failure_reason", "processed_at", "updated_at"))
+
+        wallet.pending_payout_balance = _money(max(ZERO, wallet.pending_payout_balance - amount))
+        wallet.available_balance = _money(wallet.available_balance + amount)
+        wallet.save(update_fields=("pending_payout_balance", "available_balance", "updated_at"))
+        DeliveryEarning.objects.filter(payout=locked, status=DeliveryEarning.STATUS_RESERVED).update(
+            status=DeliveryEarning.STATUS_AVAILABLE,
+            payout=None,
+        )
+        return locked
