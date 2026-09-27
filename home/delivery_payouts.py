@@ -321,8 +321,8 @@ def initiate_delivery_payout(payout):
         if accepted:
             locked.status = DeliveryPayout.STATUS_PROCESSING
             provider_id = (
-                response.get("OriginatorConversationID")
-                or response.get("ConversationID")
+                response.get("ConversationID")
+                or response.get("OriginatorConversationID")
                 or originator_id
             )
             locked.provider_reference = str(provider_id)
