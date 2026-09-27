@@ -105,7 +105,7 @@ def queue_delivery_payout(agent, *, automatic=False, force=False):
         earnings = list(
             DeliveryEarning.objects.select_for_update()
             .filter(agent=agent, status="available", payout__isnull=True)
-            .order_by("created_at", "id")
+            .order_by("earned_at", "id")
         )
         selected = []
         running = ZERO
@@ -170,9 +170,6 @@ def record_delivery_earning(order, agent, now=None):
         wallet.available_balance = _money(wallet.available_balance + total_amount)
         wallet.total_earned = _money(wallet.total_earned + total_amount)
         wallet.save(update_fields=("available_balance", "total_earned", "updated_at"))
-
-        if profile.auto_payout_enabled and wallet.auto_payout_enabled:
-            queue_delivery_payout(agent, automatic=True)
 
         return earning
 
