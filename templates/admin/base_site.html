@@ -155,6 +155,78 @@ input,select,textarea{border-radius:10px!important;border-color:#d7e4eb!importan
 }
 #changelist-filter .selected .count{color:#087f83!important}
 #changelist-filter > div{padding-bottom:5px!important}
+
+/* Shopiva premium admin header + breadcrumb bar */
+#header{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  min-height:76px!important;
+  box-sizing:border-box!important;
+  padding:13px 30px!important;
+  background:
+    radial-gradient(circle at 8% 15%,rgba(34,211,238,.14),transparent 22%),
+    linear-gradient(135deg,#082334 0%,#0b5365 52%,#128b73 100%)!important;
+  border-bottom:1px solid rgba(255,255,255,.12)!important;
+  box-shadow:0 10px 30px rgba(8,35,52,.22)!important;
+}
+#branding{display:flex!important;align-items:center!important}
+.shopiva-admin-brand{gap:13px!important}
+.shopiva-admin-mark{
+  width:46px!important;height:46px!important;border-radius:14px!important;
+  background:linear-gradient(145deg,#20c77b,#078f54)!important;
+  box-shadow:0 8px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.2)!important;
+  font-size:15px!important;
+}
+.shopiva-admin-brand > span:last-child{
+  font-size:17px!important;letter-spacing:-.02em!important;
+  text-shadow:0 1px 8px rgba(0,0,0,.12)!important;
+}
+.shopiva-admin-brand small{
+  margin-top:3px!important;font-size:8px!important;
+  letter-spacing:1.9px!important;color:#bde8e0!important;opacity:1!important;
+}
+#user-tools{
+  display:flex!important;align-items:center!important;gap:10px!important;
+  margin:0!important;padding:0!important;
+  color:#e7f8f5!important;font-size:11px!important;font-weight:700!important;
+}
+#user-tools a{
+  color:#e7f8f5!important;text-decoration:none!important;
+  border-bottom:1px solid transparent!important;
+  padding:7px 2px!important;
+  transition:all .15s ease!important;
+}
+#user-tools a:hover{color:#7ff3c1!important;border-bottom-color:#7ff3c1!important}
+#user-tools a[href*="logout"]{
+  padding:8px 12px!important;border:1px solid rgba(255,255,255,.18)!important;
+  border-radius:9px!important;background:rgba(255,255,255,.07)!important;
+}
+#user-tools a[href*="logout"]:hover{background:rgba(255,255,255,.14)!important}
+#breadcrumbs{
+  display:block!important;height:auto!important;overflow:visible!important;
+  box-sizing:border-box!important;margin:0!important;
+  padding:12px 34px!important;
+  background:linear-gradient(180deg,#28566a,#214a5d)!important;
+  border-bottom:1px solid rgba(255,255,255,.08)!important;
+  color:#d7e7ee!important;font-size:12px!important;
+  box-shadow:0 5px 16px rgba(8,35,52,.10)!important;
+}
+#breadcrumbs a{
+  color:#f0fbff!important;text-decoration:none!important;font-weight:750!important;
+}
+#breadcrumbs a:hover{color:#72efd0!important}
+#breadcrumbs a + a:before,#breadcrumbs a~a:before{color:#7fa8b7!important}
+#breadcrumbs{letter-spacing:.01em!important}
+@media(max-width:700px){
+  #header{min-height:68px!important;padding:10px 16px!important}
+  .shopiva-admin-brand > span:last-child{font-size:15px!important}
+  .shopiva-admin-brand small{font-size:7px!important;letter-spacing:1.4px!important}
+  #user-tools{font-size:0!important;gap:4px!important}
+  #user-tools a{font-size:10px!important}
+  #breadcrumbs{padding:10px 16px!important;white-space:nowrap!important;overflow:auto!important}
+}
 </style>
 {% endblock %}
 {% block extrahead %}{{ block.super }}
