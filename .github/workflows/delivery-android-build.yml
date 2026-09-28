@@ -39,14 +39,14 @@ jobs:
         run: gradle -p delivery-android :app:assembleRelease :app:bundleRelease
 
       - name: Upload debug Admin APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: shopiva-admin-debug-apk
           path: delivery-android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
       - name: Upload unsigned Admin release APK and AAB
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: shopiva-admin-release-unsigned
           path: |
@@ -108,7 +108,7 @@ jobs:
 
       - name: Upload signed Admin APK and AAB
         if: steps.signing.outputs.configured == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: shopiva-admin-release-signed
           path: |
