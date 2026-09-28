@@ -130,6 +130,14 @@
     @media(max-width:1200px){ .stats{grid-template-columns:repeat(3,1fr)} .layout{grid-template-columns:1fr} }
     @media(max-width:650px){ #content{padding:0 12px 30px}.shopiva-hero{padding:20px;align-items:flex-start;flex-direction:column}.stats{grid-template-columns:repeat(2,1fr)}.quick-grid{grid-template-columns:1fr}.ai-form{flex-direction:column} }
 .live-delivery-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}.live-delivery-stats>div{padding:11px;border:1px solid var(--shopiva-border);border-radius:12px;background:#f8fafc}.live-delivery-stats small{display:block;color:var(--shopiva-muted);font-size:10px;text-transform:uppercase;font-weight:800}.live-delivery-stats strong{display:block;margin-top:3px;font-size:21px}.live-delivery-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.live-rider{padding:10px;border:1px solid var(--shopiva-border);border-radius:12px;background:#fff}.live-rider-head{display:flex;justify-content:space-between;gap:8px}.live-rider strong{font-size:12px}.live-rider small{display:block;color:var(--shopiva-muted);font-size:10px;line-height:1.45;margin-top:4px}.live-badge{display:inline-flex;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900}.live-badge.on{background:#e8f8ef;color:#087448}.live-badge.off{background:#fff1f1;color:#b4232f}@media(max-width:900px){.live-delivery-stats{grid-template-columns:repeat(2,1fr)}.live-delivery-list{grid-template-columns:1fr}}@media(max-width:650px){.live-delivery-stats{grid-template-columns:1fr 1fr}}
+    /* Final contrast pass: keep classic table text clearly visible */
+    .shop-table td,
+    .shop-table td:first-child { color:#263445 !important; background:#ffffff !important; }
+    .shop-table tbody tr:nth-child(even) td { color:#263445 !important; background:#f3f6f8 !important; }
+    .shop-table tbody tr:hover td { color:#172033 !important; background:#e5f2f4 !important; }
+    .shop-table th { color:#f1f5f9 !important; background:linear-gradient(180deg,#334155,#263446) !important; }
+    .shop-table td a { color:#087f83 !important; }
+    .status { color:#1e40af !important; background:#eef5ff !important; border-color:#bfd3ea !important; }
 </style>
 <section class="nia-widget" data-nia-widget data-role="admin" aria-label="Nia live copilot"></section><link rel="stylesheet" href="/static/shopiva/nia-widget.css"><script src="/static/shopiva/nia-widget.js"></script>
 {% endblock %}
