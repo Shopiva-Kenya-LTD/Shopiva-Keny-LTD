@@ -38,7 +38,6 @@
     .quick { background:#f7f9fb; border:1px solid #d7e0e8; color:#263445 !important; }
     .quick span { color:#66758a; }
         .live-delivery-stats>div,.live-rider { background:#f7f9fb; border-color:#d7e0e8; color:#263445; }
-    .nia-phone-panel { background:linear-gradient(135deg,#eefaf5,#f7fbfa); }
     .notice { background:#fff8e8; border-color:#f1d49b; color:#7a5a18; }
     .layout > main > .panel:nth-of-type(2) { border-top:4px solid #087f83; }
     .layout > main > .panel:nth-of-type(3) { border-top:4px solid #64748b; }
@@ -77,7 +76,6 @@
     .shop-table td { border-bottom-color:rgba(255,255,255,.07); color:#dce6ef; }
     .live-delivery-stats>div,.live-rider { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); }
                 .notice { background:rgba(250,204,21,.07); border-color:rgba(250,204,21,.20); color:#f5d879; }
-    .nia-phone-panel { background:linear-gradient(145deg,#0b251f,#0c1c24); border-color:rgba(34,197,94,.25); }
     @media(max-width:900px){ .shopiva-hero{align-items:flex-start;flex-direction:column}.hero-console{width:100%;max-width:620px} }
     @media(max-width:650px){ #content{padding:12px 12px 30px}.shopiva-hero{padding:24px 20px}.hero-console{grid-template-columns:1fr 1fr}.shopiva-hero h1{font-size:32px} }
 
@@ -157,15 +155,6 @@
         <div class="stat"><div class="icon">📈</div><div class="label">Today's Orders</div><div class="value">{{ shopiva_stats.today_orders }}</div></div>
     </section>
 
-    <section class="panel nia-phone-panel" aria-label="Nia phone calling">
-        <div class="panel-head"><div class="ai-title"><div class="ai-orb">📞</div><div><h2>Nia Phone — Hands-Free Operations</h2><div class="panel-sub">Nia can call the configured administrator phone through Twilio.</div></div></div><span class="shopiva-badge" style="background:#ecfdf5;color:#087448;border-color:#bbf7d0;">PHONE READY</span></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-            <div><strong style="font-size:16px;color:var(--shopiva-dark);">Call Nia</strong><div class="panel-sub" style="margin-top:4px;">Starts a protected outbound call to the administrator number configured in Shopiva.</div></div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" id="admin-call-nia-top" style="border:0;border-radius:12px;padding:12px 18px;background:#16a34a;color:#fff;font-weight:900;cursor:pointer;">📞 Call Nia now</button><button type="button" id="admin-nia-pin" style="border:1px solid #bbf7d0;border-radius:12px;padding:12px 15px;background:#fff;color:#087448;font-weight:900;cursor:pointer;">🔐 Generate call PIN</button></div>
-        </div>
-        <div id="admin-call-status-top" class="panel-sub" style="margin-top:10px;">Ready for a phone call.</div>
-        <div id="admin-nia-pin-status" class="panel-sub" style="margin-top:7px;">Generate a four-digit PIN before calling Nia from the phone registered for this admin account.</div>
-    </section>
 
     <div class="layout">
         <main>
@@ -212,7 +201,7 @@
                 <div class="table-wrap"><table class="shop-table"><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Action</th></tr></thead><tbody>
                 {% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category }}</td><td class="stock-danger">{{ product.stock_quantity }}</td><td><a href="{% url 'shopiva_admin:home_product_change' product.id %}">Edit</a></td></tr>{% endfor %}
                 </tbody></table></div>
-                {% else %}<div class="notice">Inventory is clear right now. Add products and the assistant will monitor low stock automatically.</div>{% endif %}
+                {% else %}<div class="notice">Inventory is clear right now. Shopiva will continue monitoring inventory through the admin operations system.</div>{% endif %}
             </section>
         </main>
 
@@ -232,26 +221,6 @@
 </div>
 
 <script>
-(function(){
-  const b=document.getElementById('admin-call-nia'),s=document.getElementById('admin-call-status');
-  if(!b||!s)return;
-  b.addEventListener('click',async()=>{
-    b.disabled=true;s.textContent='Nia is placing your call…';
-    try{
-      const r=await fetch("{% url 'nia_phone_call' %}",{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'}});
-      const d=await r.json();
-      if(!r.ok||!d.ok)throw new Error(d.error||'Nia could not place the call.');
-      s.textContent='📞 Nia is calling the configured admin number now.';
-    }catch(e){s.textContent=e.message||'Nia could not place the call.';b.disabled=false;}
-  });
-})();
 </script><script>
-(function(){
-  const b=document.getElementById('admin-call-nia-top'),s=document.getElementById('admin-call-status-top');
-  const p=document.getElementById('admin-nia-pin'),ps=document.getElementById('admin-nia-pin-status');
-  p?.addEventListener('click',async()=>{p.disabled=true;ps.textContent='Generating a 10-minute PIN…';try{const r=await fetch("{% url 'nia_phone_pin' %}",{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Could not generate a Nia PIN.');ps.textContent='🔐 Your Nia call PIN is '+d.pin+' · valid for 10 minutes.';}catch(e){ps.textContent=e.message||'Could not generate a Nia PIN.';}finally{p.disabled=false;}});
-  if(!b||!s)return;
-  b.addEventListener('click',async()=>{b.disabled=true;b.setAttribute('aria-busy','true');s.textContent='Nia is placing your call…';try{const r=await fetch("{% url 'nia_phone_call' %}",{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Nia could not place the call.');s.textContent='📞 Nia is calling the configured administrator number now.';}catch(e){s.textContent=e.message||'Nia could not place the call.';b.disabled=false;b.removeAttribute('aria-busy');}});
-})();
 </script>
 {% endblock %}
