@@ -403,4 +403,4 @@
   b.addEventListener('click',async()=>{b.disabled=true;b.setAttribute('aria-busy','true');s.textContent='Nia is placing your call…';try{const r=await fetch("{% url 'nia_phone_call' %}",{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Nia could not place the call.');s.textContent='📞 Nia is calling the configured administrator number now.';}catch(e){s.textContent=e.message||'Nia could not place the call.';b.disabled=false;b.removeAttribute('aria-busy');}});
 })();
 </script>
-{% endblock %>
+{% endblock %}
