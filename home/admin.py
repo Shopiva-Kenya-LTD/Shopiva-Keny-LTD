@@ -93,7 +93,15 @@ class ShopivaAdminSite(admin.AdminSite):
                 "pending_staff_approvals": DeliveryAgent.objects.filter(is_active=False).select_related("user").order_by("-created_at")[:8],
             }
         )
-        return super().index(request, extra_context=extra_context)
+        # The Shopiva dashboard is fully custom and does not depend on Django's
+        # generated app list. Rendering it directly keeps a broken model registration
+        # from taking down the entire Admin Control Center.
+        context = {
+            **self.each_context(request),
+            "title": self.index_title,
+            **extra_context,
+        }
+        return TemplateResponse(request, self.index_template, context)
 
     def logout(self, request, extra_context=None):
         auth_logout(request)
