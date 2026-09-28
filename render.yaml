@@ -32,7 +32,13 @@ services:
       - key: CLOUDINARY_URL
         sync: false
       - key: NIA_PHONE_CALLS_ENABLED
-        value: "false"
+        value: "true"
+      - key: NIA_SPEECH_LANGUAGE
+        value: "en-KE"
+      - key: NIA_TTS_LANGUAGE
+        value: "en-GB"
+      - key: NIA_SPEECH_TIMEOUT
+        value: "10"
       - key: TWILIO_ACCOUNT_SID
         sync: false
       - key: TWILIO_AUTH_TOKEN
