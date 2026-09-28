@@ -327,6 +327,10 @@ class ShopivaAdminSite(admin.AdminSite):
             )
 
 
+# Custom Shopiva admin site used by all registered models and /admin/.
+shopiva_admin_site = ShopivaAdminSite(name="shopiva_admin")
+
+
 @admin.register(Order, site=shopiva_admin_site)
 class OrderAdmin(admin.ModelAdmin):
     list_display = (
