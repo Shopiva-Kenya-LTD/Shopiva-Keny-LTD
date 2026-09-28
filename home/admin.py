@@ -96,8 +96,16 @@ class ShopivaAdminSite(admin.AdminSite):
         # The Shopiva dashboard is fully custom and does not depend on Django's
         # generated app list. Rendering it directly keeps a broken model registration
         # from taking down the entire Admin Control Center.
+        # This dashboard is fully custom. Do not build Django's model/app list
+        # here: a broken optional ModelAdmin must never take down /admin/.
         context = {
-            **self.each_context(request),
+            "site_title": self.site_title,
+            "site_header": self.site_header,
+            "site_url": self.site_url,
+            "has_permission": self.has_permission(request),
+            "available_apps": [],
+            "is_popup": False,
+            "is_nav_sidebar": False,
             "title": self.index_title,
             **extra_context,
         }
