@@ -4,7 +4,7 @@ import re
 
 from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from .models import Order
 from .payments import checkout_mpesa as original_checkout_mpesa
@@ -161,6 +161,9 @@ def checkout_mpesa_map(request, error=None):
             Order.objects.filter(pk=order_id, customer=request.user).update(**updates)
         else:
             Order.objects.filter(pk=order_id, email__iexact=request.POST.get("email", "").strip()).update(**updates)
+        if "/payments/mpesa/waiting/" in response.url:
+            # The map checkout owns browser navigation after the nested payment flow.
+            return redirect("mpesa_waiting", order_id=order_id)
     return response
 
 
