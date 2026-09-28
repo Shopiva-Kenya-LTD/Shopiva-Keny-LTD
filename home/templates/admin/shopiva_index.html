@@ -51,35 +51,7 @@
   @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}}
   @media(max-width:650px){#content{padding:10px 12px 28px}.hero{padding:22px}.hero h1{font-size:28px}.stats{grid-template-columns:repeat(2,1fr)}.quick{grid-template-columns:1fr}}
 </style>
-<script>
-(function(){
-  const form=document.getElementById('nia-form');
-  if(!form)return;
-  const input=document.getElementById('nia-question');
-  const answer=document.getElementById('nia-answer');
-  const submit=document.getElementById('nia-submit');
-  const csrf=form.querySelector('[name=csrfmiddlewaretoken]');
-  async function ask(question){
-    question=(question||'').trim();
-    if(!question)return;
-    answer.textContent='Nia is checking the current Shopiva data…';
-    submit.disabled=true;
-    const body=new URLSearchParams();
-    body.append('question',question);
-    body.append('csrfmiddlewaretoken',csrf.value);
-    try{
-      const response=await fetch(form.action,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'},body});
-      const data=await response.json();
-      if(!response.ok||!data.ok)throw new Error(data.error||'Request failed');
-      answer.textContent=data.answer||'Nia did not return an answer.';
-    }catch(error){
-      answer.textContent=error.message||'Nia could not complete that request right now. Please try again.';
-    }finally{submit.disabled=false;}
-  }
-  form.addEventListener('submit',function(event){event.preventDefault();const q=input.value;input.value='';ask(q);});
-  document.querySelectorAll('.nia-suggestions button').forEach(function(button){button.addEventListener('click',function(){ask(button.dataset.q);});});
-})();
-</script>
+
 
 {% endblock %}
 
@@ -180,4 +152,33 @@
     </aside>
   </div>
 </div>
+<script>
+(function(){
+  const form=document.getElementById('nia-form');
+  if(!form)return;
+  const input=document.getElementById('nia-question');
+  const answer=document.getElementById('nia-answer');
+  const submit=document.getElementById('nia-submit');
+  const csrf=form.querySelector('[name=csrfmiddlewaretoken]');
+  async function ask(question){
+    question=(question||'').trim();
+    if(!question)return;
+    answer.textContent='Nia is checking the current Shopiva data…';
+    submit.disabled=true;
+    const body=new URLSearchParams();
+    body.append('question',question);
+    body.append('csrfmiddlewaretoken',csrf.value);
+    try{
+      const response=await fetch(form.action,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'},body});
+      const data=await response.json();
+      if(!response.ok||!data.ok)throw new Error(data.error||'Request failed');
+      answer.textContent=data.answer||'Nia did not return an answer.';
+    }catch(error){
+      answer.textContent=error.message||'Nia could not complete that request right now. Please try again.';
+    }finally{submit.disabled=false;}
+  }
+  form.addEventListener('submit',function(event){event.preventDefault();const q=input.value;input.value='';ask(q);});
+  document.querySelectorAll('.nia-suggestions button').forEach(function(button){button.addEventListener('click',function(){ask(button.dataset.q);});});
+})();
+</script>
 {% endblock %}
