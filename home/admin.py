@@ -19,6 +19,7 @@ from django.utils import timezone
 from .voice_ai import speak_text, transcribe_voice
 from .nia_core import call_nia
 from .admin_operations import admin_operations_center
+from support.views import support_admin_center
 from .payments import _create_seller_settlements
 from .delivery_payouts import cancel_delivery_payout, complete_delivery_payout, fail_delivery_payout
 from .notifications import notify_user
@@ -127,6 +128,7 @@ class ShopivaAdminSite(admin.AdminSite):
             path("delivery-map/", self.admin_view(self.delivery_map), name="delivery_map"),
             path("delivery-locations/", self.admin_view(self.delivery_locations), name="delivery_locations"),
             path("approval-center/", self.admin_view(admin_operations_center), name="approval_center"),
+            path("support-center/", self.admin_view(support_admin_center), name="support_center"),
             path("operations-center/", self.admin_view(admin_operations_center), name="operations_center"),
         ]
         return custom_urls + urls
