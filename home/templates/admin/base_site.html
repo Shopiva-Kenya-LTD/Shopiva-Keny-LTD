@@ -71,7 +71,7 @@ input:focus,select:focus,textarea:focus{border-color:#19d978!important;box-shado
 <style>
 /* Shopiva Modern Control Center shell */
 :root{--sv-navy:#061a2f;--sv-navy2:#0a2a45;--sv-green:#18d978;--sv-green2:#0aa866;--sv-bg:#f3f7f9;--sv-line:#dce6eb;--sv-ink:#142337;--sv-muted:#708194}
-.shopiva-shell-nav{position:fixed;left:0;top:66px;bottom:0;width:236px;background:linear-gradient(180deg,#061a2f 0%,#08253c 58%,#062e25 100%);padding:18px 12px 16px;z-index:40;overflow:auto;box-shadow:12px 0 32px rgba(6,26,47,.14)}
+.shopiva-shell-nav{position:fixed;left:0;top:66px;bottom:0;width:236px;height:calc(100vh - 66px);background:linear-gradient(180deg,#061a2f 0%,#08253c 58%,#062e25 100%);padding:18px 12px 24px;z-index:40;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.24) transparent;box-shadow:12px 0 32px rgba(6,26,47,.14)}.shopiva-shell-nav::-webkit-scrollbar{width:7px}.shopiva-shell-nav::-webkit-scrollbar-track{background:transparent}.shopiva-shell-nav::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:99px}.shopiva-shell-nav::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.38)}
 .shopiva-shell-nav .nav-brand{padding:4px 10px 18px;color:#fff;font-weight:900;font-size:14px}
 .shopiva-shell-nav .nav-brand small{display:block;margin-top:3px;color:#9dc0c9;font-size:8px;letter-spacing:.12em;text-transform:uppercase}
 .shopiva-shell-nav .nav-section{margin:12px 8px 6px;color:#6f93a5;font-size:7px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
