@@ -60,7 +60,7 @@ function init(el){
      if(ev.type==='response.done'&&voiceActive)setStatus('🟢 Nia is listening — ask another question.');
      if(ev.type==='response.function_call_arguments.done'){
       const args=JSON.parse(ev.arguments||'{}');
-      const response=await fetch('/ai/nia/realtime-action/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:JSON.stringify({action:ev.name,...args})});
+      const response=await fetch('/ai/realtime/action/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:JSON.stringify({action:ev.name,...args})});
       const out=await response.json();
       if(dc&&dc.readyState==='open'){
        dc.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:ev.call_id,output:JSON.stringify(out)}}));
@@ -70,7 +70,7 @@ function init(el){
     }catch(_){}
    };
    const offer=await pc.createOffer();await pc.setLocalDescription(offer);
-   const response=await fetch('/ai/nia/realtime-call/',{method:'POST',headers:{'Content-Type':'application/sdp','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:offer.sdp});
+   const response=await fetch('/ai/realtime/call/',{method:'POST',headers:{'Content-Type':'application/sdp','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:offer.sdp});
    if(!response.ok){let message='Could not connect Nia voice.';try{const d=await response.json();message=d.error||message}catch(_){}throw new Error(message)}
    await pc.setRemoteDescription({type:'answer',sdp:await response.text()});
    btn.disabled=false;
