@@ -22,6 +22,7 @@ from .payments import _create_seller_settlements
 from .delivery_payouts import cancel_delivery_payout, complete_delivery_payout, fail_delivery_payout
 from .notifications import notify_user
 from .notification_service import notify_wishlist_product_change
+from .nia_admin import answer_admin_question
 from .models import CustomerAddress, DeliveryAgent, DeliveryEarning, DeliveryPayProfile, DeliveryPayout, DeliveryWallet, Order, OrderEvent, OrderItem, PaymentTransaction, Product, SellerPayoutRequest, SellerProfile, SellerSettlement, SellerWallet, WishlistItem, ProductReview, Notification, NotificationDelivery, DeliveryTariff, DeliveryHub, DeliveryPricingProfile, DeliveryPickupPoint, DeliveryRateCard, ShopivaBranch, ShopivaOutlet, NiaCallSession, NiaTask, NiaCallerVerification, NiaAuditLog
 
 
@@ -126,8 +127,31 @@ class ShopivaAdminSite(admin.AdminSite):
             path("approval-center/", self.admin_view(admin_operations_center), name="approval_center"),
             path("support-center/", self.admin_view(support_admin_center), name="support_center"),
             path("operations-center/", self.admin_view(admin_operations_center), name="operations_center"),
+            path("nia-assistant/", self.admin_view(self.nia_assistant), name="nia_assistant"),
         ]
         return custom_urls + urls
+
+    def nia_assistant(self, request):
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": "Method not allowed."}, status=405)
+
+        question = (request.POST.get("question") or "").strip()
+        if not question:
+            return JsonResponse({"ok": False, "error": "Ask Nia a question first."}, status=400)
+        if len(question) > 1000:
+            return JsonResponse({"ok": False, "error": "Question is too long."}, status=400)
+
+        try:
+            result = answer_admin_question(question)
+            return JsonResponse({
+                "ok": True,
+                "answer": result.get("answer", "I could not find an answer for that question."),
+            })
+        except Exception:
+            return JsonResponse({
+                "ok": False,
+                "error": "Nia could not complete that request right now. Please try again.",
+            }, status=500)
 
     def delivery_map(self, request):
         counties = [

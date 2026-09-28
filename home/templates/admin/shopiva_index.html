@@ -40,9 +40,19 @@
   .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef5ff;color:#1e40af;font-weight:800;font-size:10px}
   .low{color:#dc2626;font-weight:900}
   .empty{padding:13px;border:1px solid rgba(250,204,21,.2);border-radius:11px;background:rgba(250,204,21,.06);color:#f5d879;font-size:12px}
+  .nia-panel{position:relative;overflow:hidden;margin-bottom:20px;padding:20px;border:1px solid rgba(34,211,238,.24);border-radius:18px;background:linear-gradient(135deg,#0b1728 0%,#0b2537 58%,#075e63 100%);box-shadow:0 14px 34px rgba(0,0,0,.18)}
+  .nia-panel:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 88% 15%,rgba(34,211,238,.16),transparent 35%);pointer-events:none}
+  .nia-head{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+  .nia-title{display:flex;align-items:center;gap:11px}.nia-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:rgba(34,211,238,.12);border:1px solid rgba(34,211,238,.28);font-size:21px}
+  .nia-head h2{margin:0;color:#fff;font-size:17px}.nia-head p{margin:3px 0 0;color:#9fc1ce;font-size:11px}.nia-status{display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid rgba(34,197,94,.2);border-radius:999px;background:rgba(34,197,94,.08);color:#86efac;font-size:10px;font-weight:800}.nia-status i{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e}
+  .nia-answer{position:relative;min-height:62px;padding:13px 14px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(2,12,24,.34);color:#dceaf1;font-size:12px;line-height:1.6;white-space:pre-line}
+  .nia-form{position:relative;display:flex;gap:8px;margin-top:10px}.nia-form input{flex:1;min-width:0;padding:11px 12px;border:1px solid rgba(255,255,255,.14);border-radius:10px;background:rgba(255,255,255,.07);color:#fff;outline:none}.nia-form input::placeholder{color:#87a4b1}.nia-form input:focus{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.08)}.nia-btn{border:0;border-radius:10px;padding:11px 16px;background:linear-gradient(135deg,#22d3ee,#06b6d4);color:#06212a;font-weight:900;cursor:pointer}.nia-btn:disabled{opacity:.6;cursor:wait}
+  .nia-suggestions{position:relative;display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.nia-suggestions button{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#c8dce4;border-radius:999px;padding:6px 9px;font-size:10px;cursor:pointer}.nia-suggestions button:hover{background:rgba(34,211,238,.1);border-color:rgba(34,211,238,.3);color:#fff}
   @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}}
   @media(max-width:650px){#content{padding:10px 12px 28px}.hero{padding:22px}.hero h1{font-size:28px}.stats{grid-template-columns:repeat(2,1fr)}.quick{grid-template-columns:1fr}}
 </style>
+
+
 {% endblock %}
 
 {% block content %}
@@ -56,6 +66,30 @@
       <a href="/admin/delivery-map/">🧭 Delivery Command</a>
       <a href="/admin/notifications/">🔔 Notifications</a>
       <a href="/admin/support-center/">🛟 Support Center</a>
+    </div>
+  </section>
+
+  <section class="nia-panel">
+    <div class="nia-head">
+      <div class="nia-title">
+        <div class="nia-icon" aria-hidden="true">🤖</div>
+        <div><h2>Nia Admin Assistant</h2><p>Live Shopiva operational answers for products, orders, M-PESA, delivery, approvals and revenue.</p></div>
+      </div>
+      <span class="nia-status"><i></i> Online</span>
+    </div>
+    <div id="nia-answer" class="nia-answer">Hello. I’m Nia. Ask me about the current Shopiva operation.</div>
+    <form id="nia-form" class="nia-form" method="post" action="{% url 'shopiva_admin:nia_assistant' %}">
+      {% csrf_token %}
+      <input id="nia-question" name="question" placeholder="Ask Nia about Shopiva..." autocomplete="off" maxlength="1000">
+      <button id="nia-submit" class="nia-btn" type="submit">Ask Nia</button>
+    </form>
+    <div class="nia-suggestions" aria-label="Nia suggestions">
+      <button type="button" data-q="Give me today's activity summary">Today</button>
+      <button type="button" data-q="How many products do we have?">Products</button>
+      <button type="button" data-q="Which products are low stock?">Stock</button>
+      <button type="button" data-q="How many pending orders?">Orders</button>
+      <button type="button" data-q="What is our revenue?">Revenue</button>
+      <button type="button" data-q="How many delivery riders are active?">Riders</button>
     </div>
   </section>
 
@@ -118,4 +152,33 @@
     </aside>
   </div>
 </div>
+<script>
+(function(){
+  const form=document.getElementById('nia-form');
+  if(!form)return;
+  const input=document.getElementById('nia-question');
+  const answer=document.getElementById('nia-answer');
+  const submit=document.getElementById('nia-submit');
+  const csrf=form.querySelector('[name=csrfmiddlewaretoken]');
+  async function ask(question){
+    question=(question||'').trim();
+    if(!question)return;
+    answer.textContent='Nia is checking the current Shopiva data…';
+    submit.disabled=true;
+    const body=new URLSearchParams();
+    body.append('question',question);
+    body.append('csrfmiddlewaretoken',csrf.value);
+    try{
+      const response=await fetch(form.action,{method:'POST',headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'},body});
+      const data=await response.json();
+      if(!response.ok||!data.ok)throw new Error(data.error||'Request failed');
+      answer.textContent=data.answer||'Nia did not return an answer.';
+    }catch(error){
+      answer.textContent=error.message||'Nia could not complete that request right now. Please try again.';
+    }finally{submit.disabled=false;}
+  }
+  form.addEventListener('submit',function(event){event.preventDefault();const q=input.value;input.value='';ask(q);});
+  document.querySelectorAll('.nia-suggestions button').forEach(function(button){button.addEventListener('click',function(){ask(button.dataset.q);});});
+})();
+</script>
 {% endblock %}
