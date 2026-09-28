@@ -759,4 +759,4 @@ class AdminPortalBoundaryTests(TestCase):
         response = self.client.get(reverse("customer_logout"), secure=True)
         self.assertRedirects(response, reverse("admin_login"), fetch_redirect_response=False)
         response = self.client.get(reverse("customer_dashboard"), secure=True)
-        self.assertRedirects(response, reverse("customer_login"), fetch_redirect_response=False)
+        self.assertRedirects(response, f"{reverse('customer_login')}?next=%2Faccount%2F", fetch_redirect_response=False)
