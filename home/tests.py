@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.db import IntegrityError
+from django.http import HttpResponseRedirect
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -338,6 +339,37 @@ class MpesaCallbackSafetyTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(payment.status, "pending")
         self.assertEqual(order.payment_status, "pending")
+
+
+class MpesaCheckoutNavigationTests(TestCase):
+    def test_successful_mpesa_checkout_redirects_to_waiting_page(self):
+        order = Order.objects.create(
+            customer_name="Buyer",
+            email="buyer@example.com",
+            phone="254712345678",
+            address="Nairobi",
+            total_amount=Decimal("1000.00"),
+        )
+        waiting_url = reverse("mpesa_waiting", args=[order.id])
+        nested_response = HttpResponseRedirect(waiting_url)
+        nested_response["X-Nested-Checkout-Response"] = "yes"
+
+        with patch("home.checkout_map.original_checkout_mpesa", return_value=nested_response):
+            response = self.client.post(
+                reverse("checkout"),
+                {
+                    "email": order.email,
+                    "delivery_latitude": "-1.292100",
+                    "delivery_longitude": "36.821900",
+                },
+                secure=True,
+            )
+
+        self.assertRedirects(response, waiting_url, fetch_redirect_response=False)
+        self.assertNotIn("X-Nested-Checkout-Response", response)
+        order.refresh_from_db()
+        self.assertEqual(order.delivery_latitude, Decimal("-1.292100"))
+        self.assertEqual(order.delivery_longitude, Decimal("36.821900"))
 
 
 
