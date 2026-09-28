@@ -725,3 +725,38 @@ class DeliveryAssignmentGuardTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(response.status_code, 302)
         self.assertEqual(order.status, "shipped")
+
+
+class AdminPortalBoundaryTests(TestCase):
+    def setUp(self):
+        self.password = "StrongPass123!"
+        self.admin = User.objects.create_user(
+            username="strict_admin",
+            email="strict-admin@example.com",
+            password=self.password,
+            is_staff=True,
+        )
+
+    def test_admin_is_redirected_away_from_customer_storefront(self):
+        self.client.force_login(self.admin)
+        for url_name in ("home", "products", "cart", "customer_login", "customer_dashboard"):
+            response = self.client.get(reverse(url_name), secure=True)
+            self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
+
+    def test_admin_is_redirected_away_from_seller_portal(self):
+        self.client.force_login(self.admin)
+        for url_name in ("seller_login", "seller_dashboard"):
+            response = self.client.get(reverse(url_name), secure=True)
+            self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
+
+    def test_admin_can_still_reach_admin_control_center(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("shopiva_admin:index"), secure=True)
+        self.assertNotIn(response.status_code, (301, 302))
+
+    def test_admin_logout_clears_session_and_returns_to_admin_login(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("customer_logout"), secure=True)
+        self.assertRedirects(response, reverse("admin_login"), fetch_redirect_response=False)
+        response = self.client.get(reverse("customer_dashboard"), secure=True)
+        self.assertRedirects(response, reverse("customer_login"), fetch_redirect_response=False)
