@@ -83,9 +83,9 @@ input:focus,select:focus,textarea:focus{border-color:#19d978!important;box-shado
 .shopiva-shell-nav .nav-help b{display:block;font-size:9px}.shopiva-shell-nav .nav-help span{display:block;margin:4px 0 9px;color:#9bb6b8;font-size:7px;line-height:1.4}.shopiva-shell-nav .nav-help a{display:inline-flex;background:#b8ffd9;color:#063522!important;padding:7px 9px;font-size:8px;margin:0}
 .shopiva-shell-content{margin-left:236px;min-height:calc(100vh - 66px)}
 .shopiva-mobile-nav{display:none}
-#content{padding:22px 28px 44px!important}
+#content{margin-left:236px!important;padding:22px 28px 44px!important}
 #content-main{max-width:1500px}
-@media(max-width:900px){.shopiva-shell-nav{display:none}.shopiva-shell-content{margin-left:0}.shopiva-mobile-nav{display:flex;position:sticky;top:0;z-index:35;gap:6px;overflow:auto;padding:8px 12px;background:#fff;border-bottom:1px solid var(--sv-line)}.shopiva-mobile-nav a{white-space:nowrap;padding:7px 9px;border-radius:9px;background:#f0f7f4;color:#245346!important;text-decoration:none!important;font-size:8px;font-weight:900}.shopiva-mobile-nav a:first-child{background:#0aa866;color:#fff!important}#content{padding:15px 12px 32px!important}}
+@media(max-width:900px){.shopiva-shell-nav{display:none}.shopiva-shell-content{margin-left:0}#content{margin-left:0!important}.shopiva-mobile-nav{display:flex;position:sticky;top:0;z-index:35;gap:6px;overflow:auto;padding:8px 12px;background:#fff;border-bottom:1px solid var(--sv-line)}.shopiva-mobile-nav a{white-space:nowrap;padding:7px 9px;border-radius:9px;background:#f0f7f4;color:#245346!important;text-decoration:none!important;font-size:8px;font-weight:900}.shopiva-mobile-nav a:first-child{background:#0aa866;color:#fff!important}#content{padding:15px 12px 32px!important}}
 </style>
 <aside class="shopiva-shell-nav" aria-label="Shopiva Admin navigation">
   <div class="nav-brand">Shopiva Control Center<small>Kenya Everything Marketplace</small></div>
@@ -114,5 +114,5 @@ input:focus,select:focus,textarea:focus{border-color:#19d978!important;box-shado
   <a href="{% url 'shopiva_admin:delivery_map' %}">Delivery</a>
 </nav>
 <div class="shopiva-shell-content"></div>
-<script>(function(){const STATUS_URL="{% url 'admin_session_status' %}",LOGIN_URL="{% url 'shopiva_admin:login' %}";let checking=false;async function verify(){if(checking)return;checking=true;try{const r=await fetch(STATUS_URL,{credentials:'same-origin',cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest'}});if(!r.ok)throw new Error();const s=await r.json();if(!s.authenticated)window.location.replace(LOGIN_URL)}catch(e){window.location.replace(LOGIN_URL)}finally{checking=false}}window.addEventListener('pageshow',verify);window.addEventListener('popstate',verify);setTimeout(verify,150)})();})();</script>
+<script>(function(){const STATUS_URL="{% url 'admin_session_status' %}",LOGIN_URL="{% url 'shopiva_admin:login' %}";let checking=false;async function verify(){if(checking)return;checking=true;try{const r=await fetch(STATUS_URL,{credentials:'same-origin',cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest'}});if(!r.ok)throw new Error();const s=await r.json();if(!s.authenticated)window.location.replace(LOGIN_URL)}catch(e){window.location.replace(LOGIN_URL)}finally{checking=false}}window.addEventListener('pageshow',verify);window.addEventListener('popstate',verify);setTimeout(verify,150)})();</script>
 {% endblock %}
