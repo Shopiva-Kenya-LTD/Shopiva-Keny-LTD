@@ -12,7 +12,7 @@ body{background:radial-gradient(circle at 92% 0%,rgba(22,199,132,.12),transparen
 {% endblock %}
 {% block content %}
 <div class="intel">
-<nav class="nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'admin_operations_center' %}">🛡️ Operations</a><a href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a class="active" href="{% url 'business_intelligence' %}">📊 Intelligence</a></nav>
+<nav class="nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Operations</a><a href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a class="active" href="{% url 'business_intelligence' %}">📊 Intelligence</a></nav>
 <section class="hero"><div class="hero-row"><div class="hero-copy"><div class="hero-icon">📊</div><div><div class="eyebrow">Shopiva Kenya LTD · Decision workspace</div><h1>Commercial Intelligence</h1><p>Decision-ready signals from orders, products, customers and payments — presented as a live operations view.</p></div></div><div class="live-chip">● LIVE DATABASE SIGNALS</div></div></section>
 <section class="stats">
 <div class="stat"><div class="ico">📦</div><small>Recorded orders</small><strong>{{ stats.orders }}</strong></div>

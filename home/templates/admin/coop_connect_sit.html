@@ -6,7 +6,7 @@ body{background:linear-gradient(180deg,#f4f9f6,#edf4f0)!important}.coop{max-widt
 </style>{% endblock %}
 {% block content %}
 <div class="coop">
-<nav class="nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'statistics_center' %}">📊 Statistics</a><a href="{% url 'admin_operations_center' %}">🛡️ Approvals</a><a href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a href="{% url 'business_intelligence' %}">🧠 Intelligence</a></nav>
+<nav class="nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'statistics_center' %}">📊 Statistics</a><a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals</a><a href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a href="{% url 'business_intelligence' %}">🧠 Intelligence</a></nav>
 <section class="hero"><h1>🏦 Co-op Connect SIT Console</h1><p>Private staff testing workspace for the bank's supplied SIT token, STK Push and STK transaction-status flow.</p><div class="state">{% if ready %}● SIT configuration detected{% else %}○ Waiting for bank SIT credentials{% endif %}</div></section>
 {% if error %}<div class="error">{{ error }}</div>{% endif %}
 <div class="grid">
