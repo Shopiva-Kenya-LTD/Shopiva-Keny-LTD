@@ -41,6 +41,48 @@ html,body{background:var(--shopiva-bg)!important;color:var(--shopiva-ink)!import
 .button,.submit-row input[type=submit],input[type=submit],.object-tools a{border-radius:10px!important;background:linear-gradient(135deg,var(--shopiva-green),var(--shopiva-green-dark))!important;color:#fff!important;border:0!important}
 input,select,textarea{border-radius:10px!important;border-color:#d7e4eb!important}
 /* Prevent Django from reappearing after dynamic navigation */
+
+/* Classic Shopiva data-management theme */
+#changelist{background:transparent!important}
+#changelist .changelist-form{display:block!important}
+#changelist .actions{background:#f8fafc!important;border:1px solid #d9e3ea!important;border-radius:14px!important;padding:10px!important;margin:0 0 12px!important}
+#changelist .actions select{min-width:210px!important;height:38px!important;background:#fff!important;color:#243447!important}
+#changelist .actions .button{height:38px!important;padding:0 15px!important}
+#toolbar{background:#fff!important;border:1px solid #d9e3ea!important;border-radius:14px!important;padding:10px!important;margin:0 0 12px!important;box-shadow:0 8px 22px rgba(20,55,70,.05)!important}
+#toolbar form{display:flex!important;align-items:center!important;gap:8px!important}
+#toolbar input[type=search],#toolbar input[name=q]{height:38px!important;box-sizing:border-box!important;background:#f8fafc!important;color:#172033!important;border:1px solid #cbd8e1!important;border-radius:10px!important;padding:0 12px!important}
+#toolbar input[type=submit]{height:38px!important}
+#changelist-filter{background:#fff!important;border:1px solid #d9e3ea!important;border-radius:16px!important;box-shadow:0 10px 28px rgba(20,55,70,.07)!important}
+#changelist-filter h2{background:linear-gradient(135deg,#31566a,#087f83)!important;color:#fff!important;padding:13px 15px!important;font-size:12px!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+#changelist-filter h3{color:#516476!important;font-size:11px!important;padding:12px 15px 5px!important}
+#changelist-filter ul{padding:0 15px 9px!important}
+#changelist-filter li a{color:#087f83!important;font-weight:700!important}
+#changelist-filter li.selected a{color:#0f5e62!important;font-weight:900!important}
+#result_list{width:100%!important;border:1px solid #cbd7df!important;border-radius:14px!important;overflow:hidden!important;background:#fff!important;border-collapse:separate!important;border-spacing:0!important;box-shadow:0 14px 34px rgba(20,55,70,.08)!important}
+#result_list thead th{background:linear-gradient(180deg,#334155,#263446)!important;color:#f3f7fa!important;border-bottom:2px solid #1e293b!important;padding:13px 12px!important;font-size:10px!important;letter-spacing:.06em!important;text-transform:uppercase!important}
+#result_list thead th a{color:#f3f7fa!important}
+#result_list tbody td,#result_list tbody th{padding:12px!important;color:#263445!important;border-bottom:1px solid #e1e8ed!important;background:#fff!important;font-size:12px!important}
+#result_list tbody tr:nth-child(even) td,#result_list tbody tr:nth-child(even) th{background:#f5f7f9!important}
+#result_list tbody tr:hover td,#result_list tbody tr:hover th{background:#e7f4f5!important}
+#result_list tbody tr:last-child td,#result_list tbody tr:last-child th{border-bottom:0!important}
+#result_list tbody a{color:#087f83!important;font-weight:750!important}
+#result_list tbody a:hover{color:#055f62!important}
+#result_list .action-checkbox-column{width:38px!important}
+#result_list .action-select{accent-color:#087f83!important}
+.paginator{margin-top:12px!important;padding:11px 14px!important;background:#fff!important;border:1px solid #d9e3ea!important;border-radius:12px!important;color:#5f7080!important}
+.paginator a{color:#087f83!important;font-weight:800!important}
+#changelist .object-tools{margin-bottom:12px!important}
+#changelist .object-tools a{padding:10px 15px!important;font-size:11px!important;font-weight:900!important;letter-spacing:.02em!important}
+#changelist .object-tools a.addlink{background:linear-gradient(135deg,#16b66d,#078f54)!important}
+#changelist .object-tools a.addlink:before{content:"＋ ";font-weight:900}
+#changelist-search{margin:0!important}
+@media(max-width:800px){
+  #content{padding:18px 14px!important}
+  #changelist .actions{overflow:auto}
+  #result_list{min-width:760px}
+  #changelist{overflow-x:auto}
+  #changelist-filter{margin-top:12px!important}
+}
 </style>
 {% endblock %}
 {% block extrahead %}{{ block.super }}
