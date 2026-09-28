@@ -4,223 +4,118 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-    :root { --shopiva-blue:#2563eb; --shopiva-dark:#111827; --shopiva-bg:#f4f7fb; --shopiva-card:#fff; --shopiva-muted:#64748b; --shopiva-border:#e2e8f0; --shopiva-green:#16a34a; --shopiva-orange:#ea580c; --shopiva-red:#dc2626; }
-
-    /* Shopiva premium admin visual refresh */
-    html, body { background:#07111f !important; }
-    body { color:#e5edf8; }
-    #header { background:linear-gradient(135deg,#071426 0%,#0b3f4a 55%,#087f83 100%) !important; border-bottom:1px solid rgba(255,255,255,.12); box-shadow:0 10px 35px rgba(0,0,0,.22); }
-    #branding h1, #branding h1 a { color:#fff !important; font-weight:900; letter-spacing:.02em; }
-    #user-tools, #user-tools a { color:#d9f7f5 !important; }
-    #content { max-width:1540px; padding:22px 26px 50px; }
-    #content-main { width:100%; }
-    .shopiva-shell { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    /* Classic admin workspace finish */
-    body { background:linear-gradient(135deg,#07111f 0%,#0b1f2a 48%,#12383d 100%) !important; background-attachment:fixed !important; }
-    #main { background:transparent !important; }
-    #content { background:transparent !important; }
-    .layout { gap:24px; }
-    .panel { background:linear-gradient(180deg,#f8fafc 0%,#eef3f7 100%); border:1px solid rgba(203,213,225,.85); color:#1f2937; box-shadow:0 18px 40px rgba(0,0,0,.20); }
-    .panel h2 { color:#172033; letter-spacing:-.01em; }
-    .panel-sub { color:#66758a; }
-    .panel-head { padding-bottom:12px; border-bottom:1px solid #d9e1e8; }
-    .shop-table { border:1px solid #cbd5df; border-radius:10px; overflow:hidden; background:#fff; }
-    .shop-table thead { background:linear-gradient(180deg,#334155,#263446); }
-    .shop-table th { padding:13px 12px; color:#e7edf4; font-size:11px; font-weight:800; letter-spacing:.08em; border-bottom:2px solid #1f2937; }
-    .shop-table td { padding:13px 12px; color:#263445; background:#fff; border-bottom:1px solid #dce3e9; font-size:13px; vertical-align:middle; }
-    .shop-table tbody tr:nth-child(even) td { background:#f5f7f9; }
-    .shop-table tbody tr:hover td { background:#eaf4f6; }
-    .shop-table tbody tr:last-child td { border-bottom:0; }
-    .shop-table td:first-child { font-weight:800; color:#334155; }
-    .shop-table a { color:#087f83; font-weight:750; }
-    .status { padding:6px 10px; border:1px solid #cbd5e1; background:#eef2f7; color:#334155; font-size:11px; font-weight:800; }
-    .table-wrap { border-radius:10px; }
-    .quick { background:#f7f9fb; border:1px solid #d7e0e8; color:#263445 !important; }
-    .quick span { color:#66758a; }
-        .live-delivery-stats>div,.live-rider { background:#f7f9fb; border-color:#d7e0e8; color:#263445; }
-    .notice { background:#fff8e8; border-color:#f1d49b; color:#7a5a18; }
-    .layout > main > .panel:nth-of-type(2) { border-top:4px solid #087f83; }
-    .layout > main > .panel:nth-of-type(3) { border-top:4px solid #64748b; }
-    @media(max-width:650px){ .shop-table th,.shop-table td { padding:10px 8px; } }
-    .shopiva-hero { position:relative; overflow:hidden; margin:0 0 22px; padding:32px 34px; min-height:245px; border:1px solid rgba(255,255,255,.13); border-radius:26px; background:radial-gradient(circle at 72% 20%,rgba(34,211,238,.20),transparent 28%),radial-gradient(circle at 92% 90%,rgba(250,204,21,.16),transparent 28%),linear-gradient(135deg,#091426,#0b2038 52%,#073b48); color:#fff; box-shadow:0 22px 60px rgba(0,0,0,.30); display:flex; justify-content:space-between; align-items:center; gap:30px; }
-    .shopiva-hero:before { content:""; position:absolute; width:360px; height:360px; right:210px; top:-190px; border:1px solid rgba(34,211,238,.18); border-radius:50%; box-shadow:0 0 0 22px rgba(34,211,238,.035),0 0 0 48px rgba(34,211,238,.025); pointer-events:none; }
-    .hero-copy { position:relative; z-index:1; max-width:720px; }
-    .hero-kicker { color:#facc15; font-size:11px; font-weight:950; letter-spacing:.20em; text-transform:uppercase; margin-bottom:10px; }
-    .shopiva-hero h1 { margin:0 0 9px; font-size:clamp(30px,4vw,48px); line-height:1.02; color:#fff; letter-spacing:-.035em; }
-    .shopiva-hero h1 span { color:#22d3ee; }
-    .shopiva-hero p { margin:0; color:#b9c9da; font-size:14px; max-width:650px; line-height:1.65; }
-    .hero-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:20px; }
-    .hero-action { display:inline-flex; align-items:center; gap:7px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.07); color:#fff !important; text-decoration:none !important; font-size:12px; font-weight:850; }
-    .hero-action.primary { background:linear-gradient(135deg,#facc15,#f59e0b); color:#111827 !important; border-color:transparent; }
-    .hero-action:hover { transform:translateY(-1px); background:rgba(255,255,255,.12); }
-    .hero-status { margin-top:15px; color:#9fb2c8; font-size:11px; }
-    .hero-status i { display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 12px #22c55e; margin-right:6px; }
-    .hero-console { position:relative; z-index:1; width:min(420px,38%); display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .hero-console-card { min-height:90px; padding:16px; border:1px solid rgba(255,255,255,.13); border-radius:18px; background:rgba(255,255,255,.065); }
-    .hero-console-card small { display:block; color:#91a6bb; font-size:10px; text-transform:uppercase; letter-spacing:.08em; font-weight:850; }
-    .hero-console-card strong { display:block; margin-top:7px; color:#fff; font-size:23px; }
-    .hero-console-card strong.gold { color:#facc15; }
-    .hero-console-card strong.cyan { color:#67e8f9; }
-    .stats { gap:13px; }
-    .stat { position:relative; overflow:hidden; background:linear-gradient(145deg,#101c2d,#0d1725); border:1px solid rgba(255,255,255,.10); border-radius:17px; padding:17px; box-shadow:0 12px 30px rgba(0,0,0,.18); }
-    .stat:after { content:""; position:absolute; right:-22px; top:-25px; width:70px; height:70px; border-radius:50%; background:rgba(34,211,238,.08); }
-    .stat .label { color:#8ea2b8; }
-    .stat .value { color:#f8fbff; }
-    .panel { background:linear-gradient(145deg,#0e1a2a,#0b1624); border:1px solid rgba(255,255,255,.10); border-radius:19px; box-shadow:0 14px 35px rgba(0,0,0,.20); }
-    .panel h2 { color:#f4f8fc; }
-    .panel-sub { color:#91a4b8; }
-    .quick { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); color:#e9f1f8 !important; }
-    .quick span { color:#8da1b6; }
-    .quick:hover { border-color:rgba(34,211,238,.45); background:rgba(34,211,238,.08); }
-    .shop-table th { color:#8498ad; }
-    .shop-table td { border-bottom-color:rgba(255,255,255,.07); color:#dce6ef; }
-    .live-delivery-stats>div,.live-rider { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); }
-                .notice { background:rgba(250,204,21,.07); border-color:rgba(250,204,21,.20); color:#f5d879; }
-    @media(max-width:900px){ .shopiva-hero{align-items:flex-start;flex-direction:column}.hero-console{width:100%;max-width:620px} }
-    @media(max-width:650px){ #content{padding:12px 12px 30px}.shopiva-hero{padding:24px 20px}.hero-console{grid-template-columns:1fr 1fr}.shopiva-hero h1{font-size:32px} }
-
-    body { background:var(--shopiva-bg); }
-    #content { padding:0 24px 40px; max-width:1500px; margin:auto; }
-    .shopiva-shell { font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-    .shopiva-hero { margin:8px 0 22px; padding:26px 28px; border-radius:20px; background:linear-gradient(135deg,#111827,#1e3a8a); color:#fff; display:flex; justify-content:space-between; align-items:center; gap:20px; box-shadow:0 14px 35px rgba(15,23,42,.15); }
-    .shopiva-hero h1 { margin:0 0 6px; font-size:30px; color:#fff; }
-    .shopiva-hero p { margin:0; color:#dbeafe; font-size:14px; }
-    .shopiva-badge { padding:9px 13px; border:1px solid rgba(255,255,255,.2); background:rgba(255,255,255,.1); border-radius:999px; font-weight:700; white-space:nowrap; }
-    .stats { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:14px; margin-bottom:22px; }
-    .stat { background:var(--shopiva-card); border:1px solid var(--shopiva-border); border-radius:16px; padding:18px; box-shadow:0 4px 16px rgba(15,23,42,.05); }
-    .stat .icon { font-size:20px; }
-    .stat .label { margin-top:9px; color:var(--shopiva-muted); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-    .stat .value { margin-top:4px; font-size:25px; font-weight:850; color:var(--shopiva-dark); }
-    .layout { display:grid; grid-template-columns:minmax(0,1.55fr) minmax(320px,.75fr); gap:20px; align-items:start; }
-    .panel { background:var(--shopiva-card); border:1px solid var(--shopiva-border); border-radius:18px; padding:20px; box-shadow:0 4px 16px rgba(15,23,42,.05); margin-bottom:20px; }
-    .panel-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:15px; }
-    .panel h2 { margin:0; font-size:18px; color:var(--shopiva-dark); }
-    .panel-sub { color:var(--shopiva-muted); font-size:13px; }
-    .quick-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:11px; }
-    .quick { display:block; padding:15px; border:1px solid var(--shopiva-border); border-radius:13px; text-decoration:none !important; color:var(--shopiva-dark) !important; background:#f8fafc; transition:.15s ease; }
-    .quick:hover { transform:translateY(-2px); border-color:#bfdbfe; background:#eff6ff; }
-    .quick strong { display:block; font-size:14px; }
-    .quick span { display:block; margin-top:3px; color:var(--shopiva-muted); font-size:12px; }
-    .table-wrap { overflow:auto; }
-    .shop-table { width:100%; border-collapse:collapse; }
-    .shop-table th,.shop-table td { padding:12px 8px; border-bottom:1px solid #eef2f7; text-align:left; font-size:13px; }
-    .shop-table th { color:var(--shopiva-muted); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
-    .status { display:inline-flex; padding:5px 9px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-weight:700; font-size:11px; }
-    .stock-danger { color:var(--shopiva-red); font-weight:800; }
-    .stock-ok { color:var(--shopiva-green); font-weight:800; }
-    .notice { padding:12px 14px; border-radius:12px; background:#fff7ed; border:1px solid #fed7aa; color:#9a3412; font-size:13px; }
-    .delivery-link { margin-top:12px; display:block; text-decoration:none !important; }
-    @media(max-width:1200px){ .stats{grid-template-columns:repeat(3,1fr)} .layout{grid-template-columns:1fr} }
-    @media(max-width:650px){ #content{padding:0 12px 30px}.shopiva-hero{padding:20px;align-items:flex-start;flex-direction:column}.stats{grid-template-columns:repeat(2,1fr)}.quick-grid{grid-template-columns:1fr}.ai-form{flex-direction:column} }
-.live-delivery-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:11px}.live-delivery-stats>div{padding:11px;border:1px solid var(--shopiva-border);border-radius:12px;background:#f8fafc}.live-delivery-stats small{display:block;color:var(--shopiva-muted);font-size:10px;text-transform:uppercase;font-weight:800}.live-delivery-stats strong{display:block;margin-top:3px;font-size:21px}.live-delivery-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.live-rider{padding:10px;border:1px solid var(--shopiva-border);border-radius:12px;background:#fff}.live-rider-head{display:flex;justify-content:space-between;gap:8px}.live-rider strong{font-size:12px}.live-rider small{display:block;color:var(--shopiva-muted);font-size:10px;line-height:1.45;margin-top:4px}.live-badge{display:inline-flex;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900}.live-badge.on{background:#e8f8ef;color:#087448}.live-badge.off{background:#fff1f1;color:#b4232f}@media(max-width:900px){.live-delivery-stats{grid-template-columns:repeat(2,1fr)}.live-delivery-list{grid-template-columns:1fr}}@media(max-width:650px){.live-delivery-stats{grid-template-columns:1fr 1fr}}
-    /* Final contrast pass: keep classic table text clearly visible */
-    .shop-table td,
-    .shop-table td:first-child { color:#263445 !important; background:#ffffff !important; }
-    .shop-table tbody tr:nth-child(even) td { color:#263445 !important; background:#f3f6f8 !important; }
-    .shop-table tbody tr:hover td { color:#172033 !important; background:#e5f2f4 !important; }
-    .shop-table th { color:#f1f5f9 !important; background:linear-gradient(180deg,#334155,#263446) !important; }
-    .shop-table td a { color:#087f83 !important; }
-    .status { color:#1e40af !important; background:#eef5ff !important; border-color:#bfd3ea !important; }
+  :root{--bg:#07111f;--card:#0f1d2d;--card2:#132438;--text:#edf5fb;--muted:#91a5ba;--border:rgba(255,255,255,.10);--accent:#22d3ee;--green:#22c55e;--gold:#facc15}
+  body{background:linear-gradient(135deg,#07111f,#0b1f2a 55%,#12383d)!important;color:var(--text)}
+  #content{max-width:1500px;margin:auto;padding:18px 24px 44px;background:transparent}
+  #content-main{width:100%}
+  .shopiva-shell{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .hero{padding:28px;border:1px solid var(--border);border-radius:22px;background:linear-gradient(135deg,#0b1728,#0b3040 60%,#087f83);box-shadow:0 18px 45px rgba(0,0,0,.25);margin-bottom:20px}
+  .eyebrow{color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.18em}
+  .hero h1{margin:8px 0 7px;color:#fff;font-size:34px;letter-spacing:-.03em}
+  .hero p{margin:0;color:#bfd0df;max-width:800px;line-height:1.6;font-size:14px}
+  .actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+  .actions a,.quick a{display:inline-flex;align-items:center;gap:7px;text-decoration:none!important}
+  .actions a{padding:10px 13px;border-radius:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff!important;font-weight:800;font-size:12px}
+  .actions a.primary{background:linear-gradient(135deg,#facc15,#f59e0b);color:#111827!important;border-color:transparent}
+  .stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:20px}
+  .stat{padding:16px;border:1px solid var(--border);border-radius:15px;background:linear-gradient(145deg,#101d2e,#0c1725);box-shadow:0 10px 24px rgba(0,0,0,.15)}
+  .stat small{display:block;color:var(--muted);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+  .stat strong{display:block;margin-top:7px;color:#fff;font-size:24px}
+  .layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.75fr);gap:18px}
+  .panel{padding:19px;border:1px solid var(--border);border-radius:17px;background:linear-gradient(145deg,#0e1a2a,#0b1624);box-shadow:0 12px 30px rgba(0,0,0,.16);margin-bottom:18px}
+  .head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+  .head h2{margin:0;color:#f4f8fc;font-size:17px}
+  .sub{color:var(--muted);font-size:12px;margin-top:3px}
+  .head>a{color:#67e8f9;text-decoration:none;font-size:12px;font-weight:800}
+  .quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .quick a{display:block;padding:14px;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.035);color:#e9f1f8!important}
+  .quick a:hover{border-color:rgba(34,211,238,.45);background:rgba(34,211,238,.07)}
+  .quick b{display:block;font-size:13px}
+  .quick span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}
+  table{width:100%;border-collapse:collapse;background:#fff}
+  th{padding:11px;text-align:left;background:#263446;color:#f1f5f9;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+  td{padding:11px;color:#263445;background:#fff;border-top:1px solid #e2e8f0;font-size:12px}
+  tr:nth-child(even) td{background:#f4f7f9}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef5ff;color:#1e40af;font-weight:800;font-size:10px}
+  .low{color:#dc2626;font-weight:900}
+  .empty{padding:13px;border:1px solid rgba(250,204,21,.2);border-radius:11px;background:rgba(250,204,21,.06);color:#f5d879;font-size:12px}
+  @media(max-width:1200px){.stats{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}}
+  @media(max-width:650px){#content{padding:10px 12px 28px}.hero{padding:22px}.hero h1{font-size:28px}.stats{grid-template-columns:repeat(2,1fr)}.quick{grid-template-columns:1fr}}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="shopiva-shell">
-    <section class="shopiva-hero">
-        <div class="hero-copy">
-            <div class="hero-kicker">ADMIN OPERATIONS</div>
-            <h1><span>Shopiva</span> Admin Control Center</h1>
-            <p>Your protected operations workspace for marketplace orders, inventory, sellers, delivery staff, approvals, payments and live Shopiva activity.</p>
-            <div class="hero-actions">
-                <a class="hero-action primary" href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approval Center</a>
-                <a class="hero-action" href="{% url 'shopiva_admin:delivery_map' %}">🧭 Delivery Command</a>
-                <a class="hero-action" href="{% url 'admin_notifications' %}">🔔 Notifications</a>
-            </div>
-            <div class="hero-status"><i></i> Shopiva operations online · M-PESA checkout live · Admin boundary protected</div>
-        </div>
-        <div class="hero-console" aria-label="Admin overview">
-            <div class="hero-console-card"><small>Today's orders</small><strong class="cyan">{{ shopiva_stats.today_orders }}</strong></div>
-            <div class="hero-console-card"><small>Total orders</small><strong>{{ shopiva_stats.orders }}</strong></div>
-            <div class="hero-console-card"><small>Revenue</small><strong class="gold">KSh {{ shopiva_stats.revenue|floatformat:0 }}</strong></div>
-            <div class="hero-console-card"><small>Low stock</small><strong>{{ shopiva_stats.low_stock }}</strong></div>
-        </div>
-    </section>
-
-    <section class="stats">
-        <div class="stat"><div class="icon">🛍️</div><div class="label">Products</div><div class="value">{{ shopiva_stats.products }}</div></div>
-        <div class="stat"><div class="icon">📦</div><div class="label">Orders</div><div class="value">{{ shopiva_stats.orders }}</div></div>
-        <div class="stat"><div class="icon">⏳</div><div class="label">Pending</div><div class="value">{{ shopiva_stats.pending_orders }}</div></div>
-        <div class="stat"><div class="icon">💰</div><div class="label">Revenue</div><div class="value">KSh {{ shopiva_stats.revenue|floatformat:0 }}</div></div>
-        <div class="stat"><div class="icon">⚠️</div><div class="label">Low Stock</div><div class="value">{{ shopiva_stats.low_stock }}</div></div>
-        <div class="stat"><div class="icon">📈</div><div class="label">Today's Orders</div><div class="value">{{ shopiva_stats.today_orders }}</div></div>
-    </section>
-
-
-    <div class="layout">
-        <main>
-            <section class="panel">
-                <div class="panel-head"><div><h2>⚡ Quick Actions</h2><div class="panel-sub">Common admin tasks, one click away.</div></div></div>
-                <div class="quick-grid">
-                    <a class="quick" href="{% url 'shopiva_admin:home_product_add' %}"><strong>➕ Add Product</strong><span>Create a new marketplace listing.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:home_product_changelist' %}"><strong>🛍️ Manage Products</strong><span>Prices, stock, discounts and visibility.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:home_order_changelist' %}"><strong>📦 Manage Orders</strong><span>Review and update order status.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:home_orderitem_changelist' %}"><strong>🧾 Order Items</strong><span>Inspect items attached to orders.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:auth_user_changelist' %}"><strong>👥 Users</strong><span>Manage staff and customer accounts.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:auth_group_changelist' %}"><strong>🔐 Permissions</strong><span>Organize admin access with groups.</span></a>
-                    <a class="quick delivery-link" href="{% url 'shopiva_admin:delivery_map' %}"><strong>🧭 Delivery Command Map</strong><span>View Shopiva's Kenya delivery network.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:approval_center' %}"><strong>🛡️ Operations & Approval Center</strong><span>Delivery approvals, raised issues, system issues and reports.</span></a>
-                    <a class="quick" href="{% url 'admin_notifications' %}"><strong>🔔 Admin Notification Center</strong><span>Read and manage Shopiva staff notifications.</span></a>
-                    <a class="quick support-center-link" href="{% url 'shopiva_admin:support_center' %}"><strong>🛟 Support Center</strong><span>Open the staff support workspace for customer, seller and system cases.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:support_center' %}?source=system"><strong>⚙️ System Issues</strong><span>Open automatically raised payment and order support cases.</span></a>
-                </div>
-            </section>
-
-            <section class="panel live-delivery-panel">
-                <div class="panel-head"><div><h2>📡 Live Delivery Network</h2><div class="panel-sub">Protected rider telemetry from the Delivery app · refreshes every 5 seconds.</div></div><a href="{% url 'shopiva_admin:delivery_map' %}">Open command center →</a></div>
-                <div class="live-delivery-stats">
-                    <div><small>Active riders</small><strong id="live-riders">—</strong></div>
-                    <div><small>On delivery</small><strong id="live-deliveries">—</strong></div>
-                    <div><small>Live GPS</small><strong id="live-gps">—</strong></div>
-                    <div><small>Stale GPS</small><strong id="live-stale">—</strong></div>
-                </div>
-                <div id="live-delivery-list" class="live-delivery-list"><div class="notice">Connecting to the protected delivery feed…</div></div>
-            </section>
-
-            <section class="panel">
-                <div class="panel-head"><div><h2>📦 Recent Orders</h2><div class="panel-sub">Latest customer activity.</div></div><a href="{% url 'shopiva_admin:home_order_changelist' %}">View all</a></div>
-                {% if recent_orders %}
-                <div class="table-wrap"><table class="shop-table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>
-                {% for order in recent_orders %}<tr><td>#{{ order.id }}</td><td>{{ order.customer_name }}</td><td>KSh {{ order.total_amount|floatformat:2 }}</td><td><span class="status">{{ order.get_status_display }}</span></td><td>{{ order.created_at|date:"M d, H:i" }}</td></tr>{% endfor %}
-                </tbody></table></div>
-                {% else %}<div class="notice">No orders yet. Orders will appear here automatically when customers complete checkout.</div>{% endif %}
-            </section>
-
-            <section class="panel">
-                <div class="panel-head"><div><h2>⚠️ Inventory Watch</h2><div class="panel-sub">Active products with 5 units or fewer.</div></div><a href="{% url 'shopiva_admin:home_product_changelist' %}">Manage stock</a></div>
-                {% if low_stock_products %}
-                <div class="table-wrap"><table class="shop-table"><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Action</th></tr></thead><tbody>
-                {% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category }}</td><td class="stock-danger">{{ product.stock_quantity }}</td><td><a href="{% url 'shopiva_admin:home_product_change' product.id %}">Edit</a></td></tr>{% endfor %}
-                </tbody></table></div>
-                {% else %}<div class="notice">Inventory is clear right now. Shopiva will continue monitoring inventory through the admin operations system.</div>{% endif %}
-            </section>
-        </main>
-
-        <aside>
-            <section class="panel">
-                <div class="panel-head"><div><h2>🧭 Admin Navigation</h2><div class="panel-sub">Safe paths into the management system.</div></div></div>
-                <div class="quick-grid">
-                    <a class="quick" href="{% url 'shopiva_admin:home_product_changelist' %}"><strong>🛍️ Catalog</strong><span>Products & inventory</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:home_order_changelist' %}"><strong>📦 Orders</strong><span>Fulfilment workflow</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:auth_user_changelist' %}"><strong>👥 Accounts</strong><span>Users & staff</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:delivery_map' %}"><strong>🧭 Delivery Map</strong><span>Kenya delivery network</span></a>
-                    <a class="quick" href="/">🏪 <strong>Open Market</strong><span>Return to Shopiva storefront</span></a>
-                </div>
-            </section>
-        </aside>
+  <section class="hero">
+    <div class="eyebrow">ADMIN OPERATIONS</div>
+    <h1>Shopiva Admin Control Center</h1>
+    <p>Protected workspace for marketplace orders, products, sellers, delivery operations, approvals, payments, notifications and support.</p>
+    <div class="actions">
+      <a class="primary" href="/admin/approval-center/">🛡️ Approval Center</a>
+      <a href="/admin/delivery-map/">🧭 Delivery Command</a>
+      <a href="/admin/notifications/">🔔 Notifications</a>
+      <a href="/admin/support-center/">🛟 Support Center</a>
     </div>
-</div>
+  </section>
 
-<script>
-</script><script>
-</script>
+  <section class="stats">
+    <div class="stat"><small>Products</small><strong>{{ shopiva_stats.products }}</strong></div>
+    <div class="stat"><small>Orders</small><strong>{{ shopiva_stats.orders }}</strong></div>
+    <div class="stat"><small>Pending Orders</small><strong>{{ shopiva_stats.pending_orders }}</strong></div>
+    <div class="stat"><small>Revenue</small><strong>KSh {{ shopiva_stats.revenue|floatformat:0 }}</strong></div>
+    <div class="stat"><small>Low Stock</small><strong>{{ shopiva_stats.low_stock }}</strong></div>
+    <div class="stat"><small>Today's Orders</small><strong>{{ shopiva_stats.today_orders }}</strong></div>
+  </section>
+
+  <div class="layout">
+    <main>
+      <section class="panel">
+        <div class="head"><div><h2>⚡ Quick Actions</h2><div class="sub">Stable direct paths into the management system.</div></div></div>
+        <div class="quick">
+          <a href="/admin/home/product/add/"><b>➕ Add Product</b><span>Create a marketplace listing.</span></a>
+          <a href="/admin/home/product/"><b>🛍️ Manage Products</b><span>Stock, pricing and visibility.</span></a>
+          <a href="/admin/home/order/"><b>📦 Manage Orders</b><span>Review fulfilment and payment status.</span></a>
+          <a href="/admin/auth/user/"><b>👥 Users</b><span>Manage customer and staff accounts.</span></a>
+          <a href="/admin/approval-center/"><b>🛡️ Operations & Approvals</b><span>Staff approvals and operational issues.</span></a>
+          <a href="/admin/notifications/"><b>🔔 Notifications</b><span>Review Shopiva staff alerts.</span></a>
+          <a href="/admin/support-center/"><b>🛟 Support Center</b><span>Customer, seller and system cases.</span></a>
+          <a href="/admin/support-center/?source=system"><b>⚙️ System Issues</b><span>Automatic order and payment assistance cases.</span></a>
+          <a href="/admin/delivery-map/"><b>🧭 Delivery Command</b><span>Delivery staff and live network tools.</span></a>
+          <a href="/admin/business-intelligence/"><b>📊 Business Intelligence</b><span>Commercial and marketplace reporting.</span></a>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="head"><div><h2>📦 Recent Orders</h2><div class="sub">Latest recorded customer activity.</div></div><a href="/admin/home/order/">View all →</a></div>
+        {% if recent_orders %}
+        <div class="table-wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead><tbody>
+        {% for order in recent_orders %}<tr><td>#{{ order.id }}</td><td>{{ order.customer_name }}</td><td>KSh {{ order.total_amount|floatformat:2 }}</td><td><span class="pill">{{ order.get_status_display }}</span></td><td>{{ order.created_at|date:"M d, H:i" }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<div class="empty">No orders have been recorded yet.</div>{% endif %}
+      </section>
+    </main>
+
+    <aside>
+      <section class="panel">
+        <div class="head"><div><h2>⚠️ Inventory Watch</h2><div class="sub">Active products at 5 units or fewer.</div></div><a href="/admin/home/product/">Manage →</a></div>
+        {% if low_stock_products %}
+        <div class="table-wrap"><table><thead><tr><th>Product</th><th>Stock</th></tr></thead><tbody>
+        {% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td class="low">{{ product.stock_quantity }}</td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<div class="empty">Inventory is clear right now.</div>{% endif %}
+      </section>
+
+      <section class="panel">
+        <div class="head"><div><h2>🧭 Admin Navigation</h2><div class="sub">Core operational workspaces.</div></div></div>
+        <div class="quick">
+          <a href="/admin/home/product/"><b>🛍️ Catalog</b><span>Products & inventory</span></a>
+          <a href="/admin/home/order/"><b>📦 Orders</b><span>Fulfilment workflow</span></a>
+          <a href="/admin/auth/user/"><b>👥 Accounts</b><span>Users & staff</span></a>
+          <a href="/admin/delivery-map/"><b>🧭 Delivery</b><span>Kenya delivery network</span></a>
+        </div>
+      </section>
+    </aside>
+  </div>
+</div>
 {% endblock %}
