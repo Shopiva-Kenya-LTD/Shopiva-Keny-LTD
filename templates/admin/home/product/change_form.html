@@ -1,0 +1,180 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+/* Shopiva Product Admin — premium Add/Edit Product form */
+:root{
+  --shopiva-navy:#071827;
+  --shopiva-teal:#087f83;
+  --shopiva-green:#16b66d;
+  --shopiva-ink:#172033;
+  --shopiva-muted:#68798b;
+  --shopiva-line:#d7e2e8;
+}
+#content{
+  background:linear-gradient(135deg,#071827 0%,#0d3442 38%,#eef4f6 38%,#f7fafb 100%)!important;
+  padding:28px 32px 50px!important;
+  min-height:calc(100vh - 110px);
+}
+#content-main{
+  max-width:1180px!important;
+  margin:0 auto!important;
+}
+#content h1{
+  color:#fff!important;
+  font-size:30px!important;
+  font-weight:950!important;
+  letter-spacing:-.035em!important;
+  margin:0 0 22px!important;
+}
+form#product_form, form#product_form *{box-sizing:border-box}
+.module.aligned{
+  background:rgba(255,255,255,.98)!important;
+  border:1px solid rgba(203,216,225,.9)!important;
+  border-radius:22px!important;
+  box-shadow:0 24px 60px rgba(4,30,44,.20)!important;
+  overflow:hidden!important;
+  margin-bottom:18px!important;
+}
+.module.aligned h2{
+  background:linear-gradient(135deg,#0a2638,#0b5961)!important;
+  color:#fff!important;
+  border:0!important;
+  padding:18px 24px!important;
+  font-size:14px!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+.form-row{
+  padding:16px 24px!important;
+  border-bottom:1px solid #edf1f3!important;
+  background:#fff!important;
+}
+.form-row:last-child{border-bottom:0!important}
+.form-row label{
+  color:#33475a!important;
+  font-weight:850!important;
+  font-size:12px!important;
+}
+.form-row input[type=text],
+.form-row input[type=number],
+.form-row input[type=email],
+.form-row input[type=url],
+.form-row input[type=password],
+.form-row select,
+.form-row textarea{
+  width:100%!important;
+  max-width:760px!important;
+  padding:12px 13px!important;
+  min-height:43px!important;
+  border:1px solid var(--shopiva-line)!important;
+  border-radius:11px!important;
+  background:#fbfdfe!important;
+  color:var(--shopiva-ink)!important;
+  box-shadow:none!important;
+  font-size:13px!important;
+}
+.form-row textarea{min-height:125px!important;resize:vertical!important}
+.form-row input[type=file]{
+  width:100%!important;
+  max-width:760px!important;
+  padding:9px!important;
+  border:1px solid var(--shopiva-line)!important;
+  border-radius:11px!important;
+  background:#f7fafb!important;
+  color:var(--shopiva-ink)!important;
+}
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus{
+  border-color:var(--shopiva-teal)!important;
+  outline:none!important;
+  box-shadow:0 0 0 3px rgba(8,127,131,.11)!important;
+  background:#fff!important;
+}
+.form-row input[type=checkbox]{
+  width:19px!important;
+  height:19px!important;
+  accent-color:var(--shopiva-teal)!important;
+}
+.help,.helptext{color:var(--shopiva-muted)!important;font-size:11px!important}
+.errors,.errorlist{color:#b91c1c!important;font-size:12px!important}
+.submit-row{
+  background:transparent!important;
+  border:0!important;
+  padding:4px 0 0!important;
+}
+.submit-row input,
+.submit-row a.deletelink{
+  border-radius:11px!important;
+  padding:12px 20px!important;
+  font-weight:900!important;
+  border:0!important;
+}
+.submit-row input[name="_save"],
+.submit-row input[name="_continue"],
+.submit-row input[name="_addanother"]{
+  background:linear-gradient(135deg,#16b66d,#078f54)!important;
+  color:#fff!important;
+  box-shadow:0 9px 20px rgba(8,143,84,.18)!important;
+}
+.submit-row a.deletelink{
+  background:#fff1f2!important;
+  color:#b91c1c!important;
+  border:1px solid #fecdd3!important;
+}
+.shopiva-form-section{
+  margin:0!important;
+  padding:18px 24px 7px!important;
+  background:#f7fafb!important;
+  border-top:1px solid #e3e9ed!important;
+  color:#25384b!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  letter-spacing:.03em!important;
+}
+.shopiva-form-section:before{
+  content:"";
+  display:inline-block;
+  width:4px;height:17px;border-radius:4px;
+  background:linear-gradient(#087f83,#16b66d);
+  vertical-align:-4px;
+  margin-right:9px;
+}
+@media(max-width:800px){
+  #content{padding:18px 12px 35px!important}
+  #content h1{font-size:24px!important}
+  .form-row{padding:14px 16px!important}
+  .module.aligned h2{padding:15px 16px!important}
+  .shopiva-form-section{padding:15px 16px 6px!important}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+{{ block.super }}
+<script>
+(function(){
+  function sectionBefore(fieldId, title){
+    const field=document.getElementById(fieldId);
+    if(!field) return;
+    const row=field.closest('.form-row');
+    if(!row || row.previousElementSibling?.classList.contains('shopiva-form-section')) return;
+    const heading=document.createElement('div');
+    heading.className='shopiva-form-section';
+    heading.textContent=title;
+    row.parentNode.insertBefore(heading,row);
+  }
+  function organize(){
+    sectionBefore('id_name','Product information');
+    sectionBefore('id_price','Pricing & inventory');
+    sectionBefore('id_seller','Seller & category');
+    sectionBefore('id_package_class','Shipping & fulfillment');
+    sectionBefore('id_is_featured','Visibility & promotion');
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',organize);
+  else organize();
+})();
+</script>
+{% endblock %}
