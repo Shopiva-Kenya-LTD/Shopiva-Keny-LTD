@@ -1,0 +1,90 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_urls %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.delete-page{max-width:1200px;margin:0 auto;padding:8px 0 90px}
+.delete-hero{display:flex;justify-content:space-between;gap:24px;align-items:center;background:linear-gradient(135deg,#fff5f6,#fff);border:1px solid #fecdd3;border-radius:20px;padding:24px;box-shadow:0 12px 30px rgba(15,23,42,.08)}
+.delete-icon{width:64px;height:64px;border-radius:17px;display:grid;place-items:center;background:#ef233c;color:#fff;font-size:30px;box-shadow:0 10px 24px rgba(239,35,60,.24);flex:0 0 auto}
+.delete-hero-main{display:flex;align-items:center;gap:17px;min-width:0}
+.delete-hero h1{margin:0 0 7px;color:#172033;font-size:28px;letter-spacing:-.03em}
+.delete-hero p{margin:0;color:#5f7183;font-size:13px;line-height:1.6}
+.delete-warning{padding:13px 16px;border:1px solid #fecdd3;border-radius:12px;background:#fff1f2;color:#9f1239;font-size:12px;font-weight:800;min-width:230px}
+.delete-card{margin-top:18px;background:#fff;border:1px solid #dce6eb;border-radius:18px;padding:22px;box-shadow:0 10px 28px rgba(15,23,42,.06)}
+.delete-card h2{margin:0 0 17px;color:#172033;font-size:17px}
+.delete-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.delete-stat{padding:17px;border-radius:13px;border:1px solid #e2eaf0;background:#f7fafc}
+.delete-stat strong{display:block;font-size:24px;color:#0b5961;margin-bottom:3px}
+.delete-stat span{font-size:11px;color:#637588;font-weight:800}
+.delete-list{margin-top:22px}
+.delete-object-list{margin:0;padding:0;list-style:none}
+.delete-object-list ul{margin:7px 0 7px 20px;padding-left:18px;color:#637588}
+.delete-object-list li{margin:5px 0;font-size:12px}
+.delete-object-list>li{padding:13px 15px;border:1px solid #e1e9ee;border-radius:12px;background:#fbfdfe;color:#172033;font-weight:800}
+.delete-object-list a{color:#087f83}
+.delete-actions{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:13px max(24px,calc((100vw - 1200px)/2));background:rgba(255,255,255,.96);border-top:1px solid #fecdd3;box-shadow:0 -10px 30px rgba(15,23,42,.12);backdrop-filter:blur(12px)}
+.delete-actions p{margin:0;color:#b91c1c;font-size:12px;font-weight:800}
+.delete-actions small{display:block;color:#6b7d8e;font-weight:500;margin-top:2px}
+.delete-buttons{display:flex;gap:9px}
+.delete-btn,.cancel-btn{border:0;border-radius:11px;padding:12px 18px;font:800 12px Inter,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.delete-btn{background:#ef233c;color:#fff;box-shadow:0 8px 18px rgba(239,35,60,.2)}
+.cancel-btn{background:#f1f5f7;color:#25384b;border:1px solid #d8e2e8}
+@media(max-width:800px){.delete-hero{align-items:flex-start;flex-direction:column}.delete-warning{width:100%}.delete-summary{grid-template-columns:repeat(2,1fr)}.delete-actions{padding:12px 14px;align-items:flex-start}.delete-actions p{display:none}.delete-buttons{width:100%}.delete-btn,.cancel-btn{flex:1}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-page">
+  <section class="delete-hero">
+    <div class="delete-hero-main">
+      <div class="delete-icon" aria-hidden="true">🗑</div>
+      <div>
+        <h1>{% trans "Delete Selected Objects" %}</h1>
+        <p>{% blocktrans %}You are about to permanently delete the selected {{ objects_name }} and all related objects shown below.{% endblocktrans %}</p>
+      </div>
+    </div>
+    <div class="delete-warning">⚠ This action is permanent<br><span style="font-weight:500">Selected data will be permanently deleted and cannot be recovered.</span></div>
+  </section>
+
+  <section class="delete-card">
+    <h2>Summary</h2>
+    <div class="delete-summary">
+      <div class="delete-stat"><strong>{{ queryset|length }}</strong><span>{{ objects_name|capfirst }} selected for deletion</span></div>
+      <div class="delete-stat"><strong>{{ model_count|length }}</strong><span>Related model types</span></div>
+      <div class="delete-stat"><strong>{{ deletable_objects|length }}</strong><span>Deletion groups</span></div>
+      <div class="delete-stat"><strong>!</strong><span>Permanent action</span></div>
+    </div>
+    <div class="delete-list">
+      <h2>Objects to be deleted</h2>
+      <ul class="delete-object-list">
+        {% for deletable_object in deletable_objects %}
+          {{ deletable_object|unordered_list }}
+        {% empty %}
+          <li>No deletable objects were found.</li>
+        {% endfor %}
+      </ul>
+      {% if perms_lacking %}
+        <p style="color:#b91c1c;font-size:12px;font-weight:800">You do not have permission to delete some of these objects.</p>
+      {% endif %}
+      {% if protected %}
+        <p style="color:#b91c1c;font-size:12px;font-weight:800">Some related objects are protected and cannot be deleted.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="post" value="yes">
+  <input type="hidden" name="action" value="delete_selected">
+  <input type="hidden" name="index" value="0">
+  {% for obj in queryset %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ obj.pk }}">{% endfor %}
+  <div class="delete-actions">
+    <p>You are about to permanently delete {{ queryset|length }} {{ objects_name }}.<small>This action cannot be undone.</small></p>
+    <div class="delete-buttons">
+      <a class="cancel-btn" href="{% url opts|admin_urlname:'changelist' %}">Cancel</a>
+      {% if not protected and not perms_lacking %}<button class="delete-btn" type="submit">🗑 Yes, Delete All Selected Objects</button>{% endif %}
+    </div>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_urls %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+.single-delete{max-width:980px;margin:0 auto;padding:8px 0 45px}
+.single-hero{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#fff5f6,#fff);border:1px solid #fecdd3;border-radius:20px;padding:24px;box-shadow:0 12px 30px rgba(15,23,42,.08)}
+.single-icon{width:64px;height:64px;border-radius:17px;display:grid;place-items:center;background:#ef233c;color:#fff;font-size:30px;box-shadow:0 10px 24px rgba(239,35,60,.24)}
+.single-hero h1{margin:0 0 7px;color:#172033;font-size:28px;letter-spacing:-.03em}
+.single-hero p{margin:0;color:#637588;font-size:13px;line-height:1.6}
+.single-card{margin-top:18px;background:#fff;border:1px solid #dce6eb;border-radius:18px;padding:24px;box-shadow:0 10px 28px rgba(15,23,42,.06)}
+.single-object{padding:16px;border:1px solid #e1e9ee;border-radius:13px;background:#f7fafc;color:#172033;font-size:14px;font-weight:850}
+.single-related{margin-top:18px}.single-related h2{font-size:15px;color:#172033}.single-related ul{color:#637588;font-size:12px;line-height:1.7}
+.single-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid #e5ebef}
+.single-btn{border-radius:11px;padding:12px 18px;font:900 12px Inter,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.single-cancel{background:#f1f5f7;color:#25384b;border:1px solid #d8e2e8}
+.single-danger{border:0;background:#ef233c;color:#fff;box-shadow:0 8px 18px rgba(239,35,60,.2)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="single-delete">
+  <section class="single-hero">
+    <div class="single-icon" aria-hidden="true">🗑</div>
+    <div>
+      <h1>{% trans "Delete" %} {{ object_name }}</h1>
+      <p>This action is permanent. The selected object and its related data will be removed and cannot be recovered.</p>
+    </div>
+  </section>
+  <section class="single-card">
+    <div class="single-object">{{ escaped_object }}</div>
+    {% if deleted_objects %}
+      <div class="single-related">
+        <h2>Related objects that will also be deleted</h2>
+        {{ deleted_objects|unordered_list }}
+      </div>
+    {% endif %}
+    {% if perms_lacking %}
+      <p style="color:#b91c1c;font-size:12px;font-weight:800">You do not have permission to delete some related objects.</p>
+    {% endif %}
+    {% if protected %}
+      <p style="color:#b91c1c;font-size:12px;font-weight:800">Some related objects are protected and cannot be deleted.</p>
+    {% endif %}
+    <form method="post">{% csrf_token %}
+      {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+      {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+      <div class="single-actions">
+        <a class="single-btn single-cancel" href="{% url opts|admin_urlname:'changelist' %}">Cancel</a>
+        {% if not protected and not perms_lacking %}<button class="single-btn single-danger" type="submit">🗑 Yes, Delete Permanently</button>{% endif %}
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
