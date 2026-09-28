@@ -180,6 +180,10 @@ def support_center(request):
             "is_empty": not tickets.exists(),
             "open_user_count": open_user_count,
             "system_count": system_count,
+            "customer_raised_count": customer_count,
+            "seller_raised_count": seller_count,
+            "system_raised_count": system_count,
+            "urgent_issues_count": urgent_count,
         },
     )
 
