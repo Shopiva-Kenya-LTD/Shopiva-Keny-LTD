@@ -197,7 +197,8 @@
                     <a class="quick delivery-link" href="{% url 'shopiva_admin:delivery_map' %}"><strong>🧭 Delivery Command Map</strong><span>View Shopiva's Kenya delivery network.</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:approval_center' %}"><strong>🛡️ Operations & Approval Center</strong><span>Delivery approvals, raised issues, system issues and reports.</span></a>
                     <a class="quick" href="{% url 'admin_notifications' %}"><strong>🔔 Admin Notification Center</strong><span>Read and manage Shopiva staff notifications.</span></a>
-                    <a class="quick" href="{% url 'support_admin_center' %}"><strong>🛟 Raised Issues & Support</strong><span>Customer and seller cases requiring attention.</span></a>
+                    <a class="quick support-center-link" href="{% url 'shopiva_admin:support_center' %}"><strong>🛟 Support Center</strong><span>Open the staff support workspace for customer, seller and system cases.</span></a>
+                    <a class="quick" href="{% url 'shopiva_admin:support_center' %}?source=system"><strong>⚙️ System Issues</strong><span>Open automatically raised payment and order support cases.</span></a>
                 </div>
             </section>
 
