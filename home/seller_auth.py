@@ -56,7 +56,13 @@ def seller_login(request):
 
 
 def seller_logout(request):
+    was_admin = bool(
+        request.user.is_authenticated
+        and (request.user.is_staff or request.user.is_superuser)
+    )
     auth_logout(request)
+    if was_admin:
+        return redirect("admin_login")
     messages.success(request, "You have been signed out of the seller portal.")
     return redirect("seller_login")
 
