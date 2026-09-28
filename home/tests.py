@@ -3,7 +3,6 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.http import HttpResponseRedirect
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -340,6 +339,427 @@ class MpesaCallbackSafetyTests(TestCase):
         self.assertEqual(payment.status, "pending")
         self.assertEqual(order.payment_status, "pending")
 
+
+
+
+class DeliveryRegistrationTests(TestCase):
+    def test_delivery_signup_creates_pending_agent_and_credentials(self):
+        response = self.client.post(
+            reverse("delivery_signup"),
+            {
+                "username": "new_rider",
+                "email": "new-rider@example.com",
+                "first_name": "New",
+                "last_name": "Rider",
+                "phone": "0712345678",
+                "vehicle_type": "Motorbike",
+                "vehicle_number": "KDA123A",
+                "password1": "StrongPass123!",
+                "password2": "StrongPass123!",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "delivery/signup_success.html")
+        user = User.objects.get(username="new_rider")
+        agent = DeliveryAgent.objects.get(user=user)
+        self.assertTrue(user.check_password("StrongPass123!"))
+        self.assertTrue(user.is_active)
+        self.assertFalse(agent.is_active)
+        self.assertEqual(agent.phone, "254712345678")
+        self.assertEqual(agent.vehicle_type, "Motorbike")
+        self.assertEqual(agent.vehicle_number, "KDA123A")
+
+    def test_delivery_signup_rejects_duplicate_email(self):
+        User.objects.create_user(
+            username="existing_rider",
+            email="existing@example.com",
+            password="StrongPass123!",
+        )
+        form = DeliveryRegistrationForm(
+            data={
+                "username": "another_rider",
+                "email": "EXISTING@example.com",
+                "first_name": "Another",
+                "last_name": "Rider",
+                "phone": "0723456789",
+                "vehicle_type": "Bicycle",
+                "vehicle_number": "",
+                "password1": "StrongPass123!",
+                "password2": "StrongPass123!",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("already registered", str(form.errors["email"]))
+
+    def test_delivery_signup_normalizes_and_rejects_duplicate_phone(self):
+        User.objects.create_user(
+            username="phone_rider",
+            email="phone-rider@example.com",
+            password="StrongPass123!",
+        )
+        DeliveryAgent.objects.create(user=User.objects.get(username="phone_rider"), phone="254700000123")
+        form = DeliveryRegistrationForm(
+            data={
+                "username": "phone_rider_two",
+                "email": "phone-rider-two@example.com",
+                "first_name": "Phone",
+                "last_name": "Rider",
+                "phone": "+254700000123",
+                "vehicle_type": "Car",
+                "vehicle_number": "KDB000A",
+                "password1": "StrongPass123!",
+                "password2": "StrongPass123!",
+            }
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("already linked", str(form.errors["phone"]))
+
+    def test_pending_delivery_login_is_not_authorized(self):
+        user = User.objects.create_user(
+            username="pending_rider",
+            email="pending-rider@example.com",
+            password="StrongPass123!",
+        )
+        DeliveryAgent.objects.create(user=user, phone="254711111111", is_active=False)
+        response = self.client.post(
+            reverse("delivery_login"),
+            {"username": "pending_rider", "password": "StrongPass123!"},
+        )
+        self.assertNotIn("_auth_user_id", self.client.session)
+        self.assertContains(
+            response,
+            "Your staff application is registered and awaiting administrator verification.",
+        )
+
+class DeliveryGpsCertificationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="rider_cert", email="rider-cert@example.com", password="StrongPass123!"
+        )
+        self.agent = DeliveryAgent.objects.create(
+            user=self.user, phone="254700000099", vehicle_type="Motorbike", is_active=True
+        )
+
+    def test_delivery_ping_requires_delivery_agent_and_records_gps(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("delivery_ping_location"),
+            {"latitude": "-1.292100", "longitude": "36.821900", "accuracy": "8.5", "speed": "4.2", "heading": "90"},
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        self.agent.refresh_from_db()
+        self.assertEqual(self.agent.current_latitude, Decimal("-1.292100"))
+        self.assertEqual(self.agent.current_longitude, Decimal("36.821900"))
+        self.assertIsNotNone(self.agent.last_location_at)
+        self.assertEqual(DeliveryLocationPing.objects.filter(agent=self.agent).count(), 1)
+        self.assertEqual(DeliveryLocationPing.objects.get(agent=self.agent).accuracy_meters, Decimal("8.50"))
+
+    def test_delivery_ping_rejects_invalid_coordinates(self):
+        self.client.force_login(self.user)
+        response = self.client.post(
+            reverse("delivery_ping_location"),
+            {"latitude": "91", "longitude": "36.821900"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.json()["ok"])
+        self.assertEqual(DeliveryLocationPing.objects.count(), 0)
+
+    def test_admin_delivery_locations_returns_latest_secure_feed(self):
+        admin_user = User.objects.create_user(
+            username="gps_admin", email="gps-admin@example.com", password="StrongPass123!", is_staff=True
+        )
+        self.client.force_login(self.user)
+        self.client.post(
+            reverse("delivery_ping_location"),
+            {"latitude": "-1.292100", "longitude": "36.821900"},
+        )
+        self.client.force_login(admin_user)
+        response = self.client.get(reverse("shopiva_admin:delivery_locations"))
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(len(payload["agents"]), 1)
+        self.assertEqual(payload["agents"][0]["id"], self.agent.id)
+        self.assertEqual(payload["agents"][0]["latitude"], -1.2921)
+        self.assertEqual(payload["agents"][0]["longitude"], 36.8219)
+
+    def test_admin_delivery_locations_rejects_anonymous_access(self):
+        response = self.client.get(reverse("shopiva_admin:delivery_locations"))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("admin/login", response["Location"])
+
+    def test_delivery_ping_is_rate_limited(self):
+        self.client.force_login(self.user)
+        fixed_now = timezone.now()
+        with patch("home.delivery_app.timezone.now", return_value=fixed_now):
+            DeliveryLocationPing.objects.create(
+                agent=self.agent,
+                latitude=Decimal("-1.292100"),
+                longitude=Decimal("36.821900"),
+            )
+            second = self.client.post(
+                reverse("delivery_ping_location"),
+                {"latitude": "-1.292101", "longitude": "36.821901"},
+            )
+        self.assertEqual(second.status_code, 429)
+        self.assertFalse(second.json()["ok"])
+        self.assertEqual(DeliveryLocationPing.objects.filter(agent=self.agent).count(), 1)
+
+
+class DeliveryLogoutSecurityTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="rider_logout", email="rider-logout@example.com", password="StrongPass123!"
+        )
+        self.agent = DeliveryAgent.objects.create(user=self.user, is_active=True, status="available")
+
+    def test_delivery_logout_requires_post(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("delivery_logout"))
+        self.assertEqual(response.status_code, 405)
+        self.agent.refresh_from_db()
+        self.assertEqual(self.agent.status, "available")
+
+    def test_delivery_logout_post_marks_agent_offline_and_logs_out(self):
+        self.client.force_login(self.user)
+        response = self.client.post(reverse("delivery_logout"))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        self.agent.refresh_from_db()
+        self.assertEqual(self.agent.status, "offline")
+
+
+class DeliveryVerificationTests(TestCase):
+    def setUp(self):
+        self.customer = User.objects.create_user(
+            username="delivery_customer",
+            email="delivery-customer@example.com",
+            password="StrongPass123!",
+        )
+        self.rider_user = User.objects.create_user(
+            username="delivery_rider",
+            email="delivery-rider@example.com",
+            password="StrongPass123!",
+        )
+        self.agent = DeliveryAgent.objects.create(
+            user=self.rider_user, is_active=True, status="available"
+        )
+        seller_user = User.objects.create_user(
+            username="delivery_seller",
+            email="delivery-seller@example.com",
+            password="StrongPass123!",
+        )
+        self.seller = SellerProfile.objects.create(user=seller_user, business_name="Delivery Seller")
+        self.wallet = SellerWallet.objects.create(seller=self.seller)
+        product = Product.objects.create(
+            name="Delivery Item", sku="DELIVERY-VERIFY-001", price=Decimal("1000.00"),
+            stock_quantity=2, seller=self.seller
+        )
+        self.order = Order.objects.create(
+            customer=self.customer, customer_name="Delivery Buyer",
+            email=self.customer.email, phone="254700000010", address="Nairobi",
+            total_amount=Decimal("1000.00"), status="shipped", delivery_agent=self.agent,
+        )
+        self.order.ensure_delivery_confirmation_code()
+        self.order.save(update_fields=["delivery_confirmation_code"])
+        OrderItem.objects.create(
+            order=self.order, product=product, quantity=1, price=Decimal("1000.00"),
+            seller=self.seller, seller_gross=Decimal("1000.00"),
+            platform_commission=Decimal("125.00"), seller_net=Decimal("1000.00"),
+        )
+        SellerSettlement.objects.create(
+            order=self.order, seller=self.seller, gross_amount=Decimal("1000.00"),
+            platform_commission=Decimal("125.00"), seller_amount=Decimal("1000.00"),
+            status="pending",
+        )
+
+    def _wrong_code(self):
+        code = int(self.order.delivery_confirmation_code)
+        return str((code + 1) % 1000000).zfill(6)
+
+    def test_wrong_code_does_not_deliver(self):
+        self.client.force_login(self.rider_user)
+        start = self.client.post(reverse("delivery_action", args=[self.order.id]), {"action": "start"})
+        self.assertEqual(start.status_code, 200)
+        self.order.refresh_from_db()
+        response = self.client.post(
+            reverse("delivery_action", args=[self.order.id]),
+            {"action": "delivered", "code": self._wrong_code()},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, "out_for_delivery")
+
+    def test_correct_code_delivers_and_releases_settlement(self):
+        self.client.force_login(self.rider_user)
+        self.client.post(reverse("delivery_action", args=[self.order.id]), {"action": "start"})
+        self.order.refresh_from_db()
+        response = self.client.post(
+            reverse("delivery_action", args=[self.order.id]),
+            {"action": "delivered", "code": self.order.delivery_confirmation_code},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.order.refresh_from_db()
+        self.wallet.refresh_from_db()
+        settlement = SellerSettlement.objects.get(order=self.order, seller=self.seller)
+        self.assertEqual(self.order.status, "delivered")
+        self.assertIsNotNone(self.order.delivered_at)
+        self.assertEqual(settlement.status, "available")
+        self.assertEqual(self.wallet.available_balance, Decimal("1000.00"))
+
+    def test_code_is_not_returned_in_rider_status_feed(self):
+        self.client.force_login(self.rider_user)
+        self.client.post(reverse("delivery_action", args=[self.order.id]), {"action": "start"})
+        payload = self.client.get(reverse("delivery_status")).json()
+        self.assertNotIn("delivery_confirmation_code", payload["orders"][0])
+
+    def test_verification_locks_after_five_bad_codes(self):
+        self.client.force_login(self.rider_user)
+        self.client.post(reverse("delivery_action", args=[self.order.id]), {"action": "start"})
+        wrong = self._wrong_code()
+        for _ in range(4):
+            response = self.client.post(
+                reverse("delivery_action", args=[self.order.id]),
+                {"action": "delivered", "code": wrong},
+            )
+            self.assertEqual(response.status_code, 400)
+        response = self.client.post(
+            reverse("delivery_action", args=[self.order.id]),
+            {"action": "delivered", "code": wrong},
+        )
+        self.assertEqual(response.status_code, 429)
+        self.order.refresh_from_db()
+        self.assertIsNotNone(self.order.delivery_verification_locked_at)
+
+
+class ReorderTests(TestCase):
+    def setUp(self):
+        self.customer = User.objects.create_user(
+            username="reorder_customer",
+            email="reorder-customer@example.com",
+            password="StrongPass123!",
+        )
+        self.product = Product.objects.create(
+            name="Reorder Item", sku="REORDER-001", price=Decimal("1500.00"),
+            stock_quantity=3, is_active=True,
+        )
+        self.order = Order.objects.create(
+            customer=self.customer, customer_name="Repeat Buyer",
+            email=self.customer.email, phone="254700000011", address="Nairobi",
+            total_amount=Decimal("1500.00"), status="delivered",
+        )
+        OrderItem.objects.create(
+            order=self.order, product=self.product, quantity=2, price=Decimal("1500.00")
+        )
+
+    def test_reorder_adds_available_items_to_cart(self):
+        self.client.force_login(self.customer)
+        response = self.client.post(reverse("reorder_order", args=[self.order.id]))
+        self.assertRedirects(response, reverse("cart"), fetch_redirect_response=False)
+        self.assertEqual(self.client.session["cart"], {str(self.product.id): 2})
+
+    def test_reorder_does_not_exceed_stock(self):
+        self.product.stock_quantity = 1
+        self.product.save(update_fields=["stock_quantity"])
+        self.client.force_login(self.customer)
+        self.client.post(reverse("reorder_order", args=[self.order.id]))
+        self.assertEqual(self.client.session["cart"], {str(self.product.id): 1})
+
+
+class CustomerDeliveryLocationPrivacyTests(TestCase):
+    def setUp(self):
+        self.customer_a = User.objects.create_user(
+            username="map_a", email="map-a@example.com", password="StrongPass123!"
+        )
+        self.customer_b = User.objects.create_user(
+            username="map_b", email="map-b@example.com", password="StrongPass123!"
+        )
+        self.order_a = Order.objects.create(
+            customer=self.customer_a, customer_name="A", email=self.customer_a.email,
+            phone="254700000012", address="A address", total_amount=Decimal("100.00")
+        )
+        self.order_b = Order.objects.create(
+            customer=self.customer_b, customer_name="B", email=self.customer_b.email,
+            phone="254700000013", address="B address", total_amount=Decimal("100.00")
+        )
+
+    def test_customer_cannot_query_another_customer_order_location(self):
+        self.client.force_login(self.customer_a)
+        response = self.client.get(
+            reverse("customer_delivery_location"), {"order_id": self.order_b.id}
+        )
+        self.assertEqual(response.status_code, 404)
+
+
+class DeliveryAssignmentGuardTests(TestCase):
+    def test_seller_cannot_send_order_out_for_delivery_without_rider(self):
+        seller_user = User.objects.create_user(
+            username="seller_guard", email="seller-guard@example.com",
+            password="StrongPass123!",
+        )
+        seller = SellerProfile.objects.create(user=seller_user, business_name="Guard Seller")
+        customer = User.objects.create_user(
+            username="guard_customer", email="guard-customer@example.com",
+            password="StrongPass123!",
+        )
+        product = Product.objects.create(
+            name="Guard Item", sku="GUARD-001", price=Decimal("250.00"),
+            stock_quantity=2, seller=seller
+        )
+        order = Order.objects.create(
+            customer=customer, customer_name="Guard Buyer", email=customer.email,
+            phone="254700000014", address="Nairobi", total_amount=Decimal("250.00"),
+            status="shipped"
+        )
+        OrderItem.objects.create(
+            order=order, product=product, quantity=1, price=Decimal("250.00"),
+            seller=seller, seller_gross=Decimal("250.00"),
+            platform_commission=Decimal("25.00"), seller_net=Decimal("250.00")
+        )
+        self.client.force_login(seller_user)
+        response = self.client.post(
+            reverse("seller_order_update", args=[order.id]),
+            {"status": "out_for_delivery"},
+        )
+        order.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(order.status, "shipped")
+
+
+class AdminPortalBoundaryTests(TestCase):
+    def setUp(self):
+        self.password = "StrongPass123!"
+        self.admin = User.objects.create_user(
+            username="strict_admin",
+            email="strict-admin@example.com",
+            password=self.password,
+            is_staff=True,
+        )
+
+    def test_admin_is_redirected_away_from_customer_storefront(self):
+        self.client.force_login(self.admin)
+        for url_name in ("home", "products", "cart", "customer_login", "customer_dashboard"):
+            response = self.client.get(reverse(url_name), secure=True)
+            self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
+
+    def test_admin_is_redirected_away_from_seller_portal(self):
+        self.client.force_login(self.admin)
+        for url_name in ("seller_login", "seller_dashboard"):
+            response = self.client.get(reverse(url_name), secure=True)
+            self.assertRedirects(response, "/admin/", fetch_redirect_response=False)
+
+    def test_admin_can_still_reach_admin_control_center(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("shopiva_admin:index"), secure=True)
+        self.assertNotIn(response.status_code, (301, 302))
+
+    def test_admin_logout_clears_session_and_returns_to_admin_login(self):
+        self.client.force_login(self.admin)
+        response = self.client.get(reverse("customer_logout"), secure=True)
+        self.assertRedirects(response, reverse("admin_login"), fetch_redirect_response=False)
+        response = self.client.get(reverse("customer_dashboard"), secure=True)
+        self.assertRedirects(response, f"{reverse('customer_login')}?next=%2Faccount%2F", fetch_redirect_response=False)
 
 class MpesaCheckoutNavigationTests(TestCase):
     def test_successful_mpesa_checkout_redirects_to_waiting_page(self):
