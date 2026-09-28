@@ -37,8 +37,7 @@
     .table-wrap { border-radius:10px; }
     .quick { background:#f7f9fb; border:1px solid #d7e0e8; color:#263445 !important; }
     .quick span { color:#66758a; }
-    .ai-panel { background:linear-gradient(180deg,#f8fbfd,#eef5f7); }
-    .live-delivery-stats>div,.live-rider { background:#f7f9fb; border-color:#d7e0e8; color:#263445; }
+        .live-delivery-stats>div,.live-rider { background:#f7f9fb; border-color:#d7e0e8; color:#263445; }
     .nia-phone-panel { background:linear-gradient(135deg,#eefaf5,#f7fbfa); }
     .notice { background:#fff8e8; border-color:#f1d49b; color:#7a5a18; }
     .layout > main > .panel:nth-of-type(2) { border-top:4px solid #087f83; }
@@ -77,11 +76,7 @@
     .shop-table th { color:#8498ad; }
     .shop-table td { border-bottom-color:rgba(255,255,255,.07); color:#dce6ef; }
     .live-delivery-stats>div,.live-rider { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); }
-    .ai-panel { background:linear-gradient(145deg,#101d30,#0b1726); }
-    #ai-answer { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); color:#c9d7e5; }
-    .ai-form input { background:#081321; color:#e8f1f8; border-color:rgba(255,255,255,.12); }
-    .ai-suggestions button { background:rgba(255,255,255,.045); color:#c9d7e5; border-color:rgba(255,255,255,.10); }
-    .notice { background:rgba(250,204,21,.07); border-color:rgba(250,204,21,.20); color:#f5d879; }
+                .notice { background:rgba(250,204,21,.07); border-color:rgba(250,204,21,.20); color:#f5d879; }
     .nia-phone-panel { background:linear-gradient(145deg,#0b251f,#0c1c24); border-color:rgba(34,197,94,.25); }
     @media(max-width:900px){ .shopiva-hero{align-items:flex-start;flex-direction:column}.hero-console{width:100%;max-width:620px} }
     @media(max-width:650px){ #content{padding:12px 12px 30px}.shopiva-hero{padding:24px 20px}.hero-console{grid-template-columns:1fr 1fr}.shopiva-hero h1{font-size:32px} }
@@ -222,26 +217,6 @@
         </main>
 
         <aside>
-            <section class="panel ai-panel">
-                <div class="panel-head"><div class="ai-title"><div class="ai-orb">🤖</div><div><h2>Nia — Operations Copilot</h2><div class="panel-sub">Admin-only live operations assistant</div></div></div></div>
-                <div id="ai-answer">Hello! I'm Nia, your Admin Operations Copilot. Ask me about orders, payments, delivery, staff approvals, stock or revenue.</div>
-                <form id="ai-form" class="ai-form" method="post" action="{% url 'shopiva_admin:ai_assistant' %}">
-                    {% csrf_token %}
-                    <input id="ai-question" name="question" type="text" autocomplete="off" placeholder="Ask Nia about Shopiva operations…">
-                    <button type="submit">Ask Nia</button>
-                    <button id="ai-voice-button" type="button" title="Record an admin voice question">🎙️ Voice</button>
-                    <button id="ai-live-button" type="button" title="Start a natural admin voice conversation">🗣️ Talk Live</button>
-                </form>
-                <audio id="ai-audio" controls style="width:100%;margin-top:10px;display:none;"></audio>
-                <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><button type="button" id="admin-call-nia" class="ai-suggestions" style="border:1px solid var(--shopiva-border);background:#e8fff4;color:#08784f;border-radius:10px;padding:8px 11px;font-weight:850;cursor:pointer">📞 Call Nia</button><span id="admin-call-status" class="panel-sub">Nia can call the configured admin number for a hands-free operations briefing.</span></div>
-                <div class="ai-suggestions">
-                    <button type="button" data-q="How many products do we have?">Products</button>
-                    <button type="button" data-q="Which products are low stock?">Low stock</button>
-                    <button type="button" data-q="How many pending orders?">Pending orders</button>
-                    <button type="button" data-q="What is our revenue?">Revenue</button>
-                </div>
-            </section>
-
             <section class="panel">
                 <div class="panel-head"><div><h2>🧭 Admin Navigation</h2><div class="panel-sub">Safe paths into the management system.</div></div></div>
                 <div class="quick-grid">
@@ -257,221 +232,6 @@
 </div>
 
 <script>
-(function () {
-    const form = document.getElementById("ai-form");
-    const input = document.getElementById("ai-question");
-    const answer = document.getElementById("ai-answer");
-    const voiceButton = document.getElementById("ai-voice-button");
-    const audio = document.getElementById("ai-audio");
-    let recorder = null;
-    let chunks = [];
-
-    async function speak(text) {
-        const body = new URLSearchParams();
-        body.append("text", text);
-        const csrf = form.querySelector("[name=csrfmiddlewaretoken]").value;
-        body.append("csrfmiddlewaretoken", csrf);
-        const response = await fetch("{% url 'voice_speak' %}", {
-            method: "POST",
-            headers: {"X-Requested-With": "XMLHttpRequest"},
-            body: body
-        });
-        if (!response.ok) return;
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        audio.src = url;
-        audio.style.display = "block";
-        audio.play().catch(() => {});
-    }
-
-    async function ask(question) {
-        if (!question.trim()) return;
-        answer.textContent = "Thinking…";
-        const csrf = form.querySelector("[name=csrfmiddlewaretoken]").value;
-        const body = new URLSearchParams();
-        body.append("question", question);
-        body.append("csrfmiddlewaretoken", csrf);
-        try {
-            const response = await fetch(form.action, {
-                method: "POST",
-                headers: {"X-Requested-With": "XMLHttpRequest"},
-                body: body
-            });
-            const data = await response.json();
-            answer.textContent = data.answer || "I couldn't generate an answer.";
-            if (data.answer) speak(data.answer);
-        } catch (error) {
-            answer.textContent = "The AI assistant could not connect. Please try again.";
-        }
-    }
-
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-        const question = input.value;
-        input.value = "";
-        ask(question);
-    });
-
-    document.querySelectorAll(".ai-suggestions button").forEach(function (button) {
-        button.addEventListener("click", function () { ask(button.dataset.q); });
-    });
-    const liveButton = document.getElementById("ai-live-button");
-    let livePc = null, liveDc = null, liveStream = null, liveActive = false;
-
-    function liveStatus(text) {
-        answer.textContent = text;
-    }
-
-    async function liveAction(name, args) {
-        const response = await fetch("{% url 'realtime_action' %}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value
-            },
-            body: JSON.stringify(Object.assign({action: name}, args))
-        });
-        return response.json();
-    }
-
-    function sendLiveEvent(event) {
-        if (liveDc && liveDc.readyState === "open") liveDc.send(JSON.stringify(event));
-    }
-
-    async function handleLiveEvent(event) {
-        if (event.type === "error") {
-            liveStatus(event.error && event.error.message ? event.error.message : "Voice AI error.");
-            return;
-        }
-        if (event.type === "response.audio_transcript.done") {
-            liveStatus(event.transcript || "Shopiva Voice answered.");
-        }
-        if (event.type === "response.function_call_arguments.done") {
-            try {
-                const args = JSON.parse(event.arguments || "{}");
-                const result = await liveAction(event.name, args);
-                sendLiveEvent({
-                    type: "conversation.item.create",
-                    item: {
-                        type: "function_call_output",
-                        call_id: event.call_id,
-                        output: JSON.stringify(result)
-                    }
-                });
-                sendLiveEvent({type: "response.create"});
-            } catch (error) {
-                sendLiveEvent({
-                    type: "conversation.item.create",
-                    item: {
-                        type: "function_call_output",
-                        call_id: event.call_id,
-                        output: JSON.stringify({ok:false, error:error.message})
-                    }
-                });
-                sendLiveEvent({type: "response.create"});
-            }
-        }
-    }
-
-    async function startLive() {
-        if (liveActive) {
-            stopLive();
-            return;
-        }
-        if (!window.RTCPeerConnection || !navigator.mediaDevices?.getUserMedia) {
-            liveStatus("This browser does not support realtime voice.");
-            return;
-        }
-        try {
-            liveStatus("Starting Shopiva Admin Voice…");
-            liveStream = await navigator.mediaDevices.getUserMedia({audio:true});
-            livePc = new RTCPeerConnection();
-            const audioElement = document.createElement("audio");
-            audioElement.autoplay = true;
-            audioElement.style.display = "none";
-            document.body.appendChild(audioElement);
-            livePc.ontrack = event => { audioElement.srcObject = event.streams[0]; };
-            liveStream.getTracks().forEach(track => livePc.addTrack(track, liveStream));
-            liveDc = livePc.createDataChannel("oai-events");
-            liveDc.onopen = () => {
-                liveActive = true;
-                liveButton.textContent = "⏹️ End Voice";
-                liveStatus("🟢 Admin Voice is listening. Ask about Shopiva operations naturally.");
-            };
-            liveDc.onclose = () => { if (liveActive) stopLive(); };
-            liveDc.onmessage = event => {
-                try { handleLiveEvent(JSON.parse(event.data)); } catch (_) {}
-            };
-            const offer = await livePc.createOffer();
-            await livePc.setLocalDescription(offer);
-            const response = await fetch("{% url 'realtime_call' %}", {
-                method: "POST",
-                headers: {"Content-Type":"application/sdp","X-CSRFToken":form.querySelector("[name=csrfmiddlewaretoken]").value},
-                body: offer.sdp
-            });
-            if (!response.ok) throw new Error("Could not connect to Shopiva Admin Voice.");
-            const answerSdp = await response.text();
-            await livePc.setRemoteDescription({type:"answer", sdp:answerSdp});
-        } catch (error) {
-            liveStatus(error.message || "Unable to start realtime voice.");
-            stopLive();
-        }
-    }
-
-    function stopLive() {
-        liveActive = false;
-        if (liveDc) liveDc.close();
-        if (livePc) livePc.close();
-        if (liveStream) liveStream.getTracks().forEach(track => track.stop());
-        liveDc = null;
-        livePc = null;
-        liveStream = null;
-        if (liveButton) liveButton.textContent = "🗣️ Talk Live";
-    }
-
-    liveButton?.addEventListener("click", startLive);
-
-
-    if (voiceButton && navigator.mediaDevices && window.MediaRecorder) {
-        voiceButton.addEventListener("click", async function () {
-            if (recorder && recorder.state === "recording") {
-                recorder.stop();
-                return;
-            }
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({audio:true});
-                chunks = [];
-                recorder = new MediaRecorder(stream);
-                voiceButton.textContent = "⏹️ Stop";
-                recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-                recorder.onstop = async function () {
-                    stream.getTracks().forEach(track => track.stop());
-                    voiceButton.textContent = "🎙️ Voice";
-                    const formData = new FormData();
-                    formData.append("audio", new Blob(chunks, {type: recorder.mimeType || "audio/webm"}), "admin-voice.webm");
-                    try {
-                        answer.textContent = "Listening…";
-                        const response = await fetch("{% url 'shopiva_admin:ai_voice_transcribe' %}", {
-                            method: "POST",
-                            headers: {"X-Requested-With": "XMLHttpRequest"},
-                            body: formData
-                        });
-                        const data = await response.json();
-                        if (!response.ok) throw new Error(data.error || "Voice transcription failed.");
-                        input.value = data.text || "";
-                        if (data.text) ask(data.text);
-                    } catch (error) {
-                        answer.textContent = error.message || "Voice recording failed.";
-                    }
-                };
-                recorder.start();
-            } catch (error) {
-                answer.textContent = "Microphone permission is required for voice AI.";
-            }
-        });
-    }
-})();
-</script><script>
 (function(){
   const b=document.getElementById('admin-call-nia'),s=document.getElementById('admin-call-status');
   if(!b||!s)return;
