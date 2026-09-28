@@ -268,13 +268,22 @@ def support_admin_center(request):
     active_statuses = ("open", "in_progress", "waiting_for_customer")
     open_count = SupportTicket.objects.filter(status__in=active_statuses).count()
     urgent_count = SupportTicket.objects.filter(priority="urgent", status__in=active_statuses).count()
-    seller_count = SupportTicket.objects.filter(role="seller", status__in=active_statuses).count()
-    customer_count = SupportTicket.objects.filter(role="customer", status__in=active_statuses).count()
-    system_count = SupportTicket.objects.filter(
+    system_ticket_q = (
         Q(subject__startswith="Payment assistance for order")
         | Q(subject__startswith="Order cancellation assistance")
         | Q(subject__startswith="Cancelled order assistance")
-    ).filter(status__in=active_statuses).count()
+    )
+    system_count = SupportTicket.objects.filter(system_ticket_q, status__in=active_statuses).count()
+    # Customer/Seller queue counts represent user-raised support cases only.
+    # System-generated cases must not inflate customer or seller activity counts.
+    seller_count = SupportTicket.objects.filter(
+        role="seller",
+        status__in=active_statuses,
+    ).exclude(system_ticket_q).count()
+    customer_count = SupportTicket.objects.filter(
+        role="customer",
+        status__in=active_statuses,
+    ).exclude(system_ticket_q).count()
 
     return render(
         request,
