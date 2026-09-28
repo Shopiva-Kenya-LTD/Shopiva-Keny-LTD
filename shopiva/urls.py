@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.urls import path
 
 from home.admin import shopiva_admin_site
-from home.admin_helpers import admin_ai_assistant, admin_login, admin_logout
+from home.admin_helpers import admin_login, admin_logout
 from home.admin_session import admin_session_status
 from home.business_intelligence import business_intelligence
 from home.ai import shop_assistant
@@ -149,7 +149,6 @@ urlpatterns = [
     path("ai/nia/dashboard-context/", nia_dashboard_context, name="nia_dashboard_context"),
 
     path("admin/login/", admin_login, name="admin_login"),
-    path("admin/ai-assistant/", admin_ai_assistant, name="admin_ai_assistant"),
     path("admin/logout/", admin_logout, name="admin_logout"),
     path("admin/session-status/", admin_session_status, name="admin_session_status"),
     path("admin/", shopiva_admin_site.urls),
