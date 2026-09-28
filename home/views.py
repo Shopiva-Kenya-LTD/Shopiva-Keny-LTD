@@ -125,7 +125,13 @@ def customer_login(request):
 
 
 def customer_logout(request):
+    was_admin = bool(
+        request.user.is_authenticated
+        and (request.user.is_staff or request.user.is_superuser)
+    )
     auth_logout(request)
+    if was_admin:
+        return redirect("admin_login")
     messages.success(request, "You have been signed out of Shopiva.")
     return redirect("customer_login")
 
