@@ -74,28 +74,3 @@ def admin_logout(request):
     return _no_store(HttpResponseRedirect(reverse("shopiva_admin:login")))
 
 
-@csrf_exempt
-@never_cache
-def admin_ai_assistant(request):
-    """Nia Operations Copilot: admin-only, live-data grounded and read-only."""
-    if request.method != "POST":
-        return JsonResponse({"ok": True, "answer": "I'm Nia, your Shopiva Operations Copilot. Ask about orders, payments, delivery, stock, sellers, customers, approvals, revenue or support."})
-    if not _require_admin(request):
-        return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
-    question = request.POST.get("question", "").strip()
-    if not question:
-        return JsonResponse({"ok": False, "error": "Please ask Nia a question."}, status=400)
-    result = answer_admin_question(question)
-    ai = call_nia(
-        "Admin Operations Copilot",
-        result.get("context", {}),
-        question,
-        '{"answer": "string"}',
-    )
-    if ai.get("ai"):
-        result["answer"] = str((ai.get("data") or {}).get("answer") or result["answer"])
-        result["ai"] = True
-    else:
-        result["ai"] = False
-    result["ok"] = True
-    return JsonResponse(result)

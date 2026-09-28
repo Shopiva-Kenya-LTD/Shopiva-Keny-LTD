@@ -16,8 +16,6 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 
-from .voice_ai import speak_text, transcribe_voice
-from .nia_core import call_nia
 from .admin_operations import admin_operations_center
 from support.views import support_admin_center
 from .payments import _create_seller_settlements
@@ -123,8 +121,6 @@ class ShopivaAdminSite(admin.AdminSite):
             path("products/add/", self.admin_view(self.product_add), name="product_add"),
             path("products/<int:product_id>/edit/", self.admin_view(self.product_edit), name="product_edit"),
             path("products/<int:product_id>/delete/", self.admin_view(self.product_delete), name="product_delete"),
-            path("ai-assistant/", self.admin_view(self.ai_assistant), name="ai_assistant"),
-            path("ai-voice/transcribe/", self.admin_view(transcribe_voice), name="ai_voice_transcribe"),
             path("delivery-map/", self.admin_view(self.delivery_map), name="delivery_map"),
             path("delivery-locations/", self.admin_view(self.delivery_locations), name="delivery_locations"),
             path("approval-center/", self.admin_view(admin_operations_center), name="approval_center"),
@@ -318,104 +314,6 @@ class ShopivaAdminSite(admin.AdminSite):
         context = {**self.each_context(request), "product": product}
         return TemplateResponse(request, "admin/products/delete.html", context)
 
-    def ai_assistant(self, request):
-        if request.method != "POST":
-            return JsonResponse({"answer": "Ask me about products, orders, stock, revenue, deliveries, or Shopiva operations."})
-
-        question = request.POST.get("question", "").strip()
-        products = Product.objects.all()
-        orders = Order.objects.all()
-        agents = DeliveryAgent.objects.filter(is_active=True)
-        payments = PaymentTransaction.objects.select_related("order")
-
-        snapshot = {
-            "products": products.count(),
-            "active_products": products.filter(is_active=True).count(),
-            "low_stock": list(
-                products.filter(is_active=True, stock_quantity__lte=5)
-                .values("id", "name", "stock_quantity")[:15]
-            ),
-            "pending_orders": orders.filter(status="pending").count(),
-            "today_orders": orders.filter(created_at__date=timezone.localdate()).count(),
-            "revenue_recorded": str(
-                orders.exclude(status="cancelled")
-                .aggregate(total=Sum("total_amount"))["total"] or Decimal("0.00")
-            ),
-            "mpesa_pending": payments.filter(method="mpesa", status="pending").count(),
-            "mpesa_paid": payments.filter(method="mpesa", status="paid").count(),
-            "mpesa_failed": payments.filter(method="mpesa", status="failed").count(),
-            "recent_payments": list(
-                payments.order_by("-created_at").values(
-                    "id", "order_id", "status", "amount", "provider_reference", "created_at"
-                )[:12]
-            ),
-        }
-        result = call_nia(
-            "Admin Operations Copilot",
-            snapshot,
-            question,
-            '{"answer": "string"}',
-        )
-        if result.get("ai"):
-            data = result.get("data") or {}
-            return JsonResponse({
-                "answer": str(data.get("answer") or ""),
-                "ai": True,
-            })
-
-        if not question:
-            answer = "Please type a question. I can help with products, orders, stock, revenue and delivery operations."
-        elif any(word in question for word in ("delivery", "rider", "agent")) and any(word in question for word in ("how many", "count", "online", "active")):
-            answer = f"Shopiva has {agents.filter(status__in=['available', 'on_delivery']).count()} active delivery agent(s)."
-        elif any(word in question for word in ("low stock", "low-stock", "stock")):
-            low = products.filter(stock_quantity__lte=5, is_active=True).order_by("stock_quantity")[:10]
-            answer = (
-                "Low-stock products:\n" + "\n".join(f"• {p.name}: {p.stock_quantity} units" for p in low)
-                if low
-                else "Good news — there are currently no active products at or below 5 units of stock."
-            )
-        elif any(word in question for word in ("pending", "awaiting")) and "order" in question:
-            answer = f"There are {orders.filter(status='pending').count()} pending order(s) waiting for attention."
-        elif any(word in question for word in ("today", "today's")) and "order" in question:
-            answer = f"Shopiva has received {orders.filter(created_at__date=timezone.localdate()).count()} order(s) today."
-        elif any(word in question for word in ("failed", "attention", "problem")) and any(word in question for word in ("payment", "mpesa", "m-pesa")):
-            failed = payments.filter(method="mpesa", status="failed").order_by("-created_at")[:8]
-            pending = payments.filter(method="mpesa", status="pending").order_by("-created_at")[:8]
-            answer = (
-                f"M-PESA needs attention: {failed.count()} failed transaction(s) in the latest set and {pending.count()} transaction(s) still pending."
-                if failed or pending
-                else "No failed or pending M-PESA transactions are currently recorded."
-            )
-        elif any(word in question for word in ("pending", "waiting")) and any(word in question for word in ("payment", "mpesa", "m-pesa")):
-            pending = payments.filter(method="mpesa", status="pending").count()
-            answer = f"There are {pending} M-PESA transaction(s) awaiting confirmed provider results. Pending does not mean paid."
-        elif any(word in question for word in ("failed", "failure")) and any(word in question for word in ("payment", "mpesa", "m-pesa")):
-            failed = payments.filter(method="mpesa", status="failed").count()
-            answer = f"There are {failed} recorded failed M-PESA transaction(s)."
-        elif any(word in question for word in ("revenue", "sales", "income")):
-            revenue = orders.exclude(status="cancelled").aggregate(total=Sum("total_amount"))["total"] or Decimal("0.00")
-            answer = f"Current recorded revenue excluding cancelled orders is KSh {revenue:,.2f}."
-        elif any(word in question for word in ("product", "products")) and any(word in question for word in ("how many", "count", "total")):
-            answer = f"Shopiva currently has {products.count()} product(s), with {products.filter(is_active=True).count()} active."
-        elif "help" in question or "what can" in question:
-            answer = "I can answer questions about product counts, low stock, pending orders, today's orders, revenue and delivery operations."
-        else:
-            answer = "Try: 'How many products do we have?', 'Which products are low stock?', 'How many pending orders?', or 'How many delivery riders are active?', 'Are there any M-PESA payments needing attention?', or 'How many M-PESA payments are pending?'"
-
-        return JsonResponse({"answer": answer})
-
-
-shopiva_admin_site = ShopivaAdminSite(name="shopiva_admin")
-
-
-@admin.register(Product, site=shopiva_admin_site)
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "seller", "sku", "price", "discount_percent", "stock_quantity", "is_featured", "is_active")
-    list_filter = ("is_featured", "is_active", "category")
-    search_fields = ("name", "description", "sku")
-    list_editable = ("discount_percent", "stock_quantity", "is_featured", "is_active")
-    ordering = ("-id",)
-    list_per_page = 25
 
     def save_model(self, request, obj, form, change):
         previous = Product.objects.get(pk=obj.pk) if change and obj.pk else None
