@@ -34,10 +34,7 @@
     .status { display:inline-flex; padding:5px 9px; border-radius:999px; background:#eff6ff; color:#1d4ed8; font-weight:700; font-size:11px; }
     .stock-danger { color:var(--shopiva-red); font-weight:800; }
     .stock-ok { color:var(--shopiva-green); font-weight:800; }
-    .nia-phone-panel { background:linear-gradient(135deg,#ffffff,#f0fdf4); border-color:#bbf7d0; }
     .ai-panel { background:linear-gradient(180deg,#ffffff,#f8fbff); }
-    .ai-title { display:flex; align-items:center; gap:10px; }
-    .ai-orb { width:38px; height:38px; display:grid; place-items:center; border-radius:12px; background:#eef2ff; font-size:21px; }
     #ai-answer { min-height:78px; white-space:pre-line; padding:13px; border-radius:12px; background:#f8fafc; border:1px solid var(--shopiva-border); color:#334155; font-size:13px; line-height:1.55; margin-bottom:12px; }
     .ai-suggestions { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
     .ai-suggestions button { border:1px solid var(--shopiva-border); background:#fff; border-radius:999px; padding:6px 9px; cursor:pointer; font-size:11px; }
@@ -67,14 +64,6 @@
         <div class="stat"><div class="icon">📈</div><div class="label">Today's Orders</div><div class="value">{{ shopiva_stats.today_orders }}</div></div>
     </section>
 
-    <section class="panel nia-phone-panel" aria-label="Nia phone calling">
-        <div class="panel-head"><div class="ai-title"><div class="ai-orb">📞</div><div><h2>Nia Phone — Hands-Free Operations</h2><div class="panel-sub">Nia can call the configured administrator phone through Twilio.</div></div></div><span class="shopiva-badge" style="background:#ecfdf5;color:#087448;border-color:#bbf7d0;">PHONE READY</span></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-            <div><strong style="font-size:16px;color:var(--shopiva-dark);">Call Nia</strong><div class="panel-sub" style="margin-top:4px;">Starts a protected outbound call to the administrator number configured in Shopiva.</div></div>
-            <button type="button" id="admin-call-nia-top" style="border:0;border-radius:12px;padding:12px 18px;background:#16a34a;color:#fff;font-weight:900;cursor:pointer;">📞 Call Nia now</button>
-        </div>
-        <div id="admin-call-status-top" class="panel-sub" style="margin-top:10px;">Ready for a phone call.</div>
-    </section>
 
     <div class="layout">
         <main>
@@ -140,24 +129,6 @@
 </div>
 
 <script>
-(function(){
-  const b=document.getElementById('admin-call-nia'),s=document.getElementById('admin-call-status');
-  if(!b||!s)return;
-  b.addEventListener('click',async()=>{
-    b.disabled=true;s.textContent='Nia is placing your call…';
-    try{
-      const r=await fetch("{% url 'nia_phone_call' %}",{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'}});
-      const d=await r.json();
-      if(!r.ok||!d.ok)throw new Error(d.error||'Nia could not place the call.');
-      s.textContent='📞 Nia is calling the configured admin number now.';
-    }catch(e){s.textContent=e.message||'Nia could not place the call.';b.disabled=false;}
-  });
-})();
 </script><script>
-(function(){
-  const b=document.getElementById('admin-call-nia-top'),s=document.getElementById('admin-call-status-top');
-  if(!b||!s)return;
-  b.addEventListener('click',async()=>{b.disabled=true;b.setAttribute('aria-busy','true');s.textContent='Nia is placing your call…';try{const r=await fetch("{% url 'nia_phone_call' %}",{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','X-Requested-With':'XMLHttpRequest'}});const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Nia could not place the call.');s.textContent='📞 Nia is calling the configured administrator number now.';}catch(e){s.textContent=e.message||'Nia could not place the call.';b.disabled=false;b.removeAttribute('aria-busy');}});
-})();
 </script>
 {% endblock %>
