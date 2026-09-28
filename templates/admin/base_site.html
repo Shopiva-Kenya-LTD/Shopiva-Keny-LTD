@@ -83,6 +83,78 @@ input,select,textarea{border-radius:10px!important;border-color:#d7e4eb!importan
   #changelist{overflow-x:auto}
   #changelist-filter{margin-top:12px!important}
 }
+
+/* Shopiva filter panel polish */
+#changelist-filter{
+    overflow:hidden!important;
+    background:linear-gradient(180deg,#ffffff 0%,#f7fafc 100%)!important;
+    border:1px solid #cbd8e1!important;
+    border-radius:18px!important;
+    box-shadow:0 16px 34px rgba(15,55,70,.10)!important;
+}
+#changelist-filter h2{
+    margin:0!important;
+    padding:15px 16px!important;
+    background:linear-gradient(135deg,#173f52 0%,#087f83 100%)!important;
+    color:#fff!important;
+    font-size:12px!important;
+    font-weight:900!important;
+    letter-spacing:.14em!important;
+    text-transform:uppercase!important;
+    border-bottom:1px solid rgba(255,255,255,.18)!important;
+}
+#changelist-filter h2:before{content:"⚙ ";opacity:.9}
+#changelist-filter h3{
+    margin:0!important;
+    padding:15px 16px 7px!important;
+    color:#26384a!important;
+    font-size:11px!important;
+    font-weight:900!important;
+    letter-spacing:.04em!important;
+    text-transform:uppercase!important;
+    border-top:1px solid #e2e8ed!important;
+}
+#changelist-filter h3:first-of-type{border-top:0!important}
+#changelist-filter ul{
+    margin:0!important;
+    padding:0 16px 13px!important;
+    list-style:none!important;
+}
+#changelist-filter li{
+    margin:0 0 5px!important;
+    padding:0!important;
+}
+#changelist-filter li:last-child{margin-bottom:0!important}
+#changelist-filter li a{
+    display:flex!important;
+    align-items:center!important;
+    min-height:30px!important;
+    box-sizing:border-box!important;
+    padding:5px 9px!important;
+    border-radius:8px!important;
+    color:#526577!important;
+    font-size:12px!important;
+    font-weight:700!important;
+    text-decoration:none!important;
+    transition:all .16s ease!important;
+}
+#changelist-filter li a:hover{
+    color:#075f63!important;
+    background:#e8f5f5!important;
+    transform:translateX(2px);
+}
+#changelist-filter li.selected a{
+    color:#075f63!important;
+    background:#dff1f1!important;
+    box-shadow:inset 3px 0 0 #087f83!important;
+    font-weight:900!important;
+}
+#changelist-filter li.selected a:before{content:"✓";margin-right:7px;color:#087f83;font-weight:900}
+#changelist-filter .count{
+    color:#8091a0!important;
+}
+#changelist-filter .selected .count{color:#087f83!important}
+#changelist-filter > div{padding-bottom:5px!important}
 </style>
 {% endblock %}
 {% block extrahead %}{{ block.super }}
