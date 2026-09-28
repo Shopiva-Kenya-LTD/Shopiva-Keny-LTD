@@ -109,7 +109,7 @@
                 <div class="table-wrap"><table class="shop-table"><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Action</th></tr></thead><tbody>
                 {% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category }}</td><td class="stock-danger">{{ product.stock_quantity }}</td><td><a href="{% url 'shopiva_admin:home_product_change' product.id %}">Edit</a></td></tr>{% endfor %}
                 </tbody></table></div>
-                {% else %}<div class="notice">Inventory is clear right now. Add products and the assistant will monitor low stock automatically.</div>{% endif %}
+                {% else %}<div class="notice">Inventory is clear right now. Shopiva will continue monitoring inventory through the admin operations system.</div>{% endif %}
             </section>
         </main>
 
