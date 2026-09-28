@@ -1,7 +1,10 @@
 {% extends "admin/base.html" %}
 {% load static %}
 {% block branding %}
+<div class="shopiva-brand-row">
 <a href="{% url 'admin:index' %}" class="shopiva-admin-brand" aria-label="Shopiva Admin Control Center"><span class="shopiva-admin-mark" aria-hidden="true">SA</span><span>Shopi<strong>va</strong><small>ADMIN CONTROL CENTER · KENYA LTD</small></span></a>
+<div class="shopiva-admin-search" role="search"><span aria-hidden="true">⌕</span><input id="shopiva-admin-search" type="search" placeholder="Search admin..." aria-label="Search admin"><kbd>Ctrl + K</kbd></div>
+</div>
 {% endblock %}
 {% block extrastyle %}{{ block.super }}
 <style>
@@ -227,7 +230,36 @@ input,select,textarea{border-radius:10px!important;border-color:#d7e4eb!importan
   #user-tools a{font-size:10px!important}
   #breadcrumbs{padding:10px 16px!important;white-space:nowrap!important;overflow:auto!important}
 }
+
+/* Final premium header treatment based on the approved Shopiva mockup */
+.shopiva-brand-row{display:flex!important;align-items:center!important;gap:clamp(22px,4vw,56px)!important}
+.shopiva-admin-search{display:flex!important;align-items:center!important;width:min(420px,30vw)!important;height:42px!important;box-sizing:border-box!important;padding:0 10px 0 13px!important;border:1px solid rgba(255,255,255,.20)!important;border-radius:13px!important;background:rgba(3,28,43,.24)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.10),0 8px 24px rgba(0,0,0,.08)!important;backdrop-filter:blur(10px)!important}
+.shopiva-admin-search>span{font-size:22px!important;color:#d9f7f3!important;line-height:1!important;transform:rotate(-20deg)!important}
+.shopiva-admin-search input{flex:1!important;min-width:0!important;height:100%!important;border:0!important;outline:0!important;background:transparent!important;color:#fff!important;border-radius:0!important;padding:0 9px!important;font-size:12px!important}
+.shopiva-admin-search input::placeholder{color:#c7e0e1!important;opacity:.9!important}
+.shopiva-admin-search kbd{white-space:nowrap!important;padding:5px 8px!important;border-radius:7px!important;background:rgba(255,255,255,.10)!important;border:1px solid rgba(255,255,255,.10)!important;color:#d9eeee!important;font:700 10px/1 ui-monospace,SFMono-Regular,monospace!important}
+#user-tools{display:flex!important;align-items:center!important;gap:8px!important}
+#user-tools:before{content:"";display:inline-block!important;width:9px!important;height:9px!important;border-radius:50%!important;background:#39e58b!important;box-shadow:0 0 12px rgba(57,229,139,.8)!important;margin-right:1px!important}
+#user-tools a[href*="logout"]{background:linear-gradient(135deg,#ff4d63,#e11d48)!important;border-color:rgba(255,255,255,.18)!important;font-weight:900!important;box-shadow:0 7px 18px rgba(225,29,72,.22)!important}
+#user-tools a[href*="logout"]:before{content:"↪ ";font-size:13px!important}
+#breadcrumbs{display:block!important;margin:0!important;padding:11px 34px!important;background:linear-gradient(180deg,#123b50,#0d3042)!important;color:#dcecf1!important;border-bottom:1px solid rgba(255,255,255,.10)!important;box-shadow:0 6px 18px rgba(8,35,52,.12)!important}
+#breadcrumbs a{color:#f3fbfd!important;font-weight:800!important;text-decoration:none!important}
+#breadcrumbs a:hover{color:#69efc6!important}
+@media(max-width:1050px){.shopiva-admin-search{width:min(330px,27vw)!important}.shopiva-brand-row{gap:20px!important}}
+@media(max-width:800px){.shopiva-admin-search{display:none!important}.shopiva-brand-row{gap:12px!important}#header{padding:10px 16px!important}#breadcrumbs{padding:10px 16px!important}}
 </style>
+<script>
+(function(){
+  document.addEventListener('DOMContentLoaded',function(){
+    var search=document.getElementById('shopiva-admin-search');
+    if(!search)return;
+    document.addEventListener('keydown',function(e){
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();search.focus();}
+      if(e.key==='Escape'&&document.activeElement===search){search.blur();search.value='';}
+    });
+  });
+})();
+</script>
 {% endblock %}
 {% block extrahead %}{{ block.super }}
 <script>
