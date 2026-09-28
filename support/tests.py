@@ -84,6 +84,71 @@ class SupportCenterTests(TestCase):
         ticket.refresh_from_db()
         self.assertEqual(ticket.status, "resolved")
 
+    def test_resolved_cases_leave_active_queue_but_remain_in_history(self):
+        resolved = SupportTicket.objects.create(
+            user=self.customer,
+            role="customer",
+            subject="Resolved delivery issue",
+            category="Delivery",
+            status="resolved",
+        )
+        active = SupportTicket.objects.create(
+            user=self.customer,
+            role="customer",
+            subject="Active delivery issue",
+            category="Delivery",
+            status="open",
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.get(reverse("support_admin_center"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Active delivery issue")
+        self.assertNotContains(response, "Resolved delivery issue")
+
+        response = self.client.get(reverse("support_admin_center") + "?status=resolved")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Resolved delivery issue")
+        self.assertNotContains(response, "Active delivery issue")
+        self.assertTrue(SupportTicket.objects.filter(id=resolved.id).exists())
+
+    def test_staff_can_delete_only_resolved_or_closed_cases(self):
+        resolved = SupportTicket.objects.create(
+            user=self.customer,
+            role="customer",
+            subject="Resolved case to delete",
+            category="General",
+            status="resolved",
+        )
+        active = SupportTicket.objects.create(
+            user=self.customer,
+            role="customer",
+            subject="Active case to protect",
+            category="General",
+            status="open",
+        )
+        SupportMessage.objects.create(
+            ticket=resolved,
+            author=self.customer,
+            body="Case history should be removed with the case.",
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.post(reverse("support_admin_center"), {
+            "action": "delete",
+            "ticket_id": str(active.id),
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(SupportTicket.objects.filter(id=active.id).exists())
+
+        response = self.client.post(reverse("support_admin_center"), {
+            "action": "delete",
+            "ticket_id": str(resolved.id),
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(SupportTicket.objects.filter(id=resolved.id).exists())
+        self.assertFalse(SupportMessage.objects.filter(ticket_id=resolved.id).exists())
+
     def test_closed_case_rejects_customer_reply(self):
         ticket = SupportTicket.objects.create(
             user=self.customer,
