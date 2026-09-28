@@ -5,6 +5,58 @@
 {{ block.super }}
 <style>
     :root { --shopiva-blue:#2563eb; --shopiva-dark:#111827; --shopiva-bg:#f4f7fb; --shopiva-card:#fff; --shopiva-muted:#64748b; --shopiva-border:#e2e8f0; --shopiva-green:#16a34a; --shopiva-orange:#ea580c; --shopiva-red:#dc2626; }
+
+    /* Shopiva premium admin visual refresh */
+    html, body { background:#07111f !important; }
+    body { color:#e5edf8; }
+    #header { background:linear-gradient(135deg,#071426 0%,#0b3f4a 55%,#087f83 100%) !important; border-bottom:1px solid rgba(255,255,255,.12); box-shadow:0 10px 35px rgba(0,0,0,.22); }
+    #branding h1, #branding h1 a { color:#fff !important; font-weight:900; letter-spacing:.02em; }
+    #user-tools, #user-tools a { color:#d9f7f5 !important; }
+    #content { max-width:1540px; padding:22px 26px 50px; }
+    #content-main { width:100%; }
+    .shopiva-shell { font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .shopiva-hero { position:relative; overflow:hidden; margin:0 0 22px; padding:32px 34px; min-height:245px; border:1px solid rgba(255,255,255,.13); border-radius:26px; background:radial-gradient(circle at 72% 20%,rgba(34,211,238,.20),transparent 28%),radial-gradient(circle at 92% 90%,rgba(250,204,21,.16),transparent 28%),linear-gradient(135deg,#091426,#0b2038 52%,#073b48); color:#fff; box-shadow:0 22px 60px rgba(0,0,0,.30); display:flex; justify-content:space-between; align-items:center; gap:30px; }
+    .shopiva-hero:before { content:""; position:absolute; width:360px; height:360px; right:210px; top:-190px; border:1px solid rgba(34,211,238,.18); border-radius:50%; box-shadow:0 0 0 22px rgba(34,211,238,.035),0 0 0 48px rgba(34,211,238,.025); pointer-events:none; }
+    .hero-copy { position:relative; z-index:1; max-width:720px; }
+    .hero-kicker { color:#facc15; font-size:11px; font-weight:950; letter-spacing:.20em; text-transform:uppercase; margin-bottom:10px; }
+    .shopiva-hero h1 { margin:0 0 9px; font-size:clamp(30px,4vw,48px); line-height:1.02; color:#fff; letter-spacing:-.035em; }
+    .shopiva-hero h1 span { color:#22d3ee; }
+    .shopiva-hero p { margin:0; color:#b9c9da; font-size:14px; max-width:650px; line-height:1.65; }
+    .hero-actions { display:flex; flex-wrap:wrap; gap:9px; margin-top:20px; }
+    .hero-action { display:inline-flex; align-items:center; gap:7px; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.07); color:#fff !important; text-decoration:none !important; font-size:12px; font-weight:850; }
+    .hero-action.primary { background:linear-gradient(135deg,#facc15,#f59e0b); color:#111827 !important; border-color:transparent; }
+    .hero-action:hover { transform:translateY(-1px); background:rgba(255,255,255,.12); }
+    .hero-status { margin-top:15px; color:#9fb2c8; font-size:11px; }
+    .hero-status i { display:inline-block; width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 12px #22c55e; margin-right:6px; }
+    .hero-console { position:relative; z-index:1; width:min(420px,38%); display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .hero-console-card { min-height:90px; padding:16px; border:1px solid rgba(255,255,255,.13); border-radius:18px; background:rgba(255,255,255,.065); }
+    .hero-console-card small { display:block; color:#91a6bb; font-size:10px; text-transform:uppercase; letter-spacing:.08em; font-weight:850; }
+    .hero-console-card strong { display:block; margin-top:7px; color:#fff; font-size:23px; }
+    .hero-console-card strong.gold { color:#facc15; }
+    .hero-console-card strong.cyan { color:#67e8f9; }
+    .stats { gap:13px; }
+    .stat { position:relative; overflow:hidden; background:linear-gradient(145deg,#101c2d,#0d1725); border:1px solid rgba(255,255,255,.10); border-radius:17px; padding:17px; box-shadow:0 12px 30px rgba(0,0,0,.18); }
+    .stat:after { content:""; position:absolute; right:-22px; top:-25px; width:70px; height:70px; border-radius:50%; background:rgba(34,211,238,.08); }
+    .stat .label { color:#8ea2b8; }
+    .stat .value { color:#f8fbff; }
+    .panel { background:linear-gradient(145deg,#0e1a2a,#0b1624); border:1px solid rgba(255,255,255,.10); border-radius:19px; box-shadow:0 14px 35px rgba(0,0,0,.20); }
+    .panel h2 { color:#f4f8fc; }
+    .panel-sub { color:#91a4b8; }
+    .quick { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); color:#e9f1f8 !important; }
+    .quick span { color:#8da1b6; }
+    .quick:hover { border-color:rgba(34,211,238,.45); background:rgba(34,211,238,.08); }
+    .shop-table th { color:#8498ad; }
+    .shop-table td { border-bottom-color:rgba(255,255,255,.07); color:#dce6ef; }
+    .live-delivery-stats>div,.live-rider { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); }
+    .ai-panel { background:linear-gradient(145deg,#101d30,#0b1726); }
+    #ai-answer { background:rgba(255,255,255,.035); border-color:rgba(255,255,255,.09); color:#c9d7e5; }
+    .ai-form input { background:#081321; color:#e8f1f8; border-color:rgba(255,255,255,.12); }
+    .ai-suggestions button { background:rgba(255,255,255,.045); color:#c9d7e5; border-color:rgba(255,255,255,.10); }
+    .notice { background:rgba(250,204,21,.07); border-color:rgba(250,204,21,.20); color:#f5d879; }
+    .nia-phone-panel { background:linear-gradient(145deg,#0b251f,#0c1c24); border-color:rgba(34,197,94,.25); }
+    @media(max-width:900px){ .shopiva-hero{align-items:flex-start;flex-direction:column}.hero-console{width:100%;max-width:620px} }
+    @media(max-width:650px){ #content{padding:12px 12px 30px}.shopiva-hero{padding:24px 20px}.hero-console{grid-template-columns:1fr 1fr}.shopiva-hero h1{font-size:32px} }
+
     body { background:var(--shopiva-bg); }
     #content { padding:0 24px 40px; max-width:1500px; margin:auto; }
     .shopiva-shell { font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
@@ -56,11 +108,23 @@
 {% block content %}
 <div class="shopiva-shell">
     <section class="shopiva-hero">
-        <div>
-            <h1>Shopiva Control Center</h1>
-            <p>Manage your marketplace, orders, inventory and operations from one protected workspace.</p>
+        <div class="hero-copy">
+            <div class="hero-kicker">NIA • ADMIN OPERATIONS</div>
+            <h1><span>Shopiva</span> Admin Control Center</h1>
+            <p>Your protected operations workspace for marketplace orders, inventory, sellers, delivery staff, approvals, payments and live Shopiva activity.</p>
+            <div class="hero-actions">
+                <a class="hero-action primary" href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approval Center</a>
+                <a class="hero-action" href="{% url 'shopiva_admin:delivery_map' %}">🧭 Delivery Command</a>
+                <a class="hero-action" href="{% url 'admin_notifications' %}">🔔 Notifications</a>
+            </div>
+            <div class="hero-status"><i></i> Shopiva operations online · M-PESA checkout live · Admin boundary protected</div>
         </div>
-        <div class="shopiva-badge">🛡️ Admin Workspace</div>
+        <div class="hero-console" aria-label="Admin overview">
+            <div class="hero-console-card"><small>Today's orders</small><strong class="cyan">{{ shopiva_stats.today_orders }}</strong></div>
+            <div class="hero-console-card"><small>Total orders</small><strong>{{ shopiva_stats.orders }}</strong></div>
+            <div class="hero-console-card"><small>Revenue</small><strong class="gold">KSh {{ shopiva_stats.revenue|floatformat:0 }}</strong></div>
+            <div class="hero-console-card"><small>Low stock</small><strong>{{ shopiva_stats.low_stock }}</strong></div>
+        </div>
     </section>
 
     <section class="stats">
