@@ -68,28 +68,51 @@ input:focus,select:focus,textarea:focus{border-color:#19d978!important;box-shado
 {% endblock %}
 
 {% block nav-global %}
-{{ block.super }}
 <style>
-.shopiva-global-nav{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:7px 24px;background:#fff;border-bottom:1px solid var(--shopiva-line);box-shadow:0 4px 12px rgba(7,24,46,.035)}
-.shopiva-global-nav a{display:inline-flex;align-items:center;padding:7px 9px;border-radius:9px;background:#f4f8f6;border:1px solid #dce9e1;color:#24463a!important;text-decoration:none!important;font-size:10px;font-weight:850}
-.shopiva-global-nav a:hover{background:#eafff2;border-color:#b9e6ca;color:#087448!important}
-@media(max-width:800px){.shopiva-global-nav{padding:7px 12px;gap:5px}.shopiva-global-nav a{font-size:9px;padding:6px 8px}}
-
-/* SHOPIVA ADMIN CENTER TYPOGRAPHY */
-.shopiva-global-nav a{font-size:11px!important;padding:8px 10px!important}
-.ops .head h1,.intel .hero h1,.dcc h1,.stats-page .hero h1{font-size:38px!important}
-.ops .panel h2,.intel .panel h2,.dcc .map-title h2,.dcc .map-top h2,.dcc .side h3,.stats-page .panel h2{font-size:17px!important}
-.ops .panel-head p,.ops .link span,.ops .meta,.ops .row b,.ops .stat small,.intel .panel-sub,.intel .row-meta,.intel .amount,.intel .stat small,.dcc .dcc-sub,.dcc .map-top p,.dcc .toolbar,.dcc .rider strong,.dcc .rider small,.dcc .card small,.dcc .order strong,.dcc .order small,.stats-page .panel-sub,.stats-page .order strong,.stats-page .order small,.stats-page .metric span{font-size:11px!important}
-.ops .actions button,.ops .actions a,.ops .badge,.intel .pill,.intel .row-name,.dcc .badge,.dcc .toolbar select,.dcc .toolbar button,.stats-page .badge,.stats-page .status{font-size:10px!important}
-.ops .stat strong,.stats-page .stat strong{font-size:24px!important}
+/* Shopiva Modern Control Center shell */
+:root{--sv-navy:#061a2f;--sv-navy2:#0a2a45;--sv-green:#18d978;--sv-green2:#0aa866;--sv-bg:#f3f7f9;--sv-line:#dce6eb;--sv-ink:#142337;--sv-muted:#708194}
+.shopiva-shell-nav{position:fixed;left:0;top:66px;bottom:0;width:236px;background:linear-gradient(180deg,#061a2f 0%,#08253c 58%,#062e25 100%);padding:18px 12px 16px;z-index:40;overflow:auto;box-shadow:12px 0 32px rgba(6,26,47,.14)}
+.shopiva-shell-nav .nav-brand{padding:4px 10px 18px;color:#fff;font-weight:900;font-size:14px}
+.shopiva-shell-nav .nav-brand small{display:block;margin-top:3px;color:#9dc0c9;font-size:8px;letter-spacing:.12em;text-transform:uppercase}
+.shopiva-shell-nav .nav-section{margin:12px 8px 6px;color:#6f93a5;font-size:7px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+.shopiva-shell-nav a{display:flex;align-items:center;gap:10px;margin:3px 0;padding:10px 11px;border:1px solid transparent;border-radius:11px;color:#dbe9ef!important;text-decoration:none!important;font-size:10px;font-weight:800;transition:.16s ease}
+.shopiva-shell-nav a:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.09);color:#fff!important;transform:translateX(1px)}
+.shopiva-shell-nav a.active{background:linear-gradient(135deg,#0bbf7b,#08a66a);color:#fff!important;box-shadow:0 7px 18px rgba(8,166,106,.22)}
+.shopiva-shell-nav .nav-icon{width:22px;text-align:center;font-size:14px}
+.shopiva-shell-nav .nav-help{margin-top:18px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.05);color:#d9eee7}
+.shopiva-shell-nav .nav-help b{display:block;font-size:9px}.shopiva-shell-nav .nav-help span{display:block;margin:4px 0 9px;color:#9bb6b8;font-size:7px;line-height:1.4}.shopiva-shell-nav .nav-help a{display:inline-flex;background:#b8ffd9;color:#063522!important;padding:7px 9px;font-size:8px;margin:0}
+.shopiva-shell-content{margin-left:236px;min-height:calc(100vh - 66px)}
+.shopiva-mobile-nav{display:none}
+#content{padding:22px 28px 44px!important}
+#content-main{max-width:1500px}
+@media(max-width:900px){.shopiva-shell-nav{display:none}.shopiva-shell-content{margin-left:0}.shopiva-mobile-nav{display:flex;position:sticky;top:0;z-index:35;gap:6px;overflow:auto;padding:8px 12px;background:#fff;border-bottom:1px solid var(--sv-line)}.shopiva-mobile-nav a{white-space:nowrap;padding:7px 9px;border-radius:9px;background:#f0f7f4;color:#245346!important;text-decoration:none!important;font-size:8px;font-weight:900}.shopiva-mobile-nav a:first-child{background:#0aa866;color:#fff!important}#content{padding:15px 12px 32px!important}}
 </style>
-<nav class="shopiva-global-nav" aria-label="Shopiva Admin operations navigation">
-<a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals & Operations</a>
-<a href="{% url 'admin_notifications' %}">🔔 Notifications</a>
-<a href="{% url 'support_admin_center' %}">🛟 Raised Issues</a>
-<a href="{% url 'support_admin_center' %}?source=system">⚙️ System Issues</a>
-<a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery Command</a>
-<a href="{% url 'business_intelligence' %}">📊 Reports</a>
+<aside class="shopiva-shell-nav" aria-label="Shopiva Admin navigation">
+  <div class="nav-brand">Shopiva Control Center<small>Kenya Everything Marketplace</small></div>
+  <div class="nav-section">Workspace</div>
+  <a href="{% url 'shopiva_admin:index' %}"><span class="nav-icon">⌂</span>Dashboard</a>
+  <a href="{% url 'shopiva_admin:home_order_changelist' %}"><span class="nav-icon">▣</span>Orders</a>
+  <a href="{% url 'shopiva_admin:home_product_changelist' %}"><span class="nav-icon">◇</span>Products</a>
+  <a href="{% url 'shopiva_admin:auth_user_changelist' %}"><span class="nav-icon">♙</span>Customers & Staff</a>
+  <a href="{% url 'shopiva_admin:delivery_map' %}"><span class="nav-icon">⌁</span>Delivery</a>
+  <div class="nav-section">Operations</div>
+  <a href="{% url 'shopiva_admin:approval_center' %}"><span class="nav-icon">✓</span>Approvals Center</a>
+  <a href="{% url 'admin_notifications' %}"><span class="nav-icon">●</span>Notifications</a>
+  <a href="{% url 'support_admin_center' %}"><span class="nav-icon">◉</span>Support Center</a>
+  <a href="{% url 'support_admin_center' %}?source=system"><span class="nav-icon">⚙</span>System Issues</a>
+  <a href="{% url 'statistics_center' %}"><span class="nav-icon">▥</span>Statistics</a>
+  <a href="{% url 'business_intelligence' %}"><span class="nav-icon">◫</span>Business Intelligence</a>
+  <a href="{% url 'coop_connect_sit_console' %}"><span class="nav-icon">▤</span>Co-op Connect</a>
+  <div class="nav-help"><b>Need help?</b><span>System Admin Support · Shopiva operations</span><a href="{% url 'support_admin_center' %}">Open Support</a></div>
+</aside>
+<nav class="shopiva-mobile-nav" aria-label="Shopiva mobile navigation">
+  <a href="{% url 'shopiva_admin:index' %}">⌂ Home</a>
+  <a href="{% url 'shopiva_admin:home_order_changelist' %}">Orders</a>
+  <a href="{% url 'shopiva_admin:home_product_changelist' %}">Products</a>
+  <a href="{% url 'shopiva_admin:approval_center' %}">Approvals</a>
+  <a href="{% url 'support_admin_center' %}">Support</a>
+  <a href="{% url 'shopiva_admin:delivery_map' %}">Delivery</a>
 </nav>
-<script>(function(){const STATUS_URL="{% url 'admin_session_status' %}",LOGIN_URL="{% url 'shopiva_admin:login' %}";let checking=false;async function verify(){if(checking)return;checking=true;try{const r=await fetch(STATUS_URL,{credentials:'same-origin',cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest'}});if(!r.ok)throw new Error();const s=await r.json();if(!s.authenticated)window.location.replace(LOGIN_URL)}catch(e){window.location.replace(LOGIN_URL)}finally{checking=false}}window.addEventListener('pageshow',verify);window.addEventListener('popstate',verify);setTimeout(verify,150)})();</script>
+<div class="shopiva-shell-content"></div>
+<script>(function(){const STATUS_URL="{% url 'admin_session_status' %}",LOGIN_URL="{% url 'shopiva_admin:login' %}";let checking=false;async function verify(){if(checking)return;checking=true;try{const r=await fetch(STATUS_URL,{credentials:'same-origin',cache:'no-store',headers:{'X-Requested-With':'XMLHttpRequest'}});if(!r.ok)throw new Error();const s=await r.json();if(!s.authenticated)window.location.replace(LOGIN_URL)}catch(e){window.location.replace(LOGIN_URL)}finally{checking=false}}window.addEventListener('pageshow',verify);window.addEventListener('popstate',verify);setTimeout(verify,150)})();})();</script>
 {% endblock %}
