@@ -12,7 +12,7 @@
 </style>
 </head>
 <body>
-<header class="topbar"><div class="topbar-in"><a class="brand" href="{% url 'home' %}">Shopiva<span>Kenya</span></a><nav class="topnav"><a class="navbtn bell" href="#notifications">🔔 <span class="label">Notifications</span>{% if notifications %}<span class="bell-badge">{{ notifications|length }}</span>{% endif %}</a><a class="navbtn primary" href="{% url 'seller_product_add' %}">＋ <span class="label">Add Product</span></a><a class="navbtn dark" href="{% url 'seller_logout' %}">⇥ <span class="label">Sign out</span></a></nav></div></header>
+<header class="topbar"><div class="topbar-in"><a class="brand" href="{% url 'home' %}">Shopiva<span>Kenya</span></a><nav class="topnav"><a class="navbtn bell" href="{% url 'seller_notifications' %}">🔔 <span class="label">Notifications</span>{% if unread_notifications %}<span class="bell-badge">{{ unread_notifications }}</span>{% endif %}</a><a class="navbtn primary" href="{% url 'seller_product_add' %}">＋ <span class="label">Add Product</span></a><a class="navbtn dark" href="{% url 'seller_logout' %}">⇥ <span class="label">Sign out</span></a></nav></div></header>
 <main class="wrap">
 <section class="hero"><div><div class="eyebrow">Seller Workspace</div><h1>{{ seller.business_name|default:seller.user.username }}</h1><p>Products, orders, protected earnings and payouts — all in one place.</p></div><div class="quick"><a class="add" href="{% url 'seller_product_add' %}">＋ List a product</a><a class="home" href="{% url 'home' %}">View Shop →</a></div></section>
 <section class="seller-command panel">
@@ -66,7 +66,6 @@
 
 <section class="panel" style="margin-bottom:15px"><div class="panel-head"><h2>Recent sales & settlement</h2><span>Payment confirmed → held → delivered → released</span></div><div class="table-wrap"><table class="table"><thead><tr><th>Order</th><th>Product</th><th>Qty</th><th>Product sale</th><th>Shopiva fee</th><th>Seller earnings</th><th>Status</th></tr></thead><tbody>{% for i in order_items %}<tr><td>{{ i.order.tracking_code }}</td><td>{{ i.product.name }}</td><td>{{ i.quantity }}</td><td>KSh {{ i.seller_gross }}</td><td>KSh {{ i.platform_commission }}</td><td>KSh {{ i.seller_net }}</td><td>{% if i.order.status == 'delivered' %}<span class="status live">Delivered · released</span>{% elif i.order.payment_status == 'paid' %}<span class="status low">Paid · held</span>{% else %}<span class="status paused">Awaiting payment</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="7" class="empty">No sales yet.</td></tr>{% endfor %}</tbody></table></div></section>
 </section>
-<section class="panel" id="notifications"><div class="panel-head"><h2>Notifications</h2><span>Payment, delivery and payout alerts</span></div><div class="note-list">{% for n in notifications %}<article class="note"><b>{{ n.title }}</b><p>{{ n.message }}</p><time>{{ n.created_at }}</time></article>{% empty %}<div class="note"><p>No new notifications.</p></div>{% endfor %}</div></section>
 <div class="footer">Shopiva Kenya LTD · Customer payments are protected until delivery is completed. Seller commission is platform-controlled.</div>
 </main>
 
