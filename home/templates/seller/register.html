@@ -1,2 +1,147 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Sell on Shopiva</title><style>*{box-sizing:border-box}body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:#f3f7f5;color:#17241f}.topbar{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border-bottom:1px solid #e1ebe6}.topbar-in{max-width:1100px;margin:auto;padding:13px 20px;display:flex;align-items:center;justify-content:space-between}.brand{font-weight:950;font-size:21px;letter-spacing:-.04em;text-decoration:none;color:#17241f}.brand span{color:#08a66d}.top-actions{display:flex;gap:8px}.top-actions a{padding:9px 13px;border-radius:10px;text-decoration:none;font-size:11px;font-weight:900;border:1px solid #dce7e1;color:#27372f;background:#fff}.top-actions .login{background:#0a9f69;color:#fff;border-color:#0a9f69}.wrap{max-width:900px;margin:38px auto;padding:0 20px}.card{background:#fff;border:1px solid #e0e9e4;border-radius:24px;padding:34px;box-shadow:0 20px 60px rgba(15,55,38,.08)}.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.14em;font-weight:950;color:#07885b}.head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.head h1{margin:7px 0 8px;font-size:34px;letter-spacing:-.045em}.head p{margin:0;color:#708078;line-height:1.55}.trust{padding:10px 12px;border-radius:12px;background:#effaf5;border:1px solid #ccefe0;color:#08784f;font-size:10px;font-weight:900;white-space:nowrap}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:25px}.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}label{font-size:12px;font-weight:850}input{width:100%;padding:13px;border:1px solid #cfdcd5;border-radius:11px;font:inherit;outline:none;background:#fbfdfc}input:focus{border-color:#0a9f69;box-shadow:0 0 0 4px rgba(10,159,105,.1);background:#fff}.hint{font-size:9px;color:#819089}.btn{margin-top:22px;background:#0a9f69;color:#fff;border:0;padding:13px 18px;border-radius:11px;font-weight:900;cursor:pointer;font-size:12px}.err{background:#fff3f3;color:#a11;border:1px solid #ffd0d0;padding:12px;border-radius:11px;margin-top:18px;font-size:11px;overflow:auto}.bottom{text-align:center;margin-top:18px;color:#77847e;font-size:12px}.bottom a{color:#0a8e60;font-weight:900;text-decoration:none}@media(max-width:700px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}.head{flex-direction:column}.trust{white-space:normal}.top-actions .home{display:none}}
-</style></head><body><header class="topbar"><div class="topbar-in"><a class="brand" href="{% url 'home' %}">Shopiva<span>Kenya</span></a><div class="top-actions"><a class="home" href="{% url 'home' %}">Shopiva Home</a><a class="login" href="{% url 'seller_login' %}">Seller Login →</a></div></div></header><main class="wrap"><section class="card"><div class="head"><div><div class="eyebrow">Seller onboarding</div><h1>Start selling on Shopiva</h1><p>Create your seller account and get a dedicated workspace for products, orders, earnings and payouts.</p></div><div class="trust">🔐 Secure seller access</div></div>{% if form.errors %}<div class="err">{{ form.errors }}</div>{% endif %}<form method="post"><input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}"><div class="grid"><div class="field"><label>Username</label>{{ form.username }}</div><div class="field"><label>Email</label>{{ form.email }}</div><div class="field"><label>Business name</label>{{ form.business_name }}</div><div class="field"><label>M-PESA payout number</label>{{ form.mpesa_phone }}<div class="hint">Used for future verified seller payouts.</div></div><div class="field"><label>Password</label>{{ form.password1 }}</div><div class="field"><label>Confirm password</label>{{ form.password2 }}</div></div><button class="btn" type="submit">Create Seller Account →</button></form><div class="bottom">Already a seller? <a href="{% url 'seller_login' %}">Sign in from the top Seller Login button</a></div></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sell on Shopiva | Seller Registration</title>
+{% load static %}
+<style>
+*{box-sizing:border-box}
+:root{--green:#08a66d;--green-dark:#063d2b;--ink:#12221c;--muted:#6d7d75;--line:#dfe9e4;--soft:#f3f8f5;--gold:#d9a441}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:linear-gradient(135deg,#eef6f2 0%,#f8fbf9 52%,#edf6f1 100%);min-height:100vh}
+a{text-decoration:none}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-bottom:1px solid rgba(210,224,217,.85)}
+.topbar-in{max-width:1180px;margin:auto;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.brand{display:inline-flex;align-items:center;gap:9px;color:var(--ink);font-weight:950;font-size:20px;letter-spacing:-.045em}
+.brand img{width:36px;height:36px;object-fit:contain}
+.brand span{color:var(--green)}
+.top-actions{display:flex;align-items:center;gap:8px}
+.top-actions a{display:inline-flex;align-items:center;justify-content:center;padding:9px 13px;border-radius:10px;font-size:11px;font-weight:900;border:1px solid var(--line);color:#26372f;background:#fff}
+.top-actions .login{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 7px 18px rgba(8,166,109,.16)}
+.page{max-width:1180px;margin:28px auto 45px;padding:0 22px}
+.shell{display:grid;grid-template-columns:minmax(330px,.82fr) minmax(500px,1.18fr);border:1px solid #dbe7e1;border-radius:28px;overflow:hidden;background:#fff;box-shadow:0 28px 80px rgba(20,63,45,.12)}
+.story{position:relative;min-height:690px;padding:38px;color:#fff;background:linear-gradient(145deg,rgba(3,30,21,.96),rgba(5,83,57,.88)),url("https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1100&q=88") center/cover}
+.story:after{content:"";position:absolute;inset:auto -80px -110px auto;width:300px;height:300px;border-radius:50%;background:rgba(10,180,120,.18);filter:blur(4px)}
+.story-content{position:relative;z-index:1;max-width:430px;height:100%;display:flex;flex-direction:column}
+.story-logo{width:76px;height:76px;object-fit:contain;background:rgba(255,255,255,.96);border-radius:20px;padding:8px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.story-kicker{margin-top:34px;font-size:10px;text-transform:uppercase;letter-spacing:.18em;font-weight:950;color:#9ff0cf}
+.story h1{font-size:42px;line-height:1.02;letter-spacing:-.055em;margin:9px 0 14px}
+.story p{margin:0;color:#d3eee3;font-size:13px;line-height:1.7;max-width:390px}
+.benefits{display:grid;gap:10px;margin-top:auto;padding-top:34px}
+.benefit{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);border-radius:13px;backdrop-filter:blur(7px)}
+.benefit-icon{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:rgba(10,166,109,.26);font-size:14px}
+.benefit b{display:block;font-size:11px}
+.benefit span{display:block;margin-top:2px;color:#b8d9cd;font-size:9px}
+.form-side{padding:38px 40px 34px;background:#fff}
+.form-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start}
+.eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.16em;font-weight:950;color:#07885b}
+.form-head h2{font-size:31px;letter-spacing:-.05em;margin:7px 0 8px}
+.form-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.6;max-width:560px}
+.trust{display:inline-flex;align-items:center;gap:6px;padding:9px 11px;border-radius:999px;background:#effaf5;border:1px solid #ccefe0;color:#08784f;font-size:9px;font-weight:950;white-space:nowrap}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:24px 0 4px}
+.step{padding:9px 10px;border-radius:10px;background:#f6f9f7;color:#77867e;font-size:9px;font-weight:850;border:1px solid #e8efeb}
+.step.active{background:#e9fbf3;border-color:#bdebd7;color:#08784f}
+.step b{display:block;font-size:8px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px}
+.form-error{margin:17px 0 0;padding:12px 13px;border:1px solid #ffd1d1;background:#fff5f5;color:#9f2020;border-radius:12px;font-size:10px;line-height:1.5}
+.form-error ul{margin:5px 0 0;padding-left:18px}
+form{margin-top:22px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field label{font-size:11px;font-weight:900;color:#26362f}
+.field input{width:100%;padding:13px 13px;border:1px solid #cfdcd5;border-radius:11px;font:inherit;font-size:12px;color:#1c2c25;background:#fbfdfc;outline:none;transition:.18s}
+.field input:hover{border-color:#b9cbc1}
+.field input:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(8,166,109,.10);background:#fff}
+.hint{font-size:9px;color:#87958e;line-height:1.4}
+.submit-row{display:flex;align-items:center;gap:14px;margin-top:22px}
+.btn{border:0;background:linear-gradient(135deg,#0aa66d,#078b5c);color:#fff;padding:13px 18px;border-radius:11px;font-weight:950;cursor:pointer;font-size:11px;box-shadow:0 10px 22px rgba(8,166,109,.18)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 13px 25px rgba(8,166,109,.22)}
+.form-note{font-size:9px;color:#7b8982;line-height:1.45}
+.form-note b{color:#3a4b43}
+.bottom{margin-top:21px;padding-top:18px;border-top:1px solid #edf2ef;text-align:center;color:#78857f;font-size:10px}
+.bottom a{color:#078b5c;font-weight:950}
+.security{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:12px;color:#8a9690;font-size:9px}
+.security-dot{width:7px;height:7px;border-radius:50%;background:#08a66d;box-shadow:0 0 0 4px #e5f8ef}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.story{min-height:auto}.benefits{margin-top:35px}.story h1{font-size:36px}.form-side{padding:32px 28px}}
+@media(max-width:650px){.top-actions .home{display:none}.page{margin-top:16px;padding:0 12px}.topbar-in{padding:10px 14px}.shell{border-radius:20px}.story,.form-side{padding:26px 20px}.story{min-height:520px}.story-logo{width:62px;height:62px}.form-head{flex-direction:column}.form-head h2{font-size:27px}.trust{white-space:normal}.grid{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.submit-row{align-items:stretch;flex-direction:column}.btn{width:100%}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="{% url 'home' %}">
+      <img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya LTD">
+      <span>Shopiva</span>Kenya
+    </a>
+    <div class="top-actions">
+      <a class="home" href="{% url 'home' %}">Shopiva Home</a>
+      <a class="login" href="{% url 'seller_login' %}">Seller Login →</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="shell">
+    <aside class="story">
+      <div class="story-content">
+        <img class="story-logo" src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya LTD logo">
+        <div class="story-kicker">Shopiva seller network</div>
+        <h1>Turn your business into a bigger marketplace.</h1>
+        <p>Join Shopiva Kenya and manage your products, orders, sales and eligible payouts from one dedicated seller workspace.</p>
+
+        <div class="benefits">
+          <div class="benefit"><div class="benefit-icon">📦</div><div><b>One seller workspace</b><span>Products, stock and orders in one place.</span></div></div>
+          <div class="benefit"><div class="benefit-icon">📊</div><div><b>Clear sales visibility</b><span>Track marketplace activity and earnings.</span></div></div>
+          <div class="benefit"><div class="benefit-icon">🚚</div><div><b>Connected fulfilment</b><span>Orders flow into Shopiva's delivery system.</span></div></div>
+          <div class="benefit"><div class="benefit-icon">💳</div><div><b>Verified payouts</b><span>Keep your M-PESA payout details ready.</span></div></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="form-side">
+      <div class="form-head">
+        <div>
+          <div class="eyebrow">Seller onboarding</div>
+          <h2>Start selling on Shopiva</h2>
+          <p>Create your seller account. Once approved, you'll have access to your dedicated seller workspace.</p>
+        </div>
+        <div class="trust">🔐 Secure seller access</div>
+      </div>
+
+      <div class="steps">
+        <div class="step active"><b>01</b>Create account</div>
+        <div class="step"><b>02</b>Seller approval</div>
+        <div class="step"><b>03</b>Start selling</div>
+      </div>
+
+      {% if form.errors %}
+      <div class="form-error">
+        <strong>Please check the highlighted registration details.</strong>
+        {{ form.errors }}
+      </div>
+      {% endif %}
+
+      <form method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <div class="grid">
+          <div class="field"><label for="{{ form.username.id_for_label }}">Username</label>{{ form.username }}</div>
+          <div class="field"><label for="{{ form.email.id_for_label }}">Email address</label>{{ form.email }}</div>
+          <div class="field"><label for="{{ form.business_name.id_for_label }}">Business name</label>{{ form.business_name }}</div>
+          <div class="field"><label for="{{ form.mpesa_phone.id_for_label }}">M-PESA payout number</label>{{ form.mpesa_phone }}<div class="hint">Used for future verified seller payouts.</div></div>
+          <div class="field"><label for="{{ form.password1.id_for_label }}">Password</label>{{ form.password1 }}</div>
+          <div class="field"><label for="{{ form.password2.id_for_label }}">Confirm password</label>{{ form.password2 }}</div>
+        </div>
+
+        <div class="submit-row">
+          <button class="btn" type="submit">Create Seller Account →</button>
+          <div class="form-note"><b>Ready to grow?</b><br>Your registration details stay within Shopiva's seller onboarding flow.</div>
+        </div>
+      </form>
+
+      <div class="bottom">Already a seller? <a href="{% url 'seller_login' %}">Sign in to your Seller Workspace →</a></div>
+      <div class="security"><span class="security-dot"></span> Shopiva seller authentication</div>
+    </section>
+  </section>
+</main>
+</body>
+</html>
