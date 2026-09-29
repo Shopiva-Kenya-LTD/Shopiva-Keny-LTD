@@ -121,7 +121,7 @@ body{
     <a class="active" href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals</a>
     <a href="{% url 'admin_notifications' %}">🔔 Notifications</a>
     <a href="{% url 'support_admin_center' %}">🛟 Issues</a>
-    <a href="{% url 'support_admin_center' %}?source=system">⚙️ System</a>
+    <a href="{% url 'system_issues_center' %}">⚙️ System</a>
     <a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a>
     <a href="{% url 'business_intelligence' %}">📊 Reports</a>
     <a href="{% url 'shopiva_admin:index' %}">← Admin</a>
@@ -145,7 +145,7 @@ body{
       <a class="link" href="{% url 'shopiva_admin:approval_center' %}"><strong>🛡️ Staff Approval Center</strong><span>Verify and approve new delivery staff before they can access operations.</span></a>
       <a class="link" href="{% url 'admin_notifications' %}"><strong>🔔 Notification Center</strong><span>Read and manage staff notifications.</span></a>
       <a class="link" href="{% url 'support_admin_center' %}"><strong>🛟 Raised Issues</strong><span>Customer and seller support cases.</span></a>
-      <a class="link" href="{% url 'support_admin_center' %}?source=system"><strong>⚙️ System-Raised Issues</strong><span>Automatic payment/order assistance cases.</span></a>
+      <a class="link" href="{% url 'system_issues_center' %}"><strong>⚙️ System-Raised Issues</strong><span>Automatic payment/order assistance cases.</span></a>
       <a class="link" href="{% url 'shopiva_admin:delivery_map' %}"><strong>📡 Live Delivery Command</strong><span>Rider GPS and delivery monitoring.</span></a>
       <a class="link" href="{% url 'business_intelligence' %}"><strong>📊 Business Reports</strong><span>Orders, revenue, catalog and operational intelligence.</span></a>
     </div>
