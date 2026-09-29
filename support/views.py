@@ -276,8 +276,8 @@ def support_admin_center(request):
                         f"&source={source_filter}&q={search}"
                     )
         elif action == "delete":
-            # Permanent deletion is deliberately restricted to resolved/closed
-            # cases so active support work cannot be removed accidentally.
+            # System-raised cases may be removed from the queue by an admin;
+            # user-raised active cases remain protected until resolved/closed.
             if not (_is_system_ticket(selected_ticket) or selected_ticket.status in {"resolved", "closed"}):
                 messages.error(request, "Only system-raised or resolved/closed cases can be deleted.")
             else:
