@@ -611,7 +611,8 @@ def realtime_call(request):
                         "query": {"type": "string"},
                         "category": {"type": "string"},
                         "max_price": {"type": "number"},
-                    },                    "additionalProperties": False,
+                    },
+                    "additionalProperties": False,
                 },
             },
             {
@@ -998,5 +999,3 @@ def realtime_action(request):
         except (TypeError, ValueError):
             return JsonResponse({"ok": False, "error": "Invalid order id."}, status=400)
         data = _order_details(order_id, seller=seller)
-        if not data:
-            return JsonResponse({"ok": False, "error": "That order was not found for your seller account."}, status=404)
