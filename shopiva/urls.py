@@ -38,7 +38,7 @@ from home.legal import privacy_policy, terms_of_service, account_deletion
 from home.merchant_feed import merchant_feed_xml
 from home.shipping_policy import shipping_policy
 from home.returns_policy import returns_policy
-from support.views import support_admin_center, support_center
+from support.views import support_admin_center, support_center, system_issues_center
 
 urlpatterns = [
     path("", home, name="home"),
@@ -81,6 +81,7 @@ urlpatterns = [
 
     path("support/", support_center, name="support_center"),
     path("admin/support-center/", support_admin_center, name="support_admin_center"),
+    path("admin/system-issues/", system_issues_center, name="system_issues_center"),
 
     path("seller/notifications/", seller_notification_center, name="seller_notifications"),
     path("notifications/", customer_notification_center, name="notification_center"),
