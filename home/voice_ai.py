@@ -32,11 +32,7 @@ def _voice_auth_error(request):
             {"ok": False, "error": "Authentication is required for Shopiva voice AI."},
             status=401,
         )
-    try:
-        delivery_profile = user.delivery_agent_profile
-    except DeliveryAgent.DoesNotExist:
-        delivery_profile = None
-    # Delivery accounts get a strictly scoped read-only copilot below.
+    # Delivery accounts receive a strictly scoped read-only copilot below.
     return None
 
 
@@ -297,8 +293,7 @@ def _audit_voice_action(request, action, detail=None):
             action=action,
             detail=detail or {},
         )
-    except Exception:
-        pass
+    except Exception:        pass
 
 
 def _admin_business_summary():
@@ -535,6 +530,18 @@ def realtime_call(request):
             },
             {
                 "type": "function",
+                "name": "get_nia_health",
+                "description": "Return Nia configuration and recent voice audit health signals without exposing secrets.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_support_overview",
+                "description": "Return live counts of Shopiva support tickets by operational status.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
                 "name": "get_order_attention",
                 "description": "Return recent orders with unpaid, pending, or failed payment status that need attention.",
                 "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
@@ -579,6 +586,12 @@ def realtime_call(request):
             },
             {
                 "type": "function",
+                "name": "get_seller_sales_summary",
+                "description": "Return this seller's live sales, commission and payout balances.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
                 "name": "get_seller_summary",
                 "description": "Return this seller's live product counts, order counts and payout balances.",
                 "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
@@ -597,8 +610,7 @@ def realtime_call(request):
                         "query": {"type": "string"},
                         "category": {"type": "string"},
                         "max_price": {"type": "number"},
-                    },
-                    "additionalProperties": False,
+                    },                    "additionalProperties": False,
                 },
             },
             {
@@ -631,6 +643,12 @@ def realtime_call(request):
                     "required": ["product_id", "quantity"],
                     "additionalProperties": False,
                 },
+            },
+            {
+                "type": "function",
+                "name": "get_my_orders",
+                "description": "Return the authenticated customer's own recent orders only.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
             },
             {
                 "type": "function",
@@ -769,6 +787,17 @@ def realtime_action(request):
         _audit_voice_action(request, action, {"product_id": product.id, "quantity": quantity})
         return JsonResponse({"ok": True, "message": f"Added {quantity} {product.name} to your cart.", "product": product.name, "quantity": new_quantity})
 
+    if action == "get_my_orders":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to check your orders."}, status=401)
+        rows = list(
+            Order.objects.filter(email__iexact=request.user.email)
+            .order_by("-created_at")
+            .values("id", "tracking_code", "status", "payment_status", "total_amount", "delivery_town", "delivery_county", "created_at")[:20]
+        )
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, "orders": rows})
+
     if action == "get_my_order_status":
         try:
             order_id = int(payload.get("order_id"))
@@ -828,6 +857,20 @@ def realtime_action(request):
         )
         return JsonResponse({"ok": True, "orders": rows})
 
+    if action == "get_seller_sales_summary":
+        seller = _seller_for_request(request)
+        if not seller:
+            return JsonResponse({"ok": False, "error": "Active seller access required."}, status=403)
+        wallet = getattr(seller, "wallet", None)
+        data = {
+            "total_sales": str(wallet.total_sales) if wallet else "0.00",
+            "total_commission": str(wallet.total_commission) if wallet else "0.00",
+            "pending_balance": str(wallet.pending_balance) if wallet else "0.00",
+            "available_balance": str(wallet.available_balance) if wallet else "0.00",
+        }
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
+
     if action == "get_seller_summary":
         seller = _seller_for_request(request)
         if not seller:
@@ -855,6 +898,39 @@ def realtime_action(request):
         })
 
 
+
+    if action == "get_nia_health":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        from .models import NiaAuditLog
+        since = timezone.now() - timezone.timedelta(hours=24)
+        failed = NiaAuditLog.objects.filter(created_at__gte=since, action__icontains="failed").count()
+        data = {
+            "openai_key_configured": bool(os.getenv("OPENAI_API_KEY", "").strip()),
+            "realtime_model_configured": bool(os.getenv("OPENAI_REALTIME_MODEL", "").strip()),
+            "realtime_voice_configured": bool(os.getenv("OPENAI_REALTIME_VOICE", "").strip()),
+            "audit_failures_24h": failed,
+            "action_rate_limit_per_minute": VOICE_RATE_LIMITS["realtime_action"],
+            "realtime_calls_per_minute": VOICE_RATE_LIMITS["realtime_call"],
+        }
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
+
+    if action == "get_support_overview":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        try:
+            from support.models import SupportTicket
+            data = {
+                "open": SupportTicket.objects.filter(status="open").count(),
+                "in_progress": SupportTicket.objects.filter(status="in_progress").count(),
+                "waiting_for_customer": SupportTicket.objects.filter(status="waiting_for_customer").count(),
+                "urgent": SupportTicket.objects.filter(status="open", priority="urgent").count(),
+            }
+        except Exception:
+            data = {"available": False, "error": "Support ticket data is unavailable."}
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
 
     if action == "get_financial_overview":
         if not request.user.is_staff:
@@ -998,37 +1074,3 @@ def transcribe_voice(request):
                 )
         return JsonResponse({"ok": True, "text": getattr(transcript, "text", "").strip()})
     except Exception:
-        return JsonResponse({"ok": False, "error": "I could not understand that recording. Please try again."}, status=502)
-
-
-def speak_text(request):
-    auth_error = _voice_auth_error(request)
-    if auth_error:
-        return auth_error
-    if request.method != "POST":
-        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
-    rate_limit = _voice_rate_limit(request, "speak_text")
-    if rate_limit:
-        return rate_limit
-    if request.method != "POST":
-        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
-    if not os.getenv("OPENAI_API_KEY", "").strip():
-        return JsonResponse({"ok": False, "error": "Voice AI is not configured yet."}, status=503)
-    text = request.POST.get("text", "").strip()[:2500]
-    if not text:
-        return JsonResponse({"ok": False, "error": "No text was supplied."}, status=400)
-    try:
-        from openai import OpenAI
-        client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp:
-            output_path = temp.name
-        speech = client.audio.speech.create(
-            model=os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts"),
-            voice=os.getenv("OPENAI_TTS_VOICE", "alloy"),
-            input=text,
-            response_format="mp3",
-        )
-        speech.write_to_file(output_path)
-        return FileResponse(open(output_path, "rb"), as_attachment=False, filename="shopiva-ai.mp3", content_type="audio/mpeg")
-    except Exception:
-        return JsonResponse({"ok": False, "error": "Voice feedback is temporarily unavailable."}, status=502)
