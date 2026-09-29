@@ -2,7 +2,6 @@ import json
 import os
 import tempfile
 import urllib.error
-import urllib.error
 import urllib.request
 import uuid
 
