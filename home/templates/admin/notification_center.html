@@ -10,7 +10,7 @@ body{background:radial-gradient(circle at 90% 0%,#eafff1 0,transparent 28%),line
 {% endblock %}
 {% block content %}
 <div class="nwrap">
-<nav class="ops-nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals</a><a class="active" href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'support_admin_center' %}?source=system">⚙️ System</a><a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a href="{% url 'business_intelligence' %}">📊 Reports</a></nav>
+<nav class="ops-nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals</a><a class="active" href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'system_issues_center' %}">⚙️ System</a><a href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a href="{% url 'business_intelligence' %}">📊 Reports</a></nav>
   <div class="topline">
     <div><span class="eyebrow">Shopiva Kenya LTD · Protected communications</span><h1>Admin Notification Center</h1><p>Operational alerts, delivery events, payment updates and system communications for authorized staff.</p></div>
     <div class="top-actions"><a class="primary" href="{% url 'shopiva_admin:approval_center' %}">🛡️ Operations Center</a><a href="{% url 'shopiva_admin:index' %}">← Control Center</a></div>
