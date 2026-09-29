@@ -1,6 +1,7 @@
 import json
 import os
 import tempfile
+import urllib.error
 import urllib.request
 import uuid
 
@@ -393,9 +394,23 @@ def realtime_call(request):
         offer_sdp = request.body.decode("utf-8")
         answer_sdp = _openai_multipart_sdp(offer_sdp, session)
         return HttpResponse(answer_sdp, content_type="application/sdp")
-    except Exception:
+    except urllib.error.HTTPError as exc:
+        # Surface the provider's non-secret error so the browser can distinguish
+        # billing/quota/auth/model failures from a local WebRTC failure.
+        try:
+            provider_body = exc.read().decode("utf-8", errors="replace")
+            provider_data = json.loads(provider_body)
+            provider_error = provider_data.get("error") or {}
+            detail = provider_error.get("message") or provider_error.get("code") or "OpenAI rejected the realtime session."
+        except Exception:
+            detail = "OpenAI rejected the realtime session."
         return JsonResponse(
-            {"ok": False, "error": "Could not start the realtime voice session."},
+            {"ok": False, "error": f"Realtime provider error ({exc.code}): {detail}"},
+            status=502,
+        )
+    except Exception as exc:
+        return JsonResponse(
+            {"ok": False, "error": f"Could not start the realtime voice session: {type(exc).__name__}."},
             status=502,
         )
 
