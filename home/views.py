@@ -64,6 +64,10 @@ def _notify_product_indexnow(product):
     site = str(getattr(settings, "PUBLIC_SITE_URL", "https://shopivakenya.top") or "https://shopivakenya.top").rstrip("/")
     submit_urls([f"{site}/product/{product.id}/"])
 
+def contact_center(request):
+    return render(request, "contact.html")
+
+
 def customer_register(request):
     if request.user.is_authenticated:
         if request.user.is_staff or request.user.is_superuser:
