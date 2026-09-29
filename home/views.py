@@ -5,7 +5,7 @@ from django.conf import settings
 
 from django.contrib import messages
 from django.db import IntegrityError, transaction
-from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth import login as auth_login, logout as auth_logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.paginator import Paginator
@@ -649,8 +649,31 @@ def seller_register(request):
         if form.is_valid():
             with transaction.atomic():
                 user = form.save()
-                seller = SellerProfile.objects.create(user=user, business_name=form.cleaned_data["business_name"].strip(), mpesa_phone=form.cleaned_data["mpesa_phone"].strip())
+                seller = SellerProfile.objects.create(
+                    user=user,
+                    business_name=form.cleaned_data["business_name"].strip(),
+                    business_nature=form.cleaned_data["business_nature"].strip(),
+                    mpesa_phone=form.cleaned_data["mpesa_phone"].strip(),
+                )
                 SellerWallet.objects.create(seller=seller)
+
+            # Alert every active administrator immediately when a new seller joins.
+            admin_user_model = get_user_model()
+            admin_users = admin_user_model.objects.filter(is_staff=True, is_active=True).only("id")
+            for admin_user in admin_users:
+                notify_user(
+                    admin_user,
+                    "system",
+                    "New seller registration",
+                    (
+                        f"New seller account: {seller.business_name or seller.user.username}. "
+                        f"Nature of business: {seller.business_nature}. "
+                        f"Username: {seller.user.username}. Email: {seller.user.email}."
+                    ),
+                    link="/admin/operations-center/",
+                    email=admin_user.email,
+                )
+
             auth_login(request, user)
             messages.success(request, "Seller account created. Add your first product from the seller dashboard.")
             return redirect("seller_dashboard")
