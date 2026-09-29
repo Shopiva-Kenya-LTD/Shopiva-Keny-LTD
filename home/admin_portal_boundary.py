@@ -38,6 +38,9 @@ class ShopivaAdminPortalBoundaryMiddleware:
         "/media/",
         # Admin-only Nia phone endpoints may be called by the Control Center.
         "/ai/phone/",
+        # Browser Nia Live Copilot endpoints used by the Admin Control Center.
+        "/ai/realtime/",
+        "/ai/nia/dashboard-context/",
     )
 
     def __init__(self, get_response):
