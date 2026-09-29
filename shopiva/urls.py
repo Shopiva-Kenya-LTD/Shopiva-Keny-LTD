@@ -51,6 +51,7 @@ urlpatterns = [
     path("terms/", terms_of_service, name="terms_of_service"),
     path("shipping/", shipping_policy, name="shipping_policy"),
     path("returns/", returns_policy, name="returns_policy"),
+    path("contact/", contact_center, name="contact_center"),
     path("account/delete/", account_deletion, name="account_deletion"),
     path("favicon.ico", favicon, name="favicon"),
     path("app-icon.svg", shopiva_app_icon, name="shopiva_app_icon"),
