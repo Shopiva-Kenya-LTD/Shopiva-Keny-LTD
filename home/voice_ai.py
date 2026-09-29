@@ -108,6 +108,7 @@ def _openai_multipart_sdp(sdp, session):
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": f"multipart/form-data; boundary={boundary}",
+            "Accept": "application/sdp",
             "Content-Length": str(len(body)),
         },
     )
