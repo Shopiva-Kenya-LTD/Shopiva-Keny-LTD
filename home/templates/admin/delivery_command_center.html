@@ -11,7 +11,7 @@ body{background:#f4f8f6!important}.content,#content{max-width:none!important;pad
 {% endblock %}
 {% block content %}
 <div class="dcc">
-<nav class="center-nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals</a><a href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'support_admin_center' %}?source=system">⚙️ System</a><a class="active" href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a href="{% url 'business_intelligence' %}">📊 Reports</a></nav>
+<nav class="center-nav"><a href="{% url 'shopiva_admin:index' %}">← Admin</a><a href="{% url 'shopiva_admin:approval_center' %}">🛡️ Approvals</a><a href="{% url 'admin_notifications' %}">🔔 Notifications</a><a href="{% url 'support_admin_center' %}">🛟 Issues</a><a href="{% url 'system_issues_center' %}">⚙️ System</a><a class="active" href="{% url 'shopiva_admin:delivery_map' %}">📡 Delivery</a><a href="{% url 'business_intelligence' %}">📊 Reports</a></nav>
   <header class="dcc-head"><div><span class="eyebrow">Shopiva Kenya LTD · Private Operations</span><h1>Delivery Command Center</h1><p class="dcc-sub">The same live delivery map experience used by customers, extended for full operations visibility.</p></div><div class="feed-state"><i class="feed-dot"></i><span id="feedState">Connecting to live feed…</span></div></header>
   <section class="stats">
     <div class="stat"><small>Active deliveries</small><strong id="statActive">{{ delivery_dashboard.active }}</strong></div>
