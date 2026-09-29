@@ -167,6 +167,9 @@ def support_center(request):
 
     open_user_count = tickets.filter(status__in=("open", "in_progress", "waiting_for_customer")).count()
     system_count = sum(1 for ticket in tickets if _is_system_ticket(ticket))
+    customer_count = tickets.filter(role="customer").count()
+    seller_count = tickets.filter(role="seller").count()
+    urgent_count = tickets.filter(priority="urgent", status__in=("open", "in_progress", "waiting_for_customer")).count()
 
     return render(
         request,
