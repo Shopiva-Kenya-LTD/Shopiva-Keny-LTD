@@ -89,16 +89,19 @@ function init(el){
    dc.onmessage=async e=>{
     try{
      const ev=JSON.parse(e.data);
-     if(ev.type==='error'){setStatus(ev.error?.message||'Nia voice error.');return}
+     if(ev.type==='error'){const msg=ev.error?.message||'Nia voice error.';setStatus(msg);speakFeedback('Nia encountered a voice error. '+msg);return}
      if(ev.type==='input_audio_buffer.speech_started')setStatus('🎙️ Listening…');
      if(ev.type==='input_audio_buffer.speech_stopped')setStatus('Thinking…');
      if(ev.type==='response.created')setStatus('🔊 Nia is answering…');
+     if(ev.type==='conversation.item.input_audio_transcription.completed'&&ev.transcript)setStatus('🎙️ You: '+ev.transcript);
      if(ev.type==='response.audio_transcript.done'&&ev.transcript)setStatus('🔊 Nia: '+ev.transcript);
      if(ev.type==='response.done'&&voiceActive)setStatus('🟢 Nia is listening — ask another question.');
      if(ev.type==='response.function_call_arguments.done'){
       const args=JSON.parse(ev.arguments||'{}');
       const response=await fetch('/ai/realtime/action/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:JSON.stringify({action:ev.name,...args})});
-      const out=await response.json();
+      let out={ok:false,error:'Nia could not complete that live data request.'};
+      try{out=await response.json()}catch(_){}
+      if(!response.ok)out={ok:false,error:out.error||('Live data request failed (HTTP '+response.status+').')};
       if(dc&&dc.readyState==='open'){
        dc.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:ev.call_id,output:JSON.stringify(out)}}));
        dc.send(JSON.stringify({type:'response.create'}));
