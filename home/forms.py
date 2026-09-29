@@ -247,6 +247,13 @@ class SellerRegistrationForm(_ShopivaUsernameBoundary, UserCreationForm):
     username_error_message = "Username exists. Please choose another username."
     email = forms.EmailField(required=True)
     business_name = forms.CharField(max_length=200)
+    business_nature = forms.CharField(
+        max_length=500,
+        required=True,
+        label="Nature of business",
+        help_text="Briefly describe what your business sells or provides.",
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "e.g. Hardware, building materials and tools supplied to contractors and homeowners."}),
+    )
     mpesa_phone = forms.CharField(
         max_length=30,
         help_text="Kenyan M-PESA number for future seller payouts.",
