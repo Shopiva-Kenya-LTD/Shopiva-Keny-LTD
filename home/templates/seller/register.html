@@ -49,10 +49,10 @@ form{margin-top:22px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 .field{display:flex;flex-direction:column;gap:7px}
 .field label{font-size:11px;font-weight:900;color:#26362f}
-.field input{width:100%;padding:13px 13px;border:1px solid #cfdcd5;border-radius:11px;font:inherit;font-size:12px;color:#1c2c25;background:#fbfdfc;outline:none;transition:.18s}
-.field input:hover{border-color:#b9cbc1}
-.field input:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(8,166,109,.10);background:#fff}
-.hint{font-size:9px;color:#87958e;line-height:1.4}
+.field input,.field textarea{width:100%;padding:13px 13px;border:1px solid #cfdcd5;border-radius:11px;font:inherit;font-size:12px;color:#1c2c25;background:#fbfdfc;outline:none;transition:.18s}
+.field input:hover,.field textarea:hover{border-color:#b9cbc1}
+.field input:focus,.field textarea:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(8,166,109,.10);background:#fff}
+.field textarea{resize:vertical;min-height:88px;line-height:1.5}.hint{font-size:9px;color:#87958e;line-height:1.4}
 .submit-row{display:flex;align-items:center;gap:14px;margin-top:22px}
 .btn{border:0;background:linear-gradient(135deg,#0aa66d,#078b5c);color:#fff;padding:13px 18px;border-radius:11px;font-weight:950;cursor:pointer;font-size:11px;box-shadow:0 10px 22px rgba(8,166,109,.18)}
 .btn:hover{transform:translateY(-1px);box-shadow:0 13px 25px rgba(8,166,109,.22)}
@@ -103,7 +103,7 @@ form{margin-top:22px}
         <div>
           <div class="eyebrow">Seller onboarding</div>
           <h2>Start selling on Shopiva</h2>
-          <p>Create your seller account. Once approved, you'll have access to your dedicated seller workspace.</p>
+          <p>Create your seller account and tell us what your business sells or provides so Shopiva can understand your seller network.</p>
         </div>
         <div class="trust">🔐 Secure seller access</div>
       </div>
@@ -127,6 +127,7 @@ form{margin-top:22px}
           <div class="field"><label for="{{ form.username.id_for_label }}">Username</label>{{ form.username }}</div>
           <div class="field"><label for="{{ form.email.id_for_label }}">Email address</label>{{ form.email }}</div>
           <div class="field"><label for="{{ form.business_name.id_for_label }}">Business name</label>{{ form.business_name }}</div>
+          <div class="field" style="grid-column:1/-1"><label for="{{ form.business_nature.id_for_label }}">Nature of business</label>{{ form.business_nature }}<div class="hint">Briefly describe the products or services your business provides. This helps Shopiva understand your seller network.</div></div>
           <div class="field"><label for="{{ form.mpesa_phone.id_for_label }}">M-PESA payout number</label>{{ form.mpesa_phone }}<div class="hint">Used for future verified seller payouts.</div></div>
           <div class="field"><label for="{{ form.password1.id_for_label }}">Password</label>{{ form.password1 }}</div>
           <div class="field"><label for="{{ form.password2.id_for_label }}">Confirm password</label>{{ form.password2 }}</div>
