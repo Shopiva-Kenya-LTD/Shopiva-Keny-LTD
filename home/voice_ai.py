@@ -2,7 +2,6 @@ import json
 import os
 import tempfile
 import urllib.error
-import urllib.error
 import urllib.request
 import uuid
 
@@ -21,6 +20,7 @@ VOICE_RATE_LIMITS = {
     "realtime_call": int(os.getenv("NIA_VOICE_REALTIME_LIMIT", "5")),
     "transcribe_voice": int(os.getenv("NIA_VOICE_TRANSCRIBE_LIMIT", "10")),
     "speak_text": int(os.getenv("NIA_VOICE_SPEAK_LIMIT", "20")),
+    "realtime_action": int(os.getenv("NIA_VOICE_ACTION_LIMIT", "30")),
 }
 
 
@@ -36,11 +36,7 @@ def _voice_auth_error(request):
         delivery_profile = user.delivery_agent_profile
     except DeliveryAgent.DoesNotExist:
         delivery_profile = None
-    if delivery_profile is not None and not user.is_staff:
-        return JsonResponse(
-            {"ok": False, "error": "Voice AI is not available for delivery accounts."},
-            status=403,
-        )
+    # Delivery accounts get a strictly scoped read-only copilot below.
     return None
 
 
@@ -196,6 +192,75 @@ def _seller_for_request(request):
     return seller if seller and seller.is_active else None
 
 
+def _delivery_for_request(request):
+    if not request.user.is_authenticated:
+        return None
+    agent = getattr(request.user, "delivery_agent_profile", None)
+    return agent if agent and agent.is_active else None
+
+
+def _delivery_instructions(request, agent):
+    wallet = getattr(agent, "wallet", None)
+    current_orders = list(
+        agent.orders.exclude(status__in=["delivered", "cancelled"])
+        .order_by("-created_at")
+        .values(
+            "id", "tracking_code", "status", "payment_status",
+            "delivery_town", "delivery_county", "delivery_distance_km",
+            "delivery_fee", "created_at",
+        )[:20]
+    )
+    return f"""
+You are Nia Delivery Copilot for the authenticated Shopiva delivery agent only.
+Speak naturally, briefly and operationally.
+You may report this agent's assigned deliveries, delivery status, earnings and payout balances.
+Never reveal another delivery agent's data, customer secrets, delivery confirmation codes, or private payment credentials.
+Never claim a delivery was completed, assigned, cancelled, or paid unless the live Shopiva data says so.
+Current assigned deliveries:
+{json.dumps(current_orders, default=str, ensure_ascii=False)}
+Wallet snapshot:
+{json.dumps({
+    "available_balance": str(wallet.available_balance) if wallet else "0.00",
+    "pending_payout_balance": str(wallet.pending_payout_balance) if wallet else "0.00",
+    "total_earned": str(wallet.total_earned) if wallet else "0.00",
+    "total_paid": str(wallet.total_paid) if wallet else "0.00",
+    "auto_payout_enabled": bool(wallet.auto_payout_enabled) if wallet else False,
+}, default=str)}
+"""
+
+
+def _delivery_summary(agent):
+    wallet = getattr(agent, "wallet", None)
+    active = agent.orders.exclude(status__in=["delivered", "cancelled"])
+    earnings = DeliveryEarning.objects.filter(agent=agent)
+    return {
+        "agent": agent.display_name,
+        "status": agent.get_status_display(),
+        "location_live": bool(agent.location_is_live),
+        "last_location_at": agent.last_location_at.isoformat() if agent.last_location_at else None,
+        "active_deliveries": active.count(),
+        "available_earnings": str(earnings.filter(status="available").aggregate(total=Sum("total_amount"))["total"] or 0),
+        "today_earnings": str(earnings.filter(earned_at__date=timezone.localdate()).exclude(status="reversed").aggregate(total=Sum("total_amount"))["total"] or 0),
+        "wallet_available": str(wallet.available_balance) if wallet else "0.00",
+        "wallet_pending_payout": str(wallet.pending_payout_balance) if wallet else "0.00",
+        "wallet_total_earned": str(wallet.total_earned) if wallet else "0.00",
+        "wallet_total_paid": str(wallet.total_paid) if wallet else "0.00",
+        "auto_payout_enabled": bool(wallet.auto_payout_enabled) if wallet else False,
+    }
+
+
+def _delivery_orders(agent):
+    return list(
+        agent.orders.exclude(status__in=["delivered", "cancelled"])
+        .order_by("-created_at")
+        .values(
+            "id", "tracking_code", "status", "payment_status",
+            "delivery_town", "delivery_county", "delivery_distance_km",
+            "delivery_fee", "created_at",
+        )[:30]
+    )
+
+
 def _seller_instructions(request, seller):
     products = list(
         Product.objects.filter(seller=seller, is_active=True)
@@ -297,8 +362,7 @@ def _order_details(order_id, seller=None):
         "tracking_code": order.tracking_code,
         "customer_name": order.customer_name if seller is None else "Protected customer",
         "status": order.get_status_display(),
-        "payment_status": order.get_payment_status_display(),
-        "total_amount": str(order.total_amount),
+        "payment_status": order.get_payment_status_display(),        "total_amount": str(order.total_amount),
         "items_subtotal": str(order.items_subtotal),
         "delivery_fee": str(order.delivery_fee),
         "delivery_town": order.delivery_town,
@@ -405,6 +469,7 @@ def realtime_call(request):
         return JsonResponse({"ok": False, "error": "Voice AI is not configured yet."}, status=503)
 
     seller = _seller_for_request(request)
+    delivery_agent = _delivery_for_request(request)
     if request.user.is_authenticated and request.user.is_staff:
         instructions = _admin_instructions()
         tools = [
@@ -472,6 +537,22 @@ def realtime_call(request):
                 "type": "function",
                 "name": "get_order_attention",
                 "description": "Return recent orders with unpaid, pending, or failed payment status that need attention.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+        ]
+    elif delivery_agent:
+        instructions = _delivery_instructions(request, delivery_agent)
+        tools = [
+            {
+                "type": "function",
+                "name": "get_delivery_summary",
+                "description": "Return this authenticated delivery agent's live status, assigned delivery count, earnings and payout balances.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_my_delivery_orders",
+                "description": "Return this authenticated delivery agent's active assigned orders only.",
                 "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
             },
         ]
@@ -597,8 +678,7 @@ def realtime_call(request):
             provider_error = provider_data.get("error") or {}
             detail = provider_error.get("message") or provider_error.get("code") or "OpenAI rejected the realtime session."
         except Exception:
-            detail = "OpenAI rejected the realtime session."
-        return JsonResponse(
+            detail = "OpenAI rejected the realtime session."        return JsonResponse(
             {"ok": False, "error": f"Realtime provider error ({exc.code}): {detail}"},
             status=502,
         )
@@ -620,6 +700,9 @@ def realtime_action(request):
         payload = request.POST
 
     action = payload.get("action")
+    rate_limit = _voice_rate_limit(request, "realtime_action")
+    if rate_limit:
+        return rate_limit
     if action == "search_products":
         max_price = payload.get("max_price")
         try:
@@ -683,6 +766,7 @@ def realtime_action(request):
         cart[str(product.id)] = new_quantity
         request.session["cart"] = cart
         request.session.modified = True
+        _audit_voice_action(request, action, {"product_id": product.id, "quantity": quantity})
         return JsonResponse({"ok": True, "message": f"Added {quantity} {product.name} to your cart.", "product": product.name, "quantity": new_quantity})
 
     if action == "get_my_order_status":
@@ -703,6 +787,22 @@ def realtime_action(request):
                 "payment_status": order.get_payment_status_display(),
             }
         )
+
+    if action == "get_delivery_summary":
+        agent = _delivery_for_request(request)
+        if not agent:
+            return JsonResponse({"ok": False, "error": "Active delivery access required."}, status=403)
+        data = _delivery_summary(agent)
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
+
+    if action == "get_my_delivery_orders":
+        agent = _delivery_for_request(request)
+        if not agent:
+            return JsonResponse({"ok": False, "error": "Active delivery access required."}, status=403)
+        data = _delivery_orders(agent)
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, "orders": data})
 
     if action == "get_seller_low_stock":
         seller = _seller_for_request(request)
