@@ -11,6 +11,7 @@ from cloudinary.models import CloudinaryField
 class SellerProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="seller_profile")
     business_name = models.CharField(max_length=200, blank=True)
+    business_nature = models.CharField(max_length=500, blank=True, help_text="What products or services does the business sell or provide?")
     mpesa_phone = models.CharField(max_length=30, blank=True)
     business_address = models.CharField(max_length=255, blank=True, default="")
     business_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
