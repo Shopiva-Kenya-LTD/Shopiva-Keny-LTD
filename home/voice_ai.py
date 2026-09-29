@@ -13,7 +13,7 @@ from django.http import FileResponse, JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 
 from .ai import _catalog
-from .models import DeliveryAgent, Order, OrderItem, Product, PaymentTransaction, SellerProfile
+from .models import DeliveryAgent, DeliveryEarning, Order, OrderItem, Product, PaymentTransaction, SellerProfile, SellerSettlement, SellerWallet, DeliveryWallet
 
 
 VOICE_RATE_WINDOW_SECONDS = int(os.getenv("NIA_VOICE_RATE_WINDOW_SECONDS", "60"))
@@ -328,6 +328,37 @@ def _branch_overview():
     }
 
 
+
+
+def _admin_financial_overview():
+    paid = PaymentTransaction.objects.filter(status="paid")
+    failed = PaymentTransaction.objects.filter(status="failed")
+    pending = PaymentTransaction.objects.filter(status__in=["initiated", "pending"])
+    return {
+        "paid_count": paid.count(),
+        "paid_value": str(paid.aggregate(total=Sum("amount"))["total"] or 0),
+        "pending_count": pending.count(),
+        "pending_value": str(pending.aggregate(total=Sum("amount"))["total"] or 0),
+        "failed_count": failed.count(),
+        "seller_settlements_pending": SellerSettlement.objects.filter(status="pending").count(),
+        "seller_settlements_available": SellerSettlement.objects.filter(status="available").count(),
+        "seller_wallet_available": str(SellerWallet.objects.aggregate(total=Sum("available_balance"))["total"] or 0),
+        "delivery_wallet_available": str(DeliveryWallet.objects.aggregate(total=Sum("available_balance"))["total"] or 0),
+    }
+
+
+def _admin_attention():
+    today = timezone.localdate()
+    return {
+        "unpaid_orders": Order.objects.filter(payment_status__in=["unpaid", "pending"], status__in=["pending", "confirmed"]).count(),
+        "failed_payments": PaymentTransaction.objects.filter(status="failed", created_at__date=today).count(),
+        "low_stock": Product.objects.filter(is_active=True, stock_quantity__lte=5).count(),
+        "unassigned_paid_orders": Order.objects.filter(payment_status="paid", delivery_agent__isnull=True).exclude(status__in=["delivered", "cancelled"]).count(),
+        "active_deliveries": Order.objects.filter(status="out_for_delivery").count(),
+        "pending_seller_settlements": SellerSettlement.objects.filter(status="pending").count(),
+        "pending_seller_payouts": SellerSettlement.objects.filter(status="available").count(),
+    }
+
 def _admin_instructions():
     catalog = _catalog_context()
     payments = list(
@@ -381,6 +412,18 @@ def realtime_call(request):
                 "type": "function",
                 "name": "get_business_summary",
                 "description": "Return a live Shopiva operations summary including today's orders, paid revenue, stock, sellers and delivery agents.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_financial_overview",
+                "description": "Return live payment, seller settlement and delivery wallet totals.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_attention_overview",
+                "description": "Return live Shopiva items needing attention: unpaid orders, failed payments, low stock, unassigned paid orders and pending settlements.",
                 "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
             },
             {
@@ -711,6 +754,21 @@ def realtime_action(request):
             },
         })
 
+
+
+    if action == "get_financial_overview":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        data = _admin_financial_overview()
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
+
+    if action == "get_attention_overview":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        data = _admin_attention()
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
 
     if action == "get_business_summary":
         if not request.user.is_staff:
