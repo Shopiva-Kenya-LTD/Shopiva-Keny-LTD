@@ -189,14 +189,25 @@ def support_center(request):
 
 
 @staff_member_required(login_url="admin_login")
+def system_issues_center(request):
+    """Dedicated system-issues boundary; never falls back to the user Support Center URL."""
+    query = request.GET.copy()
+    query["source"] = "system"
+    request.GET = query
+    return support_admin_center(request)
+
+
+@staff_member_required(login_url="admin_login")
 def support_admin_center(request):
     tickets = SupportTicket.objects.select_related("user").prefetch_related("messages__author").all()
 
     status_filter = request.GET.get("status", "").strip()
     role_filter = request.GET.get("role", "").strip()
     priority_filter = request.GET.get("priority", "").strip()
-    source_filter = request.GET.get("source", "").strip()
+    system_mode = request.path.rstrip("/") == "/admin/system-issues"
+    source_filter = "system" if system_mode else request.GET.get("source", "").strip()
     search = request.GET.get("q", "").strip()
+    queue_path = "/admin/system-issues/" if system_mode else "/admin/support-center/"
     active_statuses = ("open", "in_progress", "waiting_for_customer")
     if status_filter and status_filter != "all":
         tickets = tickets.filter(status=status_filter)
@@ -272,7 +283,7 @@ def support_admin_center(request):
                     # Resolution immediately removes the case from operational
                     # queues while preserving it for support history/audit.
                     return redirect(
-                        f"/admin/support-center/?role={role_filter}&priority={priority_filter}"
+                        f"{queue_path}?role={role_filter}&priority={priority_filter}"
                         f"&source={source_filter}&q={search}"
                     )
         elif action == "delete":
@@ -285,10 +296,10 @@ def support_admin_center(request):
                 selected_ticket.delete()
                 messages.success(request, f"Support case {case_id} was permanently deleted.")
                 return redirect(
-                    f"/admin/support-center/?role={role_filter}&priority={priority_filter}"
+                    f"{queue_path}?role={role_filter}&priority={priority_filter}"
                     f"&source={source_filter}&q={search}&status={status_filter}"
                 )
-        return redirect(f"/admin/support-center/?ticket={selected_ticket.id}")
+        return redirect(f"{queue_path}?ticket={selected_ticket.id}&source={source_filter}")
 
     open_count = SupportTicket.objects.filter(status__in=active_statuses).count()
     urgent_count = SupportTicket.objects.filter(priority="urgent", status__in=active_statuses).count()
