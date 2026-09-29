@@ -44,11 +44,12 @@ a{text-decoration:none;color:inherit}.page{width:min(1120px,calc(100% - 32px));m
       <button class="read-all" name="action" value="read_all" type="submit">Mark all as read</button>
       {% endif %}
     </div>
+  </form>
 
   <section class="feed">
   {% for n in notifications %}
     <article class="item {% if not n.is_read %}unread{% endif %} type-{{ n.notification_type }}">
-      {% if role == 'seller' %}<input class="notification-select" type="checkbox" name="notification_ids" value="{{ n.id }}" aria-label="Select {{ n.title }}">{% endif %}
+      {% if role == 'seller' %}<input class="notification-select" type="checkbox" name="notification_ids" value="{{ n.id }}" form="bulkNotificationForm" aria-label="Select {{ n.title }}">{% endif %}
       <div class="icon">{% if n.notification_type == 'order' %}🛒{% elif n.notification_type == 'payment' %}💳{% elif n.notification_type == 'delivery' %}🚚{% elif n.notification_type == 'payout' %}💰{% else %}🔔{% endif %}</div>
       <div class="copy"><div class="title-row"><span class="title">{{ n.title }}</span><span class="badge">{{ n.get_notification_type_display }}</span>{% if not n.is_read %}<span class="badge" style="background:#eafff2;color:#0b7945">New</span>{% endif %}</div><div class="message">{{ n.message }}</div><div class="meta">{{ n.created_at|date:"M d, Y · g:i A" }}</div></div>
       <div class="actions">{% if n.link %}<a class="open" href="{{ n.link }}">Open</a>{% endif %}{% if not n.is_read %}<form method="post">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ n.id }}"><button class="mark" name="action" value="read" type="submit">Mark read</button></form>{% endif %}{% if role == 'seller' %}<form method="post" onsubmit="return confirm('Delete this notification?');">{% csrf_token %}<input type="hidden" name="notification_id" value="{{ n.id }}"><button class="delete" name="action" value="delete" type="submit">Delete</button></form>{% endif %}</div>
@@ -57,8 +58,6 @@ a{text-decoration:none;color:inherit}.page{width:min(1120px,calc(100% - 32px));m
     <div class="empty"><div class="empty-icon">🔔</div><h2>You're all caught up</h2><p>New Shopiva updates will appear here automatically.</p></div>
   {% endfor %}
   </section>
-  </form>
-
   <div class="footer"><span>Shopiva · Everything You Need, Closer to You.</span><span class="security"><i class="shield"></i> Private account notifications</span></div>
 </main>
 <script>
