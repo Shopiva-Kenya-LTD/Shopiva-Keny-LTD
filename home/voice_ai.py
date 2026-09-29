@@ -7,6 +7,8 @@ import urllib.request
 import uuid
 
 from django.core.cache import cache
+from django.db.models import Sum
+from django.utils import timezone
 from django.http import FileResponse, JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 
@@ -218,6 +220,114 @@ Seller products:
 Seller orders:
 {json.dumps(orders, default=str, ensure_ascii=False)}
 """
+
+def _audit_voice_action(request, action, detail=None):
+    """Record Nia tool usage without storing raw audio or secrets."""
+    try:
+        from .models import NiaAuditLog
+        role = "admin" if request.user.is_staff else ("seller" if _seller_for_request(request) else "customer")
+        NiaAuditLog.objects.create(
+            user=request.user if request.user.is_authenticated else None,
+            role=role,
+            action=action,
+            detail=detail or {},
+        )
+    except Exception:
+        pass
+
+
+def _admin_business_summary():
+    today = timezone.localdate()
+    orders_today = Order.objects.filter(created_at__date=today)
+    paid_today = orders_today.filter(payment_status="paid")
+    revenue = paid_today.aggregate(total=Sum("total_amount"))["total"] or 0
+    return {
+        "date": str(today),
+        "orders_today": orders_today.count(),
+        "paid_orders_today": paid_today.count(),
+        "revenue_today": str(revenue),
+        "active_products": Product.objects.filter(is_active=True).count(),
+        "low_stock_products": Product.objects.filter(is_active=True, stock_quantity__lte=5).count(),
+        "active_sellers": SellerProfile.objects.filter(is_active=True).count(),
+        "active_delivery_agents": DeliveryAgent.objects.filter(is_active=True).count(),
+        "delivery_available": DeliveryAgent.objects.filter(is_active=True, status="available").count(),
+        "delivery_on_delivery": DeliveryAgent.objects.filter(is_active=True, status="on_delivery").count(),
+    }
+
+
+def _admin_delivery_overview():
+    rows = []
+    for agent in DeliveryAgent.objects.select_related("user").filter(is_active=True).order_by("status", "user__username")[:50]:
+        rows.append({
+            "name": agent.display_name,
+            "status": agent.get_status_display(),
+            "phone": agent.phone,
+            "vehicle": agent.vehicle_type,
+            "vehicle_number": agent.vehicle_number,
+            "location_live": agent.location_is_live,
+            "last_location_at": agent.last_location_at.isoformat() if agent.last_location_at else None,
+            "current_orders": agent.orders.exclude(status="delivered").exclude(status="cancelled").count(),
+        })
+    return rows
+
+
+def _admin_seller_overview():
+    rows = []
+    for seller in SellerProfile.objects.select_related("user").filter(is_active=True).order_by("business_name")[:50]:
+        wallet = getattr(seller, "wallet", None)
+        rows.append({
+            "seller": seller.business_name or seller.user.get_full_name() or seller.user.username,
+            "products": seller.products.filter(is_active=True).count(),
+            "orders": seller.order_items.values("order_id").distinct().count(),
+            "available_balance": str(wallet.available_balance) if wallet else "0.00",
+            "pending_balance": str(wallet.pending_balance) if wallet else "0.00",
+            "total_sales": str(wallet.total_sales) if wallet else "0.00",
+            "commission": str(wallet.total_commission) if wallet else "0.00",
+        })
+    return rows
+
+
+def _order_details(order_id, seller=None):
+    qs = Order.objects.select_related("delivery_agent", "delivery_hub", "delivery_pickup_point").prefetch_related("items__product", "items__seller")
+    order = qs.filter(id=order_id).first()
+    if not order or (seller and not order.items.filter(seller=seller).exists()):
+        return None
+    return {
+        "id": order.id,
+        "tracking_code": order.tracking_code,
+        "customer_name": order.customer_name if seller is None else "Protected customer",
+        "status": order.get_status_display(),
+        "payment_status": order.get_payment_status_display(),
+        "total_amount": str(order.total_amount),
+        "items_subtotal": str(order.items_subtotal),
+        "delivery_fee": str(order.delivery_fee),
+        "delivery_town": order.delivery_town,
+        "delivery_county": order.delivery_county,
+        "delivery_distance_km": str(order.delivery_distance_km),
+        "delivery_mode": order.delivery_mode,
+        "delivery_agent": order.delivery_agent.display_name if order.delivery_agent else None,
+        "created_at": order.created_at.isoformat(),
+        "items": [
+            {"name": i.product.name, "quantity": i.quantity, "price": str(i.price), "seller": str(i.seller) if i.seller else None}
+            for i in order.items.all()
+        ],
+    }
+
+
+def _branch_overview():
+    from .models import ShopivaBranch, ShopivaOutlet
+    return {
+        "branches": [
+            {"name": b.name, "town": b.town, "county": b.county, "address": b.address, "active": b.is_active, "headquarters": b.is_headquarters}
+            for b in ShopivaBranch.objects.filter(is_active=True)[:50]
+        ],
+        "outlets": [
+            {"name": o.name, "town": o.town, "county": o.county, "address": o.address, "pickup_available": o.pickup_available}
+            for o in ShopivaOutlet.objects.filter(is_active=True)[:50]
+        ],
+    }
+
+
 def _admin_instructions():
     catalog = _catalog_context()
     payments = list(
@@ -232,6 +342,9 @@ def _admin_instructions():
     return f"""
 You are Nia Admin Voice, the voice operations assistant for Shopiva Kenya.
 Speak clearly, concisely and professionally.
+You have live Shopiva tools. When the user asks for current numbers, status, delivery activity, seller balances, branches, or an order, call the relevant live tool instead of relying on the snapshot.
+Never claim to have performed an action unless a server tool actually performed it. For sensitive actions such as payouts, refunds, approvals, deleting records, changing payments, or assigning deliveries, require explicit confirmation before any future write tool is enabled.
+If data is unavailable, say so rather than guessing.
 Answer using only the supplied Shopiva data.
 You can explain products, stock, orders, delivery and M-PESA operations.
 Never invent data.
@@ -266,6 +379,36 @@ def realtime_call(request):
         tools = [
             {
                 "type": "function",
+                "name": "get_business_summary",
+                "description": "Return a live Shopiva operations summary including today's orders, paid revenue, stock, sellers and delivery agents.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_delivery_overview",
+                "description": "Return live delivery-agent status, vehicles, location freshness and active delivery counts.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_seller_overview",
+                "description": "Return live seller-level product, order and wallet summary.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_order_details",
+                "description": "Return live details for a specific Shopiva order.",
+                "parameters": {"type": "object", "properties": {"order_id": {"type": "integer"}}, "required": ["order_id"], "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_branch_overview",
+                "description": "Return active Shopiva branches and outlets.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
                 "name": "get_mpesa_attention",
                 "description": "Return M-PESA transactions that are pending or failed. Never treat pending as paid.",
                 "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
@@ -292,6 +435,12 @@ def realtime_call(request):
     elif seller:
         instructions = _seller_instructions(request, seller)
         tools = [
+            {
+                "type": "function",
+                "name": "get_seller_order_details",
+                "description": "Return live details for one of this seller's orders.",
+                "parameters": {"type": "object", "properties": {"order_id": {"type": "integer"}}, "required": ["order_id"], "additionalProperties": False},
+            },
             {
                 "type": "function",
                 "name": "get_seller_low_stock",
@@ -561,6 +710,62 @@ def realtime_action(request):
                 "total_sales": str(wallet.total_sales) if wallet else "0.00",
             },
         })
+
+
+    if action == "get_business_summary":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        data = _admin_business_summary()
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
+
+    if action == "get_delivery_overview":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        data = _admin_delivery_overview()
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, "agents": data})
+
+    if action == "get_seller_overview":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        data = _admin_seller_overview()
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, "sellers": data})
+
+    if action == "get_branch_overview":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        data = _branch_overview()
+        _audit_voice_action(request, action)
+        return JsonResponse({"ok": True, **data})
+
+    if action == "get_order_details":
+        if not request.user.is_staff:
+            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
+        try:
+            order_id = int(payload.get("order_id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid order id."}, status=400)
+        data = _order_details(order_id)
+        if not data:
+            return JsonResponse({"ok": False, "error": "That order was not found."}, status=404)
+        _audit_voice_action(request, action, {"order_id": order_id})
+        return JsonResponse({"ok": True, "order": data})
+
+    if action == "get_seller_order_details":
+        seller = _seller_for_request(request)
+        if not seller:
+            return JsonResponse({"ok": False, "error": "Active seller access required."}, status=403)
+        try:
+            order_id = int(payload.get("order_id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid order id."}, status=400)
+        data = _order_details(order_id, seller=seller)
+        if not data:
+            return JsonResponse({"ok": False, "error": "That order was not found for your seller account."}, status=404)
+        _audit_voice_action(request, action, {"order_id": order_id})
+        return JsonResponse({"ok": True, "order": data})
 
     if action == "get_low_stock":
         if not request.user.is_staff:
