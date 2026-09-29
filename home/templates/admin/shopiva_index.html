@@ -61,9 +61,14 @@
     </div>
   </section>
 
-  <section class="nia-widget" data-nia-widget data-role="admin" data-csrf-token="{{ csrf_token }}" aria-label="Nia live copilot"></section>
-  <link rel="stylesheet" href="/static/shopiva/nia-widget.css">
-  <script src="/static/shopiva/nia-widget.js"></script>
+  <section class="nia-widget" data-nia-widget data-role="admin"
+    data-csrf-token="{{ csrf_token }}"
+    data-initial-orders="{{ shopiva_stats.pending_orders }}"
+    data-initial-stock="{{ shopiva_stats.low_stock }}"
+    data-initial-today="{{ shopiva_stats.today_orders }}"
+    aria-label="Nia live copilot"></section>
+  <link rel="stylesheet" href="/static/shopiva/nia-widget.css?v=nia-20260929">
+  <script src="/static/shopiva/nia-widget.js?v=nia-20260929"></script>
 
   <section class="stats">
     <div class="stat"><small>Products</small><strong>{{ shopiva_stats.products }}</strong></div>

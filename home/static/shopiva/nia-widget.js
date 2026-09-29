@@ -7,17 +7,37 @@ function init(el){
  const csrf=el.dataset.csrfToken||'';
  let stream=null,ctx=null,analyser=null,raf=0,pc=null,dc=null,audio=null,voiceActive=false;
  function setStatus(text){status.textContent=text}
+ function setRefreshState(active){
+  refresh.disabled=active;
+  refresh.textContent=active?'↻ Refreshing…':'↻ Refresh';
+ }
  async function refreshStats(){
+  if(refresh.disabled)return;
+  setRefreshState(true);
+  const wasVoiceActive=voiceActive;
+  if(!wasVoiceActive)setStatus('Refreshing Shopiva data…');
   try{
-   const r=await fetch('/ai/nia/dashboard-context/',{headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'});
-   if(!r.ok)throw new Error();
-   const d=await r.json();if(!d.ok)throw new Error();
+   const r=await fetch('/ai/nia/dashboard-context/',{
+    method:'GET',
+    headers:{'X-Requested-With':'XMLHttpRequest','Accept':'application/json'},
+    credentials:'same-origin',
+    cache:'no-store'
+   });
+   let d=null;
+   try{d=await r.json()}catch(_){}
+   if(!r.ok)throw new Error((d&&d.error)||('Refresh failed (HTTP '+r.status+').'));
+   if(!d||!d.ok)throw new Error((d&&d.error)||'Shopiva data could not be loaded.');
    const s=d.stats||{};
    el.querySelector('[data-s1]').textContent=s.primary_value??'0';el.querySelector('[data-l1]').textContent=s.primary_label||'Orders';
    el.querySelector('[data-s2]').textContent=s.secondary_value??'0';el.querySelector('[data-l2]').textContent=s.secondary_label||'Stock';
    el.querySelector('[data-s3]').textContent=s.tertiary_value??'0';el.querySelector('[data-l3]').textContent=s.tertiary_label||'Today';
    if(role==='admin'&&d.digest){const box=el.querySelector('[data-nia-digest]');box.textContent='Daily operations digest: '+d.digest;box.style.display='block'}
-  }catch(_){if(!voiceActive)setStatus('Live stats temporarily unavailable.')}
+   if(!voiceActive)setStatus('Live Shopiva data updated just now.');
+  }catch(e){
+   if(!voiceActive)setStatus('Live stats unavailable — '+(e.message||'refresh failed'));
+  }finally{
+   setRefreshState(false);
+  }
  }
  function draw(){
   if(!analyser)return;
@@ -27,11 +47,13 @@ function init(el){
   const ring=el.querySelector('.nia-ring-live');ring.style.strokeWidth=String(5+level*9);ring.style.opacity=String(.45+level*.5);ring.style.strokeDasharray=(5+level*16)+' '+(11-level*5);
   raf=requestAnimationFrame(draw)
  }
- function stop(){
+ function stop(message){
   if(raf)cancelAnimationFrame(raf);
   try{stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close();dc&&dc.close();pc&&pc.close();audio&&audio.remove()}catch(_){}
   stream=null;ctx=null;analyser=null;dc=null;pc=null;audio=null;voiceActive=false;el.dataset.active='false';
-  btn.textContent='🎙️ Start voice monitor';setStatus('Idle — ready for Shopiva data.')
+  btn.disabled=false;btn.textContent='🎙️ Start voice monitor';
+  if(message)setStatus(message);
+  else setStatus('Idle — ready for Shopiva data.');
  }
  async function startVoice(){
   if(voiceActive){stop();return}
@@ -39,12 +61,16 @@ function init(el){
   if(!csrf){setStatus('Voice security token is unavailable. Refresh the page and try again.');return}
   try{
    setStatus('Requesting microphone permission…');btn.disabled=true;
-   stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   const mediaPromise=navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+   stream=await Promise.race([
+    mediaPromise,
+    new Promise((_,reject)=>setTimeout(()=>reject(new Error('Microphone permission timed out. Check the browser microphone permission for Shopiva and try again.')),15000))
+   ]);
    pc=new RTCPeerConnection();
    audio=document.createElement('audio');audio.autoplay=true;audio.setAttribute('aria-hidden','true');audio.style.display='none';document.body.appendChild(audio);
    pc.ontrack=e=>{if(e.streams[0])audio.srcObject=e.streams[0]};
    stream.getTracks().forEach(t=>pc.addTrack(t,stream));
-   ctx=new(window.AudioContext||window.webkitAudioContext)();analyser=ctx.createAnalyser();analyser.fftSize=512;ctx.createMediaStreamSource(stream).connect(analyser);
+   ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();analyser=ctx.createAnalyser();analyser.fftSize=512;ctx.createMediaStreamSource(stream).connect(analyser);
    dc=pc.createDataChannel('oai-events');
    dc.onopen=()=>{voiceActive=true;el.dataset.active='true';btn.disabled=false;btn.textContent='⏹ Stop Nia voice';setStatus('🟢 Nia is listening — ask your question.');draw()};
    dc.onclose=()=>{if(voiceActive)stop()};
@@ -74,7 +100,15 @@ function init(el){
    if(!response.ok){let message='Could not connect Nia voice.';try{const d=await response.json();message=d.error||message}catch(_){}throw new Error(message)}
    await pc.setRemoteDescription({type:'answer',sdp:await response.text()});
    btn.disabled=false;
-  }catch(e){btn.disabled=false;setStatus(e.message||'Unable to start Nia voice.');stop()}
+  }catch(e){
+   const name=e&&e.name;
+   let message=e&&e.message;
+   if(name==='NotAllowedError')message='Microphone access was blocked. Allow microphone access for shopivakenya.top, then try again.';
+   else if(name==='NotFoundError')message='No microphone was found. Connect a microphone and try again.';
+   else if(name==='NotReadableError')message='The microphone is busy or unavailable. Close other apps using it, then try again.';
+   else if(name==='SecurityError')message='Browser security blocked microphone access on this page.';
+   stop(message||'Unable to start Nia voice.');
+  }
  }
  btn.addEventListener('click',startVoice);
  refresh.addEventListener('click',refreshStats);
