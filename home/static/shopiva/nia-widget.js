@@ -5,8 +5,9 @@ function init(el){
  el.innerHTML='<div class="nia-widget-main"><div class="nia-ring"><svg viewBox="0 0 118 118"><circle cx="59" cy="59" r="50"></circle><circle class="nia-ring-live" cx="59" cy="59" r="50"></circle></svg><div class="nia-core">◉</div></div><div class="nia-copy"><div class="nia-kicker">Nia · '+role+' operations</div><h3>Nia Live Copilot</h3><p class="nia-status" data-nia-status>Idle — ready for Shopiva data.</p><div class="nia-actions"><button class="nia-action primary" data-nia-monitor type="button">🎙️ Start voice monitor</button><button class="nia-action" data-nia-refresh type="button">↻ Refresh</button></div></div></div><div class="nia-stats"><div class="nia-stat"><b data-s1>—</b><span data-l1>Orders</span></div><div class="nia-stat"><b data-s2>—</b><span data-l2>Stock</span></div><div class="nia-stat"><b data-s3>—</b><span data-l3>Today</span></div></div><div class="nia-widget-note">Nia can listen and answer by voice. The microphone is used only while the voice session is active.</div><div class="nia-digest" data-nia-digest style="display:none"></div>';
  const status=el.querySelector('[data-nia-status]'),btn=el.querySelector('[data-nia-monitor]'),refresh=el.querySelector('[data-nia-refresh]');
  const csrf=el.dataset.csrfToken||'';
- let stream=null,ctx=null,analyser=null,raf=0,pc=null,dc=null,audio=null,voiceActive=false;
+ let stream=null,ctx=null,analyser=null,raf=0,pc=null,dc=null,audio=null,voiceActive=false,mediaRecorder=null,recordedChunks=[];
  function setStatus(text){status.textContent=text}
+ function speakFeedback(text){try{if('speechSynthesis' in window){window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.rate=.98;u.pitch=1;window.speechSynthesis.speak(u)}}catch(_){} }
  function setRefreshState(active){
   refresh.disabled=active;
   refresh.textContent=active?'↻ Refreshing…':'↻ Refresh';
@@ -49,8 +50,8 @@ function init(el){
  }
  function stop(message){
   if(raf)cancelAnimationFrame(raf);
-  try{stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close();dc&&dc.close();pc&&pc.close();audio&&audio.remove()}catch(_){}
-  stream=null;ctx=null;analyser=null;dc=null;pc=null;audio=null;voiceActive=false;el.dataset.active='false';
+  try{if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close();dc&&dc.close();pc&&pc.close();audio&&audio.remove()}catch(_){}
+  stream=null;ctx=null;analyser=null;dc=null;pc=null;audio=null;mediaRecorder=null;recordedChunks=[];voiceActive=false;el.dataset.active='false';
   btn.disabled=false;btn.textContent='🎙️ Start voice monitor';
   if(message)setStatus(message);
   else setStatus('Idle — ready for Shopiva data.');
@@ -66,6 +67,15 @@ function init(el){
     mediaPromise,
     new Promise((_,reject)=>setTimeout(()=>reject(new Error('Microphone permission timed out. Check the browser microphone permission for Shopiva and try again.')),15000))
    ]);
+   recordedChunks=[];
+   try{
+    if(window.MediaRecorder){
+     mediaRecorder=new MediaRecorder(stream);
+     mediaRecorder.ondataavailable=e=>{if(e.data&&e.data.size)recordedChunks.push(e.data)};
+     mediaRecorder.start(1000);
+    }
+   }catch(_){}
+   setStatus('🎙️ Microphone is active — connecting Nia voice…');
    pc=new RTCPeerConnection();
    audio=document.createElement('audio');audio.autoplay=true;audio.setAttribute('aria-hidden','true');audio.style.display='none';document.body.appendChild(audio);
    pc.ontrack=e=>{if(e.streams[0]){audio.srcObject=e.streams[0];audio.play().catch(()=>{})}};
@@ -98,7 +108,7 @@ function init(el){
    };
    const offer=await pc.createOffer();await pc.setLocalDescription(offer);
    const response=await fetch('/ai/realtime/call/',{method:'POST',headers:{'Content-Type':'application/sdp','X-CSRFToken':csrf,'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin',body:offer.sdp});
-   if(!response.ok){let message='Could not connect Nia voice.';try{const d=await response.json();message=d.error||message}catch(_){}throw new Error(message)}
+   if(!response.ok){let message='Could not connect Nia voice.';let providerCode=response.status;try{const d=await response.json();message=d.error||message}catch(_){}if(providerCode===429||/no credits|credit.?balance|billing/i.test(message)){message='Nia can hear your microphone, but AI voice feedback is unavailable because the OpenAI API has no remaining credits.';setStatus('🎙️ Microphone working. 🔇 Nia AI voice is waiting for API credits.');speakFeedback('I can hear your microphone, but my AI voice service is temporarily unavailable because the API has no remaining credits. Your microphone test is working.');throw new Error('__NIA_BILLING__')}throw new Error(message)}
    await pc.setRemoteDescription({type:'answer',sdp:await response.text()});
    btn.disabled=false;
   }catch(e){
@@ -108,7 +118,7 @@ function init(el){
    else if(name==='NotFoundError')message='No microphone was found. Connect a microphone and try again.';
    else if(name==='NotReadableError')message='The microphone is busy or unavailable. Close other apps using it, then try again.';
    else if(name==='SecurityError')message='Browser security blocked microphone access on this page.';
-   stop(message||'Unable to start Nia voice.');
+   if(message==='__NIA_BILLING__')stop('🎙️ Microphone test complete. Nia AI voice feedback is waiting for API credits.');else stop(message||'Unable to start Nia voice.');
   }
  }
  btn.addEventListener('click',startVoice);
