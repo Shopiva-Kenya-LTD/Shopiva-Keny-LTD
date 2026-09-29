@@ -120,6 +120,9 @@ class ShopivaAdminSite(admin.AdminSite):
         custom_urls = [
             path("products/", self.admin_view(self.product_manager), name="product_manager"),
             path("products/add/", self.admin_view(self.product_add), name="product_add"),
+            # Backward-compatible routes used by older dashboard links.
+            path("home/product/", self.admin_view(self.product_manager), name="legacy_product_manager"),
+            path("home/product/add/", self.admin_view(self.product_add), name="legacy_product_add"),
             path("products/<int:product_id>/edit/", self.admin_view(self.product_edit), name="product_edit"),
             path("products/<int:product_id>/delete/", self.admin_view(self.product_delete), name="product_delete"),
             path("delivery-map/", self.admin_view(self.delivery_map), name="delivery_map"),
