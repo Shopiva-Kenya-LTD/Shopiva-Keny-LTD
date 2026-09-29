@@ -156,7 +156,7 @@ def seller_assistant(request):
     fallback = _seller_fallback(question, seller)
     snapshot = _seller_snapshot(seller)
     result = call_nia(
-        "Seller Copilot",
+        "Nia — Shopiva Seller Assistant",
         snapshot,
         question,
         '{"answer": "string"}',
