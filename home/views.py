@@ -704,7 +704,9 @@ def seller_dashboard(request):
         "low": products.filter(stock_quantity__gt=0, stock_quantity__lte=5).count(),
         "units": products.aggregate(total=Sum("stock_quantity"))["total"] or 0,
     }
-    return render(request, "seller/dashboard.html", {"seller": seller, "wallet": wallet, "products": products, "order_items": order_items, "settlements": settlements, "payouts": payouts, "analytics": analytics, "notifications": seller.user.shopiva_notifications.all()[:10], "master_catalog": catalog_browser_choices(), "inventory": inventory})
+    notifications = seller.user.shopiva_notifications.all().order_by("-created_at")[:10]
+    unread_notifications = seller.user.shopiva_notifications.filter(is_read=False).count()
+    return render(request, "seller/dashboard.html", {"seller": seller, "wallet": wallet, "products": products, "order_items": order_items, "settlements": settlements, "payouts": payouts, "analytics": analytics, "notifications": notifications, "unread_notifications": unread_notifications, "master_catalog": catalog_browser_choices(), "inventory": inventory})
 
 
 @login_required(login_url="customer_login")
