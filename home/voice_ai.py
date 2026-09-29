@@ -87,7 +87,7 @@ def _openai_multipart_sdp(sdp, session):
     parts = []
     parts.append(
         f"--{boundary}\r\n"
-        "Content-Disposition: form-data; name=\"sdp\"; filename=\"offer.sdp\"\r\n"
+        "Content-Disposition: form-data; name=\"sdp\"\r\n"
         "Content-Type: application/sdp\r\n\r\n"
     )
     parts.append(sdp)
