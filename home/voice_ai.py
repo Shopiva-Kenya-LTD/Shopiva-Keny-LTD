@@ -357,7 +357,8 @@ def _order_details(order_id, seller=None):
         "tracking_code": order.tracking_code,
         "customer_name": order.customer_name if seller is None else "Protected customer",
         "status": order.get_status_display(),
-        "payment_status": order.get_payment_status_display(),        "total_amount": str(order.total_amount),
+        "payment_status": order.get_payment_status_display(),
+        "total_amount": str(order.total_amount),
         "items_subtotal": str(order.items_subtotal),
         "delivery_fee": str(order.delivery_fee),
         "delivery_town": order.delivery_town,
@@ -696,7 +697,8 @@ def realtime_call(request):
             provider_error = provider_data.get("error") or {}
             detail = provider_error.get("message") or provider_error.get("code") or "OpenAI rejected the realtime session."
         except Exception:
-            detail = "OpenAI rejected the realtime session."        return JsonResponse(
+            detail = "OpenAI rejected the realtime session."
+        return JsonResponse(
             {"ok": False, "error": f"Realtime provider error ({exc.code}): {detail}"},
             status=502,
         )
@@ -998,79 +1000,3 @@ def realtime_action(request):
         data = _order_details(order_id, seller=seller)
         if not data:
             return JsonResponse({"ok": False, "error": "That order was not found for your seller account."}, status=404)
-        _audit_voice_action(request, action, {"order_id": order_id})
-        return JsonResponse({"ok": True, "order": data})
-
-    if action == "get_low_stock":
-        if not request.user.is_staff:
-            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
-        try:
-            threshold = max(0, min(int(payload.get("threshold", 5)), 100))
-        except (TypeError, ValueError):
-            threshold = 5
-        rows = list(
-            Product.objects.filter(is_active=True, stock_quantity__lte=threshold)
-            .order_by("stock_quantity", "name")
-            .values("id", "name", "stock_quantity", "price", "discount_percent")[:30]
-        )
-        return JsonResponse({"ok": True, "products": rows})
-
-    if action == "get_order_attention":
-        if not request.user.is_staff:
-            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
-        rows = list(
-            Order.objects.filter(
-                payment_status__in=["unpaid", "pending", "failed"]
-            ).exclude(status="cancelled").order_by("-created_at")
-            .values("id", "tracking_code", "status", "payment_status", "total_amount", "email", "created_at")[:30]
-        )
-        return JsonResponse({"ok": True, "orders": rows})
-
-    if action == "get_mpesa_attention":
-        if not request.user.is_staff:
-            return JsonResponse({"ok": False, "error": "Admin access required."}, status=403)
-        rows = list(
-            PaymentTransaction.objects.filter(method="mpesa", status__in=["pending", "failed"])
-            .order_by("-created_at")
-            .values("id", "order_id", "status", "amount", "provider_reference")[:20]
-        )
-        return JsonResponse({"ok": True, "transactions": rows})
-
-    return JsonResponse({"ok": False, "error": "Unknown voice action."}, status=400)
-
-
-def transcribe_voice(request):
-    auth_error = _voice_auth_error(request)
-    if auth_error:
-        return auth_error
-    if request.method != "POST":
-        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
-    rate_limit = _voice_rate_limit(request, "transcribe_voice")
-    if rate_limit:
-        return rate_limit
-    if request.method != "POST":
-        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
-    if not os.getenv("OPENAI_API_KEY", "").strip():
-        return JsonResponse({"ok": False, "error": "Voice AI is not configured yet."}, status=503)
-    audio = request.FILES.get("audio")
-    if not audio:
-        return JsonResponse({"ok": False, "error": "No voice recording was received."}, status=400)
-    if audio.size > 10 * 1024 * 1024:
-        return JsonResponse({"ok": False, "error": "Voice recording is too large. Please keep it under 10 MB."}, status=400)
-    suffix = ".webm"
-    name = (audio.name or "").lower()
-    if "." in name:
-        suffix = "." + name.rsplit(".", 1)[-1][:8]
-    try:
-        from openai import OpenAI
-        with tempfile.NamedTemporaryFile(suffix=suffix) as temp:
-            for chunk in audio.chunks():
-                temp.write(chunk)
-            temp.flush()
-            with open(temp.name, "rb") as voice_file:
-                transcript = OpenAI(api_key=os.getenv("OPENAI_API_KEY")).audio.transcriptions.create(
-                    model=os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-mini-transcribe"),
-                    file=voice_file,
-                )
-        return JsonResponse({"ok": True, "text": getattr(transcript, "text", "").strip()})
-    except Exception:
