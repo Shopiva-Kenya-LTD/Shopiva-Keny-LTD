@@ -68,7 +68,8 @@ function init(el){
    ]);
    pc=new RTCPeerConnection();
    audio=document.createElement('audio');audio.autoplay=true;audio.setAttribute('aria-hidden','true');audio.style.display='none';document.body.appendChild(audio);
-   pc.ontrack=e=>{if(e.streams[0])audio.srcObject=e.streams[0]};
+   pc.ontrack=e=>{if(e.streams[0]){audio.srcObject=e.streams[0];audio.play().catch(()=>{})}};
+   pc.onconnectionstatechange=()=>{if(['failed','disconnected'].includes(pc.connectionState)&&voiceActive)stop('Nia voice connection was lost. Please try again.')};
    stream.getTracks().forEach(t=>pc.addTrack(t,stream));
    ctx=new(window.AudioContext||window.webkitAudioContext)();await ctx.resume();analyser=ctx.createAnalyser();analyser.fftSize=512;ctx.createMediaStreamSource(stream).connect(analyser);
    dc=pc.createDataChannel('oai-events');
