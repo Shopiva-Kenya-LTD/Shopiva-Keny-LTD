@@ -38,6 +38,11 @@ def notification_center(request):
             notification_id = request.POST.get("notification_id")
             if notification_id:
                 Notification.objects.filter(id=notification_id, user=request.user, is_read=False).update(is_read=True)
+        elif action == "delete" and role == "seller":
+            notification_id = request.POST.get("notification_id")
+            if notification_id:
+                Notification.objects.filter(id=notification_id, user=request.user).delete()
+                messages.success(request, "Notification deleted.")
         return redirect(request.path)
 
     notifications = request.user.shopiva_notifications.all().order_by("-created_at")[:50]
