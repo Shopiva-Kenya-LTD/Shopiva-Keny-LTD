@@ -13,4 +13,4 @@ cloudinary==1.46.2
 requests==2.34.2
 django-axes==8.3.1
 twilio>=9.0,<10
-mcp>=1.20,<2
+mcp>=2,<3
