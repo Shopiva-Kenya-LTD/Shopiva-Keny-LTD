@@ -200,7 +200,7 @@ def complete_delivery_payout(payout, provider_reference="", provider_response=No
         locked = DeliveryPayout.objects.select_for_update().select_related("agent").get(pk=payout.pk)
         if locked.status == DeliveryPayout.STATUS_PAID:
             return locked
-        if locked.status not in (DeliveryPayout.STATUS_QUEUED, DeliveryPayout.STATUS_PROCESSING):
+        if locked.status not in (DeliveryPayout.STATUS_REQUESTED, DeliveryPayout.STATUS_PROCESSING):
             return locked
 
         wallet = get_or_create_delivery_wallet(locked.agent)
