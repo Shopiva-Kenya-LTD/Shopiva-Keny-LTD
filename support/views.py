@@ -118,15 +118,35 @@ def support_center(request):
             count = owned_tickets.count()
             if count:
                 with transaction.atomic():
-                    # Remove every message first, then the selected ticket records.
-                    # This makes bulk deletion explicit even if database cascade
-                    # behavior differs between environments.
                     SupportMessage.objects.filter(ticket__in=owned_tickets).delete()
                     owned_tickets.delete()
                 messages.success(request, f"{count} support case{' was' if count == 1 else 's were'} deleted.")
             else:
                 messages.error(request, "Select at least one support case to delete.")
             return redirect("support_center")
+
+        if action == "delete_all_messages" and selected_ticket:
+            deleted_count = selected_ticket.messages.count()
+            if deleted_count:
+                selected_ticket.messages.all().delete()
+                selected_ticket.updated_at = timezone.now()
+                selected_ticket.save(update_fields=["updated_at"])
+                messages.success(request, f"All {deleted_count} message{' was' if deleted_count == 1 else 's were'} deleted from this support case.")
+            else:
+                messages.info(request, "There are no messages to delete in this support case.")
+            return redirect(f"/support/?ticket={selected_ticket.id}")
+
+        if action == "delete_message" and selected_ticket:
+            message_id = request.POST.get("message_id")
+            message = selected_ticket.messages.filter(id=message_id).first()
+            if message:
+                message.delete()
+                selected_ticket.updated_at = timezone.now()
+                selected_ticket.save(update_fields=["updated_at"])
+                messages.success(request, "Message deleted.")
+            else:
+                messages.error(request, "That message could not be found.")
+            return redirect(f"/support/?ticket={selected_ticket.id}")
 
         if action == "new":
             subject = request.POST.get("subject", "").strip()
