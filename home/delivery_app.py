@@ -310,7 +310,9 @@ def delivery_payouts(request):
         agent.earnings.select_related("order", "pay_profile")
         .order_by("-earned_at")[:50]
     )
-    minimum_payout = get_active_delivery_pay_profile().minimum_payout
+    pay_profile = get_active_delivery_pay_profile()
+    minimum_payout = pay_profile.minimum_payout
+    earning_commission_percent = pay_profile.commission_percent
 
     return render(
         request,
@@ -321,6 +323,7 @@ def delivery_payouts(request):
             "payouts": pay_history,
             "earnings": earnings,
             "minimum_payout": minimum_payout,
+            "earning_commission_percent": earning_commission_percent,
             "message": message,
         },
     )
