@@ -117,7 +117,12 @@ def support_center(request):
             owned_tickets = tickets.filter(id__in=selected_ids)
             count = owned_tickets.count()
             if count:
-                owned_tickets.delete()
+                with transaction.atomic():
+                    # Remove every message first, then the selected ticket records.
+                    # This makes bulk deletion explicit even if database cascade
+                    # behavior differs between environments.
+                    SupportMessage.objects.filter(ticket__in=owned_tickets).delete()
+                    owned_tickets.delete()
                 messages.success(request, f"{count} support case{' was' if count == 1 else 's were'} deleted.")
             else:
                 messages.error(request, "Select at least one support case to delete.")
