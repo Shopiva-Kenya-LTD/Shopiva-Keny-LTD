@@ -27,7 +27,6 @@ class ShopivaAdminPortalBoundaryMiddleware:
         "/seller/logout/",
         "/delivery/logout/",
         "/payments/mpesa/callback/",
-        "/payments/pesapal/ipn/",
         "/payments/stripe/webhook/",
         "/payments/mpesa/b2c/result/",
         "/payments/mpesa/b2c/timeout/",
