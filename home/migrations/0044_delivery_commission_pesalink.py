@@ -73,6 +73,26 @@ class Migration(migrations.Migration):
             name="minimum_payout",
             field=models.DecimalField(default=Decimal("100.00"), decimal_places=2, max_digits=10),
         ),
+        migrations.AddField(
+            model_name="deliverypayout",
+            name="bank_name",
+            field=models.CharField(blank=True, max_length=120),
+        ),
+        migrations.AddField(
+            model_name="deliverypayout",
+            name="bank_code",
+            field=models.CharField(blank=True, max_length=20),
+        ),
+        migrations.AddField(
+            model_name="deliverypayout",
+            name="bank_account_name",
+            field=models.CharField(blank=True, max_length=160),
+        ),
+        migrations.AddField(
+            model_name="deliverypayout",
+            name="bank_account_number",
+            field=models.CharField(blank=True, max_length=40),
+        ),
         migrations.AlterField(
             model_name="deliverypayout",
             name="phone",
