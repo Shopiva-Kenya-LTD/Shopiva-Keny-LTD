@@ -524,18 +524,18 @@ class DeliveryAgentAdmin(admin.ModelAdmin):
 @admin.register(DeliveryPayProfile, site=shopiva_admin_site)
 class DeliveryPayProfileAdmin(admin.ModelAdmin):
     list_display = (
-        "name", "base_per_delivery", "per_km_rate", "minimum_payout",
+        "name", "commission_percent", "minimum_payout",
         "auto_payout_threshold", "auto_payout_enabled", "is_active", "updated_at",
     )
     list_filter = ("is_active", "auto_payout_enabled")
     search_fields = ("name", "notes")
     list_editable = (
-        "base_per_delivery", "per_km_rate", "minimum_payout",
+        "commission_percent", "minimum_payout",
         "auto_payout_threshold", "auto_payout_enabled", "is_active",
     )
     ordering = ("-is_active", "-updated_at")
     fieldsets = (
-        ("Rider earnings", {"fields": ("name", "base_per_delivery", "per_km_rate")}),
+        ("Rider commission", {"fields": ("name", "commission_percent")}),
         ("Payout policy", {"fields": ("minimum_payout", "auto_payout_enabled", "auto_payout_threshold")}),
         ("Governance", {"fields": ("is_active", "notes")}),
     )
@@ -544,12 +544,12 @@ class DeliveryPayProfileAdmin(admin.ModelAdmin):
 @admin.register(DeliveryWallet, site=shopiva_admin_site)
 class DeliveryWalletAdmin(admin.ModelAdmin):
     list_display = (
-        "agent", "payout_phone", "available_balance", "pending_payout_balance",
+        "agent", "bank_name", "bank_account_number", "available_balance", "pending_payout_balance",
         "total_earned", "total_paid", "auto_payout_enabled", "last_payout_at",
     )
     list_filter = ("auto_payout_enabled",)
-    search_fields = ("agent__user__username", "agent__user__email", "agent__phone", "payout_phone")
-    list_editable = ("payout_phone", "auto_payout_enabled")
+    search_fields = ("agent__user__username", "agent__user__email", "agent__phone", "bank_name", "bank_account_number")
+    list_editable = ("bank_name", "bank_account_number", "auto_payout_enabled")
     readonly_fields = ("agent", "available_balance", "pending_payout_balance", "total_earned", "total_paid", "last_payout_at", "updated_at")
     list_per_page = 25
 
@@ -557,14 +557,13 @@ class DeliveryWalletAdmin(admin.ModelAdmin):
 @admin.register(DeliveryEarning, site=shopiva_admin_site)
 class DeliveryEarningAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "agent", "order", "distance_km", "base_amount",
-        "distance_amount", "total_amount", "status", "distance_source", "earned_at",
+        "id", "agent", "order", "commission_percent", "commission_amount", "status", "earned_at",
     )
     list_filter = ("status", "distance_source", "pay_profile")
     search_fields = ("agent__user__username", "agent__user__email", "order__tracking_code")
     readonly_fields = (
         "agent", "order", "pay_profile", "distance_km", "distance_source",
-        "base_amount", "distance_amount", "total_amount", "status", "payout", "earned_at",
+        "base_amount", "distance_amount", "commission_percent", "commission_amount", "total_amount", "status", "payout", "earned_at",
     )
     ordering = ("-earned_at",)
     list_per_page = 50
@@ -573,16 +572,16 @@ class DeliveryEarningAdmin(admin.ModelAdmin):
 @admin.register(DeliveryPayout, site=shopiva_admin_site)
 class DeliveryPayoutAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "agent", "amount", "phone", "status", "trigger", "provider",
+        "id", "agent", "amount", "bank_name", "bank_account_number", "status", "trigger", "provider",
         "provider_reference", "created_at", "processed_at", "paid_at",
     )
     list_filter = ("status", "trigger", "provider", "created_at")
     search_fields = (
-        "agent__user__username", "agent__user__email", "phone",
+        "agent__user__username", "agent__user__email", "bank_name", "bank_account_number",
         "provider_reference", "idempotency_key",
     )
     readonly_fields = (
-        "agent", "amount", "phone", "trigger", "provider",
+        "agent", "amount", "phone", "bank_name", "bank_code", "bank_account_name", "bank_account_number", "trigger", "provider",
         "provider_reference", "provider_response", "idempotency_key",
         "created_at", "updated_at", "processed_at", "paid_at",
     )
