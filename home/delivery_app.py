@@ -20,6 +20,7 @@ from .delivery_payouts import (
     queue_delivery_payout,
     record_delivery_earning,
     initiate_delivery_payout,
+    handle_pesalink_webhook,
 )
 
 
@@ -259,6 +260,44 @@ def delivery_history(request):
     )
     return render(request, "delivery/history.html", {"agent": agent, "orders": orders})
 
+
+
+@csrf_exempt
+def delivery_payout_webhook(request):
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
+
+    import json
+    try:
+        payload = json.loads(request.body.decode("utf-8") or "{}")
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
+
+    expected = os.getenv("INTASEND_WEBHOOK_CHALLENGE", "").strip()
+    if expected and str(payload.get("challenge") or "").strip() != expected:
+        return JsonResponse({"ok": False, "error": "Invalid webhook challenge."}, status=403)
+
+    payout, status = handle_pesalink_webhook(payload)
+    if payout is not None and status == "paid":
+        notify_user(
+            payout.agent.user,
+            "payout",
+            "Delivery commission paid",
+            f"Shopiva has confirmed bank payout #{payout.id} of KSh {payout.amount:,.2f}. Reference: {payout.provider_reference or 'received'}",
+            link="/delivery/payouts/",
+            phone=payout.agent.phone,
+        )
+    elif payout is not None and status == "failed":
+        notify_user(
+            payout.agent.user,
+            "payout",
+            "Delivery commission payout failed",
+            f"Shopiva could not complete payout #{payout.id} of KSh {payout.amount:,.2f}. {payout.failure_reason or 'Please review your bank payout details.'}",
+            link="/delivery/payouts/",
+            phone=payout.agent.phone,
+        )
+
+    return JsonResponse({"ok": True, "status": status, "payout_id": payout.id if payout else None})
 
 
 @login_required(login_url="delivery_login")
