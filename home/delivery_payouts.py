@@ -21,9 +21,8 @@ from .models import (
 
 ZERO = Decimal("0.00")
 TWO_PLACES = Decimal("0.01")
-DEFAULT_BASE_PER_DELIVERY = Decimal("100.00")
-DEFAULT_PER_KM_RATE = Decimal("15.00")
-DEFAULT_MINIMUM_PAYOUT = Decimal("500.00")
+DEFAULT_COMMISSION_PERCENT = Decimal("0.00")
+DEFAULT_MINIMUM_PAYOUT = Decimal("100.00")
 
 
 def _money(value):
@@ -47,13 +46,12 @@ def get_active_delivery_pay_profile():
         return profile
     return DeliveryPayProfile.objects.create(
         name="Shopiva Standard Rider Pay",
-        base_per_delivery=DEFAULT_BASE_PER_DELIVERY,
-        per_km_rate=DEFAULT_PER_KM_RATE,
+        commission_percent=DEFAULT_COMMISSION_PERCENT,
         minimum_payout=DEFAULT_MINIMUM_PAYOUT,
         auto_payout_enabled=True,
         auto_payout_threshold=DEFAULT_MINIMUM_PAYOUT,
         is_active=True,
-        notes="Default starting schedule. Review against approved Shopiva transport economics before changing.",
+        notes="Commission-only rider pay. Configure the approved percentage of the customer delivery fee before enabling automatic cashout.",
     )
 
 
@@ -70,11 +68,11 @@ def get_or_create_delivery_wallet(agent):
 
 
 def calculate_delivery_earning(order, profile):
-    distance_km = max(Decimal("0.00"), _money(order.delivery_distance_km))
-    base_amount = _money(profile.base_per_delivery)
-    distance_amount = _money(distance_km * profile.per_km_rate)
-    total_amount = _money(base_amount + distance_amount)
-    return distance_km, base_amount, distance_amount, total_amount
+    """Rider earns a commission on the customer delivery fee, not a base or per-km payment."""
+    delivery_fee = max(Decimal("0.00"), _money(order.delivery_fee))
+    commission_percent = max(Decimal("0.00"), min(Decimal("100.00"), _money(profile.commission_percent)))
+    total_amount = _money(delivery_fee * commission_percent / Decimal("100.00"))
+    return delivery_fee, commission_percent, total_amount
 
 
 def queue_delivery_payout(agent, *, automatic=False, force=False):
@@ -101,11 +99,12 @@ def queue_delivery_payout(agent, *, automatic=False, force=False):
         if not automatic and not force and available < minimum:
             raise ValueError(f"Minimum payout is KSh {minimum:,.2f}.")
 
-        phone = (wallet.payout_phone or agent.phone or "").strip()
-        try:
-            phone = normalize_payout_phone(phone)
-        except ValueError as exc:
-            raise ValueError("Set a valid M-PESA payout phone number before requesting payout.") from exc
+        bank_name = (wallet.bank_name or "").strip()
+        bank_code = (wallet.bank_code or "").strip()
+        bank_account_name = (wallet.bank_account_name or agent.display_name or "").strip()
+        bank_account_number = (wallet.bank_account_number or "").strip()
+        if not bank_name or not bank_code or not bank_account_name or not bank_account_number:
+            raise ValueError("Add the rider's Kenyan bank name, bank code, account name and account number before requesting payout.")
 
         earnings = list(
             DeliveryEarning.objects.select_for_update()
@@ -127,7 +126,11 @@ def queue_delivery_payout(agent, *, automatic=False, force=False):
         payout = DeliveryPayout.objects.create(
             agent=agent,
             amount=amount,
-            phone=phone,
+            phone="",
+            bank_name=bank_name,
+            bank_code=bank_code,
+            bank_account_name=bank_account_name,
+            bank_account_number=bank_account_number,
             status=DeliveryPayout.STATUS_QUEUED,
             trigger=DeliveryPayout.TRIGGER_AUTOMATIC if automatic else DeliveryPayout.TRIGGER_MANUAL,
             idempotency_key=uuid.uuid4().hex,
@@ -157,17 +160,19 @@ def record_delivery_earning(order, agent, now=None):
             return existing
 
         profile = get_active_delivery_pay_profile()
-        distance_km, base_amount, distance_amount, total_amount = calculate_delivery_earning(order, profile)
+        delivery_fee, commission_percent, total_amount = calculate_delivery_earning(order, profile)
+        if total_amount <= ZERO:
+            raise ValueError("Rider commission is not configured or the customer delivery fee is zero.")
         wallet = get_or_create_delivery_wallet(agent)
 
         earning = DeliveryEarning.objects.create(
             agent=agent,
             order=order,
-            distance_km=distance_km,
+            distance_km=max(Decimal("0.00"), _money(order.delivery_distance_km)),
             distance_source=order.delivery_distance_source or "estimated",
             pay_profile=profile,
-            base_amount=base_amount,
-            distance_amount=distance_amount,
+            base_amount=delivery_fee,
+            distance_amount=commission_percent,
             total_amount=total_amount,
             status=DeliveryEarning.STATUS_AVAILABLE,
             earned_at=now or timezone.now(),
@@ -179,35 +184,25 @@ def record_delivery_earning(order, agent, now=None):
         return earning
 
 
-def mpesa_b2c_ready():
-    """Return True only when Shopiva's dedicated rider B2C disbursement configuration is complete."""
-    if os.getenv("MPESA_B2C_ENABLED", "false").strip().lower() != "true":
-        return False
-    if os.getenv("MPESA_ENV", "sandbox").strip().lower() not in {"sandbox", "production"}:
+def pesalink_ready():
+    """Return True when Shopiva can automatically disburse rider earnings through PesaLink."""
+    if os.getenv("PESALINK_ENABLED", "false").strip().lower() != "true":
         return False
     required = (
-        "MPESA_CONSUMER_KEY",
-        "MPESA_CONSUMER_SECRET",
-        "MPESA_B2C_INITIATOR_NAME",
-        "MPESA_B2C_SECURITY_CREDENTIAL",
-        "MPESA_B2C_SHORTCODE",
-        "MPESA_B2C_RESULT_URL",
-        "MPESA_B2C_TIMEOUT_URL",
+        "INTASEND_API_TOKEN",
+        "INTASEND_DEVICE_ID",
+        "INTASEND_PAYOUT_WALLET_ID",
+        "INTASEND_PAYOUT_CALLBACK_URL",
     )
     return all(os.getenv(name, "").strip() for name in required)
 
 
-def _mpesa_b2c_base_url():
-    return (
-        "https://api.safaricom.co.ke"
-        if os.getenv("MPESA_ENV", "sandbox").strip().lower() == "production"
-        else "https://sandbox.safaricom.co.ke"
-    )
-
-
-def _mpesa_b2c_request(url, payload, token):
+def _intasend_request(path, payload):
+    token = os.getenv("INTASEND_API_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("IntaSend payout API token is not configured.")
     request = urllib.request.Request(
-        url,
+        os.getenv("INTASEND_API_BASE_URL", "https://api.intasend.com").rstrip("/") + path,
         data=json.dumps(payload).encode("utf-8"),
         method="POST",
         headers={
@@ -222,48 +217,19 @@ def _mpesa_b2c_request(url, payload, token):
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode("utf-8", errors="replace")
         try:
-            payload = json.loads(raw)
+            return exc.code, json.loads(raw)
         except json.JSONDecodeError:
-            payload = {"error": raw}
-        return exc.code, payload
-
-
-def _daraja_access_token():
-    key = os.getenv("MPESA_CONSUMER_KEY", "").strip()
-    secret = os.getenv("MPESA_CONSUMER_SECRET", "").strip()
-    if not key or not secret:
-        raise RuntimeError("Daraja consumer credentials are not configured.")
-
-    auth = base64.b64encode(f"{key}:{secret}".encode("utf-8")).decode("ascii")
-    request = urllib.request.Request(
-        f"{_mpesa_b2c_base_url()}/oauth/v1/generate?grant_type=client_credentials",
-        method="GET",
-        headers={"Authorization": f"Basic {auth}"},
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=20) as response:
-            payload = json.loads(response.read().decode("utf-8") or "{}")
-    except urllib.error.HTTPError as exc:
-        raw = exc.read().decode("utf-8", errors="replace")
-        try:
-            payload = json.loads(raw)
-        except json.JSONDecodeError:
-            payload = {"error": raw}
-    token = payload.get("access_token")
-    if not token:
-        raise RuntimeError("Daraja authentication failed.")
-    return token
+            return exc.code, {"error": raw}
 
 
 def initiate_delivery_payout(payout):
-    """Submit a queued rider payout to Daraja B2C when explicitly enabled.
+    """Submit a queued rider commission payout through IntaSend PesaLink.
 
-    The provider result is asynchronous. A synchronous acceptance moves the
-    payout to processing; only the signed/known provider callback may mark it paid.
-    Network failures do not release the reserved balance because the provider
-    may still have accepted the request.
+    The customer confirmation has already released the earning into the rider
+    wallet. The external provider callback is the only event allowed to mark
+    the payout paid.
     """
-    if not payout or not mpesa_b2c_ready():
+    if not payout or not pesalink_ready():
         return payout
 
     with transaction.atomic():
@@ -272,36 +238,33 @@ def initiate_delivery_payout(payout):
             return locked
         if locked.status not in (DeliveryPayout.STATUS_QUEUED, DeliveryPayout.STATUS_PROCESSING):
             return locked
-        originator_id = locked.idempotency_key
-        response_state = dict(locked.provider_response or {})
-        response_state["originator_conversation_id"] = originator_id
+        state = dict(locked.provider_response or {})
+        state["provider"] = "pesalink"
         locked.status = DeliveryPayout.STATUS_PROCESSING
-        locked.provider = "mpesa_b2c"
-        locked.provider_response = response_state
+        locked.provider = "pesalink"
+        locked.provider_response = state
         locked.failure_reason = ""
         locked.save(update_fields=("status", "provider", "provider_response", "failure_reason", "updated_at"))
 
     payload = {
-        "OriginatorConversationID": originator_id,
-        "InitiatorName": os.getenv("MPESA_B2C_INITIATOR_NAME", "").strip(),
-        "SecurityCredential": os.getenv("MPESA_B2C_SECURITY_CREDENTIAL", "").strip(),
-        "CommandID": os.getenv("MPESA_B2C_COMMAND_ID", "BusinessPayment").strip() or "BusinessPayment",
-        "Amount": int(_money(payout.amount)),
-        "PartyA": os.getenv("MPESA_B2C_SHORTCODE", "").strip(),
-        "PartyB": payout.phone,
-        "Remarks": f"Shopiva delivery payout #{payout.id}",
-        "QueueTimeOutURL": os.getenv("MPESA_B2C_TIMEOUT_URL", "").strip(),
-        "ResultURL": os.getenv("MPESA_B2C_RESULT_URL", "").strip(),
-        "Occasion": f"Rider earnings payout #{payout.id}",
+        "currency": "KES",
+        "provider": "PESALINK",
+        "device_id": os.getenv("INTASEND_DEVICE_ID", "").strip(),
+        "callback_url": os.getenv("INTASEND_PAYOUT_CALLBACK_URL", "").strip(),
+        "batch_reference": payout.idempotency_key,
+        "requires_approval": "NO",
+        "transactions": [{
+            "name": payout.bank_account_name,
+            "account": payout.bank_account_number,
+            "bank_code": payout.bank_code,
+            "amount": str(_money(payout.amount)),
+            "narrative": f"Shopiva rider commission #{payout.id}",
+            "country": "KE",
+        }],
     }
-    endpoint = os.getenv(
-        "MPESA_B2C_URL",
-        f"{_mpesa_b2c_base_url()}/mpesa/b2c/v3/paymentrequest",
-    ).strip()
 
     try:
-        token = _daraja_access_token()
-        status, response = _mpesa_b2c_request(endpoint, payload, token)
+        status, response = _intasend_request("/api/v1/send-money/initiate/", payload)
     except Exception as exc:
         with transaction.atomic():
             locked = DeliveryPayout.objects.select_for_update().get(pk=payout.pk)
@@ -315,107 +278,79 @@ def initiate_delivery_payout(payout):
         locked = DeliveryPayout.objects.select_for_update().get(pk=payout.pk)
         state = dict(locked.provider_response or {})
         state["submission_response"] = response
-
-        response_code = str(response.get("ResponseCode", "")).strip()
-        accepted = status in (200, 201) and response_code in {"0", ""}
+        accepted = status in (200, 201) and not response.get("error")
         if accepted:
             locked.status = DeliveryPayout.STATUS_PROCESSING
-            provider_id = (
-                response.get("ConversationID")
-                or response.get("OriginatorConversationID")
-                or originator_id
+            locked.provider_reference = str(
+                response.get("tracking_id")
+                or response.get("trackingId")
+                or response.get("id")
+                or locked.idempotency_key
             )
-            locked.provider_reference = str(provider_id)
-            state["originator_conversation_id"] = originator_id
             locked.provider_response = state
-            locked.failure_reason = ""
-            locked.save(update_fields=("status", "provider_reference", "provider_response", "failure_reason", "updated_at"))
+            locked.save(update_fields=("status", "provider_reference", "provider_response", "updated_at"))
             return locked
 
         locked.status = DeliveryPayout.STATUS_FAILED
         locked.failure_reason = str(
-            response.get("errorMessage")
-            or response.get("ResponseDescription")
+            response.get("detail")
             or response.get("error")
-            or f"Daraja B2C rejected the request (HTTP {status})."
+            or response.get("message")
+            or f"PesaLink payout rejected (HTTP {status})."
         )[:255]
         locked.provider_response = state
         locked.processed_at = timezone.now()
         locked.save(update_fields=("status", "failure_reason", "provider_response", "processed_at", "updated_at"))
 
-    # Reconcile the reserved wallet only after a synchronous provider rejection.
-    return fail_delivery_payout(
-        locked,
-        locked.failure_reason or "Daraja B2C rejected the payout request.",
-    )
+    return fail_delivery_payout(locked, locked.failure_reason or "PesaLink rejected the payout request.")
 
 
-def _find_payout_from_b2c_result(result):
-    originator = str(result.get("OriginatorConversationID") or "").strip()
-    conversation = str(result.get("ConversationID") or "").strip()
-    transaction_id = str(result.get("TransactionID") or "").strip()
-    candidates = [value for value in (originator, conversation, transaction_id) if value]
-    for reference in candidates:
-        payout = DeliveryPayout.objects.filter(provider_reference=reference).first()
-        if payout:
-            return payout
-        payout = DeliveryPayout.objects.filter(idempotency_key=reference).first()
-        if payout:
-            return payout
-    return None
-
-
-def _b2c_result_object(payload):
+def handle_pesalink_webhook(payload):
     if not isinstance(payload, dict):
-        return None
-    result = payload.get("Result")
-    return result if isinstance(result, dict) else payload
+        return None, "Invalid PesaLink payout callback payload."
 
+    tracking_id = str(payload.get("tracking_id") or "").strip()
+    transactions = payload.get("transactions") or []
+    transaction = transactions[0] if transactions and isinstance(transactions[0], dict) else {}
+    request_reference = str(
+        transaction.get("request_reference_id")
+        or transaction.get("idempotency_key")
+        or ""
+    ).strip()
+    provider_reference = str(transaction.get("provider_reference") or transaction.get("transaction_id") or "").strip()
 
-def handle_delivery_b2c_result(payload):
-    result = _b2c_result_object(payload)
-    if not isinstance(result, dict):
-        return None, "Invalid B2C callback payload."
+    payout = None
+    for reference in (tracking_id, request_reference, provider_reference):
+        if reference:
+            payout = DeliveryPayout.objects.filter(provider_reference=reference).first()
+            if payout:
+                break
+            payout = DeliveryPayout.objects.filter(idempotency_key=reference).first()
+            if payout:
+                break
 
-    payout = _find_payout_from_b2c_result(result)
     if not payout:
         return None, "Payout reference not recognised."
 
-    result_code = str(result.get("ResultCode", "")).strip()
-    transaction_id = str(result.get("TransactionID") or "").strip()
-    if result_code == "0":
+    status = str(transaction.get("status") or payload.get("status") or "").strip().casefold()
+    code = str(transaction.get("status_code") or "").strip().upper()
+
+    if status in {"successful", "success", "complete", "completed"} or code == "TS100":
         paid = complete_delivery_payout(
             payout,
-            provider_reference=transaction_id or payout.provider_reference,
+            provider_reference=provider_reference or tracking_id,
             provider_response=payload,
         )
         return paid, "paid"
 
-    failed = fail_delivery_payout(
-        payout,
-        str(result.get("ResultDesc") or "Daraja reported that the rider payout failed."),
-    )
-    return failed, "failed"
+    if status in {"failed", "unsuccessful", "cancelled", "canceled"} or code in {"TF106", "TC108", "TF103"}:
+        failed = fail_delivery_payout(
+            payout,
+            str(transaction.get("status_description") or "PesaLink reported that the payout failed."),
+        )
+        return failed, "failed"
 
-
-def handle_delivery_b2c_timeout(payload):
-    result = _b2c_result_object(payload)
-    if not isinstance(result, dict):
-        return None, "Invalid B2C timeout payload."
-
-    payout = _find_payout_from_b2c_result(result)
-    if not payout:
-        return None, "Payout reference not recognised."
-
-    failed = fail_delivery_payout(
-        payout,
-        str(
-            result.get("ResultDesc")
-            or result.get("ResponseDescription")
-            or "Daraja reported that the rider payout request timed out."
-        ),
-    )
-    return failed, "failed"
+    return payout, "processing"
 
 
 def complete_delivery_payout(payout, provider_reference="", provider_response=None):
