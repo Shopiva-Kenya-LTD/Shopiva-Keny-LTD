@@ -1,6 +1,5 @@
 """ASGI entrypoint for Shopiva Django plus the Nia MCP endpoint."""
 
-import contextlib
 import os
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "shopiva.settings")
@@ -19,17 +18,37 @@ mcp_application = mcp.streamable_http_app(
 )
 
 
-@contextlib.asynccontextmanager
-async def lifespan(_app):
-    async with mcp.session_manager.run():
-        yield
-
-
 async def application(scope, receive, send):
-    """Route /mcp directly to Nia MCP and everything else to Django."""
-    path = scope.get("path", "")
-    if path == "/mcp" or path.startswith("/mcp/"):
-        await mcp_application(scope, receive, send)
+    """Serve Nia MCP at /mcp and keep all other traffic on Django."""
+    scope_type = scope.get("type")
+
+    if scope_type == "lifespan":
+        try:
+            async with mcp.session_manager.run():
+                while True:
+                    message = await receive()
+                    message_type = message.get("type")
+
+                    if message_type == "lifespan.startup":
+                        await send({"type": "lifespan.startup.complete"})
+                    elif message_type == "lifespan.shutdown":
+                        await send({"type": "lifespan.shutdown.complete"})
+                        return
+        except BaseException:
+            try:
+                await send({
+                    "type": "lifespan.startup.failed",
+                    "message": "Nia MCP lifespan failed to start.",
+                })
+            except Exception:
+                pass
+            raise
         return
+
+    if scope_type == "http":
+        path = scope.get("path", "")
+        if path == "/mcp" or path.startswith("/mcp/"):
+            await mcp_application(scope, receive, send)
+            return
 
     await django_application(scope, receive, send)
