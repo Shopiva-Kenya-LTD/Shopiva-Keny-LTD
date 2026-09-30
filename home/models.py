@@ -492,7 +492,7 @@ class DeliveryPayout(models.Model):
 
     agent = models.ForeignKey(DeliveryAgent, on_delete=models.PROTECT, related_name="payouts")
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    phone = models.CharField(max_length=30)
+    phone = models.CharField(max_length=30, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_QUEUED)
     trigger = models.CharField(max_length=20, choices=TRIGGER_CHOICES, default=TRIGGER_AUTOMATIC)
     provider = models.CharField(max_length=30, default="pesalink")
