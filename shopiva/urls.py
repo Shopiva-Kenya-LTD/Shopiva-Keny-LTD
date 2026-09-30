@@ -16,7 +16,6 @@ from home.map_views import customer_addresses_map, customer_delivery_location_ma
 from home.platform import app_install, app_manifest, service_worker, favicon, shopiva_app_icon
 from home.payments import (
     mpesa_callback, mpesa_payment_status, mpesa_payment_verify, mpesa_waiting,
-    pesapal_callback, pesapal_ipn, pesapal_cancel,
     card_payment_success, card_payment_cancel, stripe_webhook,
 )
 from home.seller_auth import seller_login, seller_logout, seller_login_required
@@ -72,9 +71,6 @@ urlpatterns = [
     path("payments/mpesa/status/<int:order_id>/", mpesa_payment_status, name="mpesa_payment_status"),
     path("payments/mpesa/verify/<int:order_id>/", mpesa_payment_verify, name="mpesa_payment_verify"),
     path("payments/mpesa/waiting/<int:order_id>/", mpesa_waiting, name="mpesa_waiting"),
-    path("payments/pesapal/callback/", pesapal_callback, name="pesapal_callback"),
-    path("payments/pesapal/ipn/", pesapal_ipn, name="pesapal_ipn"),
-    path("payments/pesapal/cancel/", pesapal_cancel, name="pesapal_cancel"),
     path("payments/card/success/<int:order_id>/", card_payment_success, name="card_payment_success"),
     path("payments/card/cancel/<int:order_id>/", card_payment_cancel, name="card_payment_cancel"),
     path("payments/stripe/webhook/", stripe_webhook, name="stripe_webhook"),
