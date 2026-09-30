@@ -25,7 +25,7 @@ from home.nia_phone import start_nia_call, nia_phone_answer, nia_phone_respond, 
 from home.nia_tasks import run_nia_tasks_endpoint
 from home.nia_admin import nia_dashboard_context
 from shopiva.health import health
-from home.delivery_app import delivery_login, delivery_signup, delivery_logout, delivery_action, delivery_status, delivery_history, delivery_payouts, delivery_b2c_result, delivery_b2c_timeout, delivery_update_location, delivery_ping_location
+from home.delivery_app import delivery_login, delivery_signup, delivery_logout, delivery_action, delivery_status, delivery_history, delivery_payouts, delivery_update_location, delivery_ping_location
 from home.delivery_platform import delivery_manifest, delivery_service_worker
 from home.admin_delivery_feed import admin_live_delivery_feed
 from home.admin_statistics import statistics_center
@@ -119,8 +119,6 @@ urlpatterns = [
     path("delivery/", delivery_portal, name="delivery_portal"),
     path("delivery/history/", delivery_history, name="delivery_history"),
     path("delivery/payouts/", delivery_payouts, name="delivery_payouts"),
-    path("payments/mpesa/b2c/result/", delivery_b2c_result, name="delivery_b2c_result"),
-    path("payments/mpesa/b2c/timeout/", delivery_b2c_timeout, name="delivery_b2c_timeout"),
     path("delivery/manifest.webmanifest", delivery_manifest, name="delivery_manifest"),
     path("delivery/service-worker.js", delivery_service_worker, name="delivery_service_worker"),
     path("delivery/order/<int:order_id>/action/", delivery_action, name="delivery_action"),
