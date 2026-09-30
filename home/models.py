@@ -884,6 +884,73 @@ class NotificationDelivery(models.Model):
         return f"{self.notification_id} · {self.channel} · {self.status}"
 
 
+class StaffPayment(models.Model):
+    METHOD_MPESA = "mpesa"
+    METHOD_BANK = "bank"
+    METHOD_CASH = "cash"
+    METHOD_OTHER = "other"
+    METHOD_CHOICES = (
+        (METHOD_MPESA, "M-PESA"),
+        (METHOD_BANK, "Bank transfer"),
+        (METHOD_CASH, "Cash"),
+        (METHOD_OTHER, "Other"),
+    )
+
+    STATUS_PENDING = "pending"
+    STATUS_PROCESSING = "processing"
+    STATUS_PAID = "paid"
+    STATUS_CANCELLED = "cancelled"
+    STATUS_CHOICES = (
+        (STATUS_PENDING, "Pending payment"),
+        (STATUS_PROCESSING, "Processing"),
+        (STATUS_PAID, "Paid"),
+        (STATUS_CANCELLED, "Cancelled"),
+    )
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="staff_payments_received",
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=METHOD_CHOICES, default=METHOD_MPESA)
+    destination = models.CharField(
+        max_length=120,
+        blank=True,
+        help_text="M-PESA number, bank account/reference, or other payment destination.",
+    )
+    purpose = models.CharField(max_length=160)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    provider_reference = models.CharField(max_length=120, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="staff_payments_created",
+    )
+    paid_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="staff_payments_paid",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    idempotency_key = models.CharField(max_length=120, unique=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        constraints = [
+            models.CheckConstraint(condition=models.Q(amount__gt=0), name="staffpayment_amount_gt_0"),
+        ]
+
+    def __str__(self):
+        return f"Staff payment #{self.id} - {self.recipient} - KSh {self.amount}"
+
+
 class NiaCallSession(models.Model):
     ROLE_CUSTOMER = "customer"
     ROLE_SELLER = "seller"
