@@ -17,7 +17,7 @@
 .ticket-row{display:flex;align-items:flex-start;gap:9px}
 .ticket-row .ticket{flex:1;min-width:0}
 @media(max-width:700px){.casebar{gap:10px;align-items:flex-start!important}.casebar-actions{flex-wrap:wrap;justify-content:flex-end}.select-all-wrap{font-size:11px}}
-
+</style>
 </head>
 <body>
 <header class="top"><a class="brand" href="/"><span class="mark">SA</span><span><b>Shopiva Support</b><small>24/7 {{ role_label|upper }} ASSISTANCE</small></span></a><nav class="nav"><a href="{% url back_url %}">← Dashboard</a><a href="{% if role == 'seller' %}/seller/notifications/{% else %}/account/notifications/{% endif %}">🔔 Alerts</a></nav></header>
