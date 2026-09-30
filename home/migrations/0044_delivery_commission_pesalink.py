@@ -74,6 +74,26 @@ class Migration(migrations.Migration):
             field=models.DecimalField(default=Decimal("100.00"), decimal_places=2, max_digits=10),
         ),
         migrations.AddField(
+            model_name="deliveryearning",
+            name="commission_percent",
+            field=models.DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=5),
+        ),
+        migrations.AddField(
+            model_name="deliveryearning",
+            name="commission_amount",
+            field=models.DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=10),
+        ),
+        migrations.AlterField(
+            model_name="deliveryearning",
+            name="base_amount",
+            field=models.DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=10),
+        ),
+        migrations.AlterField(
+            model_name="deliveryearning",
+            name="distance_amount",
+            field=models.DecimalField(default=Decimal("0.00"), decimal_places=2, max_digits=10),
+        ),
+        migrations.AddField(
             model_name="deliverypayout",
             name="bank_name",
             field=models.CharField(blank=True, max_length=120),
