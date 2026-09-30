@@ -20,9 +20,6 @@ from .delivery_payouts import (
     get_or_create_delivery_wallet,
     queue_delivery_payout,
     record_delivery_earning,
-    initiate_delivery_payout,
-    handle_delivery_b2c_result,
-    handle_delivery_b2c_timeout,
 )
 
 
@@ -202,8 +199,8 @@ def delivery_action(request, order_id):
             if rider_earning:
                 notifications.append((
                     agent.user,
-                    "Delivery earnings credited",
-                    f"Order {order.tracking_code} is verified delivered. KSh {rider_earning.total_amount:,.2f} has been added to your rider wallet.",
+                    "Delivery earnings pending customer receipt",
+                    f"Order {order.tracking_code} is marked delivered. Rider commission will be credited only after the customer confirms receipt.",
                     "payout",
                     "/delivery/payouts/",
                     "",
@@ -242,33 +239,7 @@ def delivery_action(request, order_id):
         agent.status = "available" if target_status == "delivered" else "on_delivery"
         agent.save(update_fields=["status"])
 
-    try:
-        auto_payout = queue_delivery_payout(agent, automatic=True)
-    except ValueError:
-        auto_payout = None
-    if auto_payout:
-        submitted = initiate_delivery_payout(auto_payout)
-        if submitted and submitted.status == DeliveryPayout.STATUS_PROCESSING:
-            notifications.append((
-                agent.user,
-                "Automatic payout submitted",
-                f"Your Shopiva rider wallet reached its payout threshold. KSh {submitted.amount:,.2f} has been submitted for M-PESA payout and is awaiting provider confirmation.",
-                "payout",
-                "/delivery/payouts/",
-                "",
-                agent.phone,
-            ))
-        else:
-            notifications.append((
-                agent.user,
-                "Automatic payout queued",
-                f"Your Shopiva rider wallet reached its payout threshold. KSh {auto_payout.amount:,.2f} has been queued for payout.",
-                "payout",
-                "/delivery/payouts/",
-                "",
-                agent.phone,
-            ))
-
+    # Rider commission is released only after the customer confirms receipt.
     for user, title, message, notification_type, link, email, phone in notifications:
         notify_user(user, notification_type, title, message, link=link, email=email, phone=phone)
 
@@ -290,63 +261,6 @@ def delivery_history(request):
 
 
 
-@csrf_exempt
-def delivery_b2c_result(request):
-    if request.method != "POST":
-        return JsonResponse({"ResultCode": 1, "ResultDesc": "POST required."}, status=405)
-
-    import json
-    try:
-        payload = json.loads(request.body.decode("utf-8") or "{}")
-    except (TypeError, ValueError):
-        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid JSON payload."}, status=400)
-
-    payout, status = handle_delivery_b2c_result(payload)
-    if payout is not None and status == "paid":
-        notify_user(
-            payout.agent.user,
-            "payout",
-            "Delivery payout paid",
-            f"Shopiva has confirmed payout #{payout.id} of KSh {payout.amount:,.2f}. M-PESA reference: {payout.provider_reference or 'received'}",
-            link="/delivery/payouts/",
-            phone=payout.agent.phone,
-        )
-    elif payout is not None and status == "failed":
-        notify_user(
-            payout.agent.user,
-            "payout",
-            "Delivery payout failed",
-            f"Shopiva could not complete payout #{payout.id} of KSh {payout.amount:,.2f}. {payout.failure_reason or 'Please review your payout details.'}",
-            link="/delivery/payouts/",
-            phone=payout.agent.phone,
-        )
-    return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted."})
-
-
-@csrf_exempt
-def delivery_b2c_timeout(request):
-    if request.method != "POST":
-        return JsonResponse({"ResultCode": 1, "ResultDesc": "POST required."}, status=405)
-
-    import json
-    try:
-        payload = json.loads(request.body.decode("utf-8") or "{}")
-    except (TypeError, ValueError):
-        return JsonResponse({"ResultCode": 1, "ResultDesc": "Invalid JSON payload."}, status=400)
-
-    payout, status = handle_delivery_b2c_timeout(payload)
-    if payout is not None and status == "failed":
-        notify_user(
-            payout.agent.user,
-            "payout",
-            "Delivery payout timed out",
-            f"Shopiva did not receive a successful response for payout #{payout.id} of KSh {payout.amount:,.2f}. The amount has been returned to your available rider balance.",
-            link="/delivery/payouts/",
-            phone=payout.agent.phone,
-        )
-    return JsonResponse({"ResultCode": 0, "ResultDesc": "Accepted."})
-
-
 @login_required(login_url="delivery_login")
 def delivery_payouts(request):
     agent = _agent(request)
@@ -360,16 +274,16 @@ def delivery_payouts(request):
     if request.method == "POST":
         action = request.POST.get("action", "").strip().lower()
 
-        if action == "save_phone":
-            raw_phone = request.POST.get("payout_phone", "").strip()
-            try:
-                phone = normalize_payout_phone(raw_phone)
-            except ValueError as exc:
-                message = str(exc)
+        if action == "save_bank":
+            wallet.bank_name = request.POST.get("bank_name", "").strip()
+            wallet.bank_code = request.POST.get("bank_code", "").strip()
+            wallet.bank_account_name = request.POST.get("bank_account_name", "").strip()
+            wallet.bank_account_number = request.POST.get("bank_account_number", "").strip()
+            if not all((wallet.bank_name, wallet.bank_code, wallet.bank_account_name, wallet.bank_account_number)):
+                message = "Complete all bank payout details before saving."
             else:
-                wallet.payout_phone = phone
-                wallet.save(update_fields=("payout_phone", "updated_at"))
-                message = "Payout phone number saved."
+                wallet.save(update_fields=("bank_name", "bank_code", "bank_account_name", "bank_account_number", "updated_at"))
+                message = "Bank payout details saved."
 
         elif action == "request_payout":
             try:
@@ -380,11 +294,11 @@ def delivery_payouts(request):
                 if payout:
                     payout = initiate_delivery_payout(payout)
                     if payout.status == DeliveryPayout.STATUS_PROCESSING:
-                        message = f"Payout #{payout.id} submitted for M-PESA processing: KSh {payout.amount:,.2f}."
+                        message = f"Payout #{payout.id} submitted to the automatic bank payout provider: KSh {payout.amount:,.2f}."
                     else:
-                        message = f"Payout #{payout.id} queued for processing: KSh {payout.amount:,.2f}."
+                        message = f"Payout #{payout.id} queued for bank payout: KSh {payout.amount:,.2f}."
                 else:
-                    message = "No payout was queued. Check your available balance or an existing pending payout."
+                    message = "No payout was queued. Check your available commission balance or an existing pending payout."
 
         wallet = DeliveryWallet.objects.get(agent=agent)
 
