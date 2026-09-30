@@ -6,6 +6,7 @@ import urllib.request
 import uuid
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Sum
 from django.utils import timezone
 from django.http import FileResponse, JsonResponse, HttpResponse
