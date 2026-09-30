@@ -13,6 +13,7 @@ from django.views.decorators.http import require_POST
 
 from .ai import _catalog
 from .models import CustomerAddress, DeliveryAgent, DeliveryEarning, Notification, Order, OrderItem, Product, PaymentTransaction, SellerProfile, SellerSettlement, SellerWallet, DeliveryWallet, WishlistItem
+from support.models import SupportMessage, SupportTicket
 
 
 VOICE_RATE_WINDOW_SECONDS = int(os.getenv("NIA_VOICE_RATE_WINDOW_SECONDS", "60"))
@@ -168,8 +169,8 @@ def _customer_instructions(request):
 You are Nia, Shopiva Kenya's natural voice shopping assistant.
 Speak naturally and briefly. Use KSh for prices.
 The customer may interrupt you. Listen carefully and continue the conversation.
-You can help discover products, compare options, explain discounts, add or remove products from the cart, change cart quantities, manage the customer's wishlist, check the customer's own orders and order status, read saved delivery addresses, and read the customer's notifications.
-When the customer asks for an action that changes their cart or wishlist, confirm the intended product and quantity naturally before calling the action when there is any ambiguity.
+You can help discover products, compare options, explain discounts, add or remove products from the cart, change cart quantities, manage the customer's wishlist, check the customer's own orders and order status, read saved delivery addresses and notifications, and use the Shopiva Contact Center to read or manage the customer's own support cases.
+When the customer asks for an action that changes their cart or wishlist, confirm the intended product and quantity naturally before calling the action when there is any ambiguity. When opening or replying to a support case, clearly summarize what will be sent and require the customer's explicit confirmation before calling the write action.
 Never invent products, prices, stock, discounts, order status, delivery details, addresses, notifications, or payment results.
 Only recommend products from the live catalogue below.
 If the customer says "the second one", "that one", or similar, use the products you just discussed.
@@ -695,6 +696,56 @@ Never claim a delivery was completed, assigned, cancelled or paid unless live Sh
                 "description": "Return recent notifications belonging only to the authenticated customer.",
                 "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
             },
+            {
+                "type": "function",
+                "name": "get_my_support_cases",
+                "description": "Return this customer's own Shopiva support cases and their current statuses.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_support_case",
+                "description": "Read messages and status for one of this customer's own support cases.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"ticket_id": {"type": "string"}},
+                    "required": ["ticket_id"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "type": "function",
+                "name": "open_support_case",
+                "description": "Open a secure Shopiva Contact Center support case for the authenticated customer. Requires confirmed=true before creating the case.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "subject": {"type": "string"},
+                        "category": {"type": "string"},
+                        "priority": {"type": "string", "enum": ["normal", "high", "urgent"]},
+                        "order_reference": {"type": "string"},
+                        "body": {"type": "string"},
+                        "confirmed": {"type": "boolean"},
+                    },
+                    "required": ["subject", "body", "confirmed"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "type": "function",
+                "name": "reply_to_support_case",
+                "description": "Reply to one of this customer's own open Shopiva support cases. Requires confirmed=true before sending.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ticket_id": {"type": "string"},
+                        "body": {"type": "string"},
+                        "confirmed": {"type": "boolean"},
+                    },
+                    "required": ["ticket_id", "body", "confirmed"],
+                    "additionalProperties": False,
+                },
+            },
         ]
 
     session = {
@@ -917,6 +968,100 @@ def realtime_action(request):
         )
         unread = Notification.objects.filter(user=request.user, is_read=False).count()
         return JsonResponse({"ok": True, "notifications": rows, "unread_count": unread})
+
+    if action == "get_my_support_cases":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to use Shopiva Contact Center."}, status=401)
+        rows = list(
+            SupportTicket.objects.filter(user=request.user)
+            .order_by("-updated_at")
+            .values("id", "subject", "category", "priority", "status", "order_reference", "created_at", "updated_at")[:30]
+        )
+        return JsonResponse({"ok": True, "cases": rows})
+
+    if action == "get_support_case":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to use Shopiva Contact Center."}, status=401)
+        ticket_id = str(payload.get("ticket_id", "")).strip()
+        ticket = SupportTicket.objects.filter(id=ticket_id, user=request.user).first()
+        if not ticket:
+            return JsonResponse({"ok": False, "error": "That support case was not found in your account."}, status=404)
+        messages_rows = list(
+            ticket.messages.select_related("author").values("id", "body", "from_staff", "created_at")
+        )
+        return JsonResponse({
+            "ok": True,
+            "case": {
+                "id": str(ticket.id),
+                "subject": ticket.subject,
+                "category": ticket.category,
+                "priority": ticket.priority,
+                "status": ticket.get_status_display(),
+                "order_reference": ticket.order_reference,
+            },
+            "messages": messages_rows,
+        })
+
+    if action == "open_support_case":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to use Shopiva Contact Center."}, status=401)
+        subject = str(payload.get("subject", "")).strip()
+        body = str(payload.get("body", "")).strip()
+        category = str(payload.get("category", "General")).strip() or "General"
+        priority = str(payload.get("priority", "normal")).strip()
+        order_reference = str(payload.get("order_reference", "")).strip()
+        confirmed = bool(payload.get("confirmed", False))
+        if not subject or len(subject) < 4 or not body:
+            return JsonResponse({"ok": False, "error": "A support subject and description are required."}, status=400)
+        if priority not in {"normal", "high", "urgent"}:
+            return JsonResponse({"ok": False, "error": "Invalid support priority."}, status=400)
+        if not confirmed:
+            return JsonResponse({
+                "ok": False,
+                "confirmation_required": True,
+                "error": "Please confirm that you want Nia to open this support case.",
+                "case_preview": {"subject": subject[:160], "category": category[:80], "priority": priority, "order_reference": order_reference[:120], "body": body[:8000]},
+            }, status=409)
+        with transaction.atomic():
+            ticket = SupportTicket.objects.create(
+                user=request.user,
+                role="customer",
+                subject=subject[:160],
+                category=category[:80],
+                priority=priority,
+                order_reference=order_reference[:120],
+                status="open",
+            )
+            SupportMessage.objects.create(
+                ticket=ticket,
+                author=request.user,
+                body=body[:8000],
+                from_staff=False,
+            )
+        _audit_voice_action(request, action, {"ticket_id": str(ticket.id), "category": ticket.category, "priority": ticket.priority})
+        return JsonResponse({"ok": True, "message": "Support case opened.", "ticket_id": str(ticket.id), "status": ticket.get_status_display()})
+
+    if action == "reply_to_support_case":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to use Shopiva Contact Center."}, status=401)
+        ticket_id = str(payload.get("ticket_id", "")).strip()
+        body = str(payload.get("body", "")).strip()
+        confirmed = bool(payload.get("confirmed", False))
+        ticket = SupportTicket.objects.filter(id=ticket_id, user=request.user).first()
+        if not ticket:
+            return JsonResponse({"ok": False, "error": "That support case was not found in your account."}, status=404)
+        if ticket.status == "closed":
+            return JsonResponse({"ok": False, "error": "That support case is closed. Please open a new case."}, status=409)
+        if not body:
+            return JsonResponse({"ok": False, "error": "Reply text is required."}, status=400)
+        if not confirmed:
+            return JsonResponse({"ok": False, "confirmation_required": True, "error": "Please confirm that you want to send this reply."}, status=409)
+        SupportMessage.objects.create(ticket=ticket, author=request.user, body=body[:8000], from_staff=False)
+        ticket.status = "open"
+        ticket.last_response_at = timezone.now()
+        ticket.save(update_fields=["status", "last_response_at", "updated_at"])
+        _audit_voice_action(request, action, {"ticket_id": str(ticket.id)})
+        return JsonResponse({"ok": True, "message": "Reply sent to Shopiva Support.", "ticket_id": str(ticket.id)})
 
     if action == "get_my_orders":
         if not request.user.is_authenticated:
