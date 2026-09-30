@@ -418,9 +418,8 @@ class DeliveryAgent(models.Model):
 
 class DeliveryPayProfile(models.Model):
     name = models.CharField(max_length=120, unique=True)
-    base_per_delivery = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("100.00"))
-    per_km_rate = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("15.00"))
-    minimum_payout = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"))
+    commission_percent = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal("0.00"))
+    minimum_payout = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("100.00"))
     auto_payout_enabled = models.BooleanField(default=True)
     auto_payout_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("500.00"))
     notes = models.TextField(blank=True)
@@ -431,8 +430,7 @@ class DeliveryPayProfile(models.Model):
     class Meta:
         ordering = ("-is_active", "-updated_at")
         constraints = [
-            models.CheckConstraint(condition=models.Q(base_per_delivery__gte=0), name="deliverypay_base_gte_0"),
-            models.CheckConstraint(condition=models.Q(per_km_rate__gte=0), name="deliverypay_km_gte_0"),
+            models.CheckConstraint(condition=models.Q(commission_percent__gte=0, commission_percent__lte=100), name="deliverypay_commission_0_100"),
             models.CheckConstraint(condition=models.Q(minimum_payout__gt=0), name="deliverypay_min_payout_gt_0"),
             models.CheckConstraint(condition=models.Q(auto_payout_threshold__gt=0), name="deliverypay_auto_threshold_gt_0"),
         ]
@@ -444,6 +442,10 @@ class DeliveryPayProfile(models.Model):
 class DeliveryWallet(models.Model):
     agent = models.OneToOneField(DeliveryAgent, on_delete=models.CASCADE, related_name="wallet")
     payout_phone = models.CharField(max_length=30, blank=True)
+    bank_name = models.CharField(max_length=120, blank=True)
+    bank_code = models.CharField(max_length=20, blank=True)
+    bank_account_name = models.CharField(max_length=160, blank=True)
+    bank_account_number = models.CharField(max_length=40, blank=True)
     available_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     pending_payout_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
@@ -493,7 +495,7 @@ class DeliveryPayout(models.Model):
     phone = models.CharField(max_length=30)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_QUEUED)
     trigger = models.CharField(max_length=20, choices=TRIGGER_CHOICES, default=TRIGGER_AUTOMATIC)
-    provider = models.CharField(max_length=30, default="mpesa_b2c")
+    provider = models.CharField(max_length=30, default="pesalink")
     provider_reference = models.CharField(max_length=120, blank=True)
     provider_response = models.JSONField(default=dict, blank=True)
     failure_reason = models.CharField(max_length=255, blank=True)
