@@ -1,16 +1,36 @@
-"""
-ASGI config for shopiva project.
+"""ASGI entrypoint for Shopiva Django plus the Nia MCP endpoint."""
 
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.1/howto/deployment/asgi/
-"""
-
+import contextlib
 import os
-
-from django.core.asgi import get_asgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "shopiva.settings")
 
-application = get_asgi_application()
+from django.core.asgi import get_asgi_application
+from starlette.applications import Starlette
+from starlette.routing import Mount
+
+from shopiva_mcp import mcp
+
+django_application = get_asgi_application()
+
+mcp_application = mcp.streamable_http_app(
+    streamable_http_path="/",
+    json_response=True,
+    stateless_http=True,
+    host="0.0.0.0",
+)
+
+
+@contextlib.asynccontextmanager
+async def lifespan(_app):
+    async with mcp.session_manager.run():
+        yield
+
+
+application = Starlette(
+    routes=[
+        Mount("/mcp", app=mcp_application),
+        Mount("/", app=django_application),
+    ],
+    lifespan=lifespan,
+)
