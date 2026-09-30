@@ -5,9 +5,9 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .delivery_payouts import queue_delivery_payout, record_delivery_earning, initiate_delivery_payout
+from .delivery_payouts import record_delivery_earning
 
-from .models import Order
+from .models import Order, PaymentTransaction
 
 
 @login_required(login_url="customer_login")
@@ -40,6 +40,22 @@ def customer_order_tracking(request, order_id):
                 customer=request.user,
             )
             if not locked.customer_delivery_confirmed:
+                payment = PaymentTransaction.objects.select_for_update().filter(order=locked).order_by("-created_at").first()
+                if payment and payment.method == "cod" and payment.status == "pending":
+                    payment.status = "paid"
+                    payment.provider_reference = payment.provider_reference or f"COD-RECEIVED-{locked.id}"
+                    payment.paid_at = timezone.now()
+                    payment.save(update_fields=("status", "provider_reference", "paid_at", "updated_at"))
+                    locked.payment_status = "paid"
+                    locked.payment_reference = payment.provider_reference
+                    locked.paid_at = timezone.now()
+                    locked.status = "delivered"
+                    locked.save(update_fields=("payment_status", "payment_reference", "paid_at", "status"))
+                    
+                if locked.payment_status != "paid":
+                    messages.error(request, "Payment has not been confirmed yet. The rider commission cannot be released.")
+                    return redirect("customer_order_tracking", order_id=order.id)
+
                 locked.customer_delivery_confirmed = True
                 locked.customer_delivery_confirmed_at = timezone.now()
                 locked.customer_delivery_confirmed_by = request.user
@@ -48,17 +64,9 @@ def customer_order_tracking(request, order_id):
                     "customer_delivery_confirmed_at",
                     "customer_delivery_confirmed_by",
                 ))
-                earning = record_delivery_earning(locked, locked.delivery_agent)
-                payout = None
-                if earning:
-                    try:
-                        payout = queue_delivery_payout(locked.delivery_agent, automatic=True)
-                    except ValueError:
-                        payout = None
-                    if payout:
-                        payout = initiate_delivery_payout(payout)
+                record_delivery_earning(locked, locked.delivery_agent)
 
-        messages.success(request, "Receipt confirmed. The rider commission has been credited and any eligible automatic payout has been queued.")
+        messages.success(request, "Receipt confirmed. The rider commission has been credited. The rider can now request payout, which requires admin payment confirmation.")
         return redirect("customer_order_tracking", order_id=order.id)
 
     return render(
