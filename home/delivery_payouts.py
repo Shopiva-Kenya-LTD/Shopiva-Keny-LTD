@@ -1,10 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
-import base64
-import json
-import os
 import re
-import urllib.error
-import urllib.request
 import uuid
 
 from django.db import transaction
