@@ -53,7 +53,7 @@ Set these variables on the `Shopiva-Keny-LTD` service:
 
 `GOOGLE_MAPS_MAP_ID=<production JavaScript map ID>`
 
-`PUBLIC_SITE_URL=https://shopiva-keny-ltd.onrender.com`
+`PUBLIC_SITE_URL=https://shopivakenya.top`
 
 Never paste credentials into repository source files. The browser key is intentionally visible at runtime; its protection comes from HTTP-referrer and API restrictions.
 
