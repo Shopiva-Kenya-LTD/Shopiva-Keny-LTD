@@ -8,12 +8,15 @@ def migrate_legacy_profile(apps, schema_editor):
     for profile in Profile.objects.all():
         profile.commission_percent = Decimal("0.00")
         profile.minimum_payout = Decimal("100.00")
+        profile.auto_payout_threshold = Decimal("100.00")
         profile.notes = (
             "Rider earnings are commission-only: a percentage of the customer delivery fee "
             "after customer delivery confirmation. Distance determines the customer delivery "
             "fee, not a separate rider per-kilometre payment."
         )
-        profile.save(update_fields=("commission_percent", "minimum_payout", "notes", "updated_at"))
+        profile.save(update_fields=("commission_percent", "minimum_payout", "auto_payout_threshold", "notes", "updated_at"))
+    Wallet = apps.get_model("home", "DeliveryWallet")
+    Wallet.objects.all().update(auto_payout_threshold=Decimal("100.00"))
 
 
 class Migration(migrations.Migration):
