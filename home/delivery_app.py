@@ -18,6 +18,7 @@ from .delivery_payouts import (
     get_active_delivery_pay_profile,
     get_or_create_delivery_wallet,
     queue_delivery_payout,
+    normalize_payout_phone,
 )
 
 
@@ -273,7 +274,7 @@ def delivery_payouts(request):
         if action == "save_payout_phone":
             try:
                 wallet.payout_phone = request.POST.get("payout_phone", "").strip()
-                wallet.payout_phone = __import__("home.delivery_payouts", fromlist=["normalize_payout_phone"]).normalize_payout_phone(wallet.payout_phone)
+                wallet.payout_phone = normalize_payout_phone(wallet.payout_phone)
             except ValueError as exc:
                 message = str(exc)
             else:
@@ -282,7 +283,7 @@ def delivery_payouts(request):
 
         elif action == "request_payout":
             try:
-                payout = queue_delivery_payout(agent, automatic=False)
+                payout = queue_delivery_payout(agent)
             except ValueError as exc:
                 message = str(exc)
             else:
