@@ -138,6 +138,20 @@ def queue_delivery_payout(agent):
         wallet.available_balance = _money(wallet.available_balance - amount)
         wallet.pending_payout_balance = _money(wallet.pending_payout_balance + amount)
         wallet.save(update_fields=("available_balance", "pending_payout_balance", "updated_at"))
+
+        # Notify every active administrator in Shopiva so the request appears in
+        # the admin notification center immediately.
+        from django.contrib.auth import get_user_model
+        from .notification_service import notify_user
+        User = get_user_model()
+        for admin_user in User.objects.filter(is_active=True, is_staff=True).iterator():
+            notify_user(
+                admin_user,
+                "payout_request",
+                "Delivery payout needs approval",
+                f"Rider {agent.display_name} requested KSh {amount:,.2f} to M-Pesa {phone}. Payout #{payout.id} is awaiting your payment confirmation.",
+                link="/admin/home/deliverypayout/",
+            )
         return payout
 
 
