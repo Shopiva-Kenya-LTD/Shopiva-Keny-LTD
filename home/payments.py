@@ -51,10 +51,6 @@ def mpesa_production_ready():
     return callback.startswith("https://shopivakenya.top/") or callback.startswith("https://www.shopivakenya.top/")
 
 
-def pesapal_ready():
-    return all(_env(name) for name in ("PESAPAL_CONSUMER_KEY", "PESAPAL_CONSUMER_SECRET", "PESAPAL_IPN_ID"))
-
-
 
 
 def _base_url():
@@ -229,197 +225,6 @@ def query_mpesa_stk(payment):
     return response
 
 
-def _pesapal_base_url():
-    return "https://cybqa.pesapal.com/pesapalv3" if _env("PESAPAL_ENV", "sandbox").lower() == "sandbox" else "https://pay.pesapal.com/v3"
-
-
-def pesapal_access_token():
-    consumer_key = _env("PESAPAL_CONSUMER_KEY")
-    consumer_secret = _env("PESAPAL_CONSUMER_SECRET")
-    if not consumer_key or not consumer_secret:
-        raise RuntimeError("Pesapal credentials are not configured.")
-    status, payload = _request_json(
-        f"{_pesapal_base_url()}/api/Auth/RequestToken",
-        data={"consumer_key": consumer_key, "consumer_secret": consumer_secret, "grant_type": "client_credentials"},
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-    )
-    token = payload.get("token")
-    if status != 200 or not token:
-        raise RuntimeError("Pesapal authentication failed.")
-    return token
-
-
-def create_pesapal_checkout(order, payment):
-    token = pesapal_access_token()
-    ipn_id = _env("PESAPAL_IPN_ID")
-    if not ipn_id:
-        raise RuntimeError("PESAPAL_IPN_ID is not configured. Register Shopiva's IPN URL in Pesapal first.")
-    base = _public_site_url()
-    callback = f"{base}/payments/pesapal/callback/"
-    cancel = f"{base}/payments/pesapal/cancel/"
-    reference = f"SHOPIVA-{order.id}-{payment.id}"
-    data = {
-        "id": reference,
-        "currency": "KES",
-        "amount": float(Decimal(payment.amount)),
-        "description": f"Shopiva order {order.tracking_code}",
-        "callback_url": callback,
-        "cancellation_url": cancel,
-        "redirect_mode": "TOP_WINDOW",
-        "notification_id": ipn_id,
-        "billing_address": {
-            "email_address": order.email,
-            "phone_number": normalize_phone(order.phone),
-            "country_code": "KE",
-            "first_name": (order.customer_name.split() or ["Customer"])[0],
-            "middle_name": "",
-            "last_name": " ".join(order.customer_name.split()[1:]) or "",
-            "line_1": order.address[:255],
-            "line_2": "",
-            "city": "",
-            "state": "",
-            "postal_code": "",
-            "zip_code": "",
-        },
-    }
-    status, payload = _request_json(
-        f"{_pesapal_base_url()}/api/Transactions/SubmitOrderRequest",
-        data=data,
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "Content-Type": "application/json"},
-    )
-    redirect_url = payload.get("redirect_url")
-    tracking_id = payload.get("order_tracking_id")
-    if status != 200 or not redirect_url or not tracking_id:
-        raise RuntimeError(payload.get("message") or "Pesapal could not create the payment session.")
-    payment.provider = "pesapal"
-    payment.provider_reference = str(tracking_id)
-    payment.raw_response = {"order_tracking_id": tracking_id, "merchant_reference": reference}
-    payment.status = "pending"
-    payment.save(update_fields=["provider", "provider_reference", "raw_response", "status", "updated_at"])
-    return redirect_url
-
-
-def query_pesapal_payment(tracking_id):
-    token = pesapal_access_token()
-    status, payload = _request_json(
-        f"{_pesapal_base_url()}/api/Transactions/GetTransactionStatus?orderTrackingId={tracking_id}",
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/json", "Content-Type": "application/json"},
-        method="GET",
-    )
-    if status != 200:
-        raise RuntimeError("Unable to verify the Pesapal transaction.")
-    return payload
-
-
-def _finalize_pesapal_payment(payment, payload):
-    with transaction.atomic():
-        payment = PaymentTransaction.objects.select_for_update().get(pk=payment.pk)
-        order = Order.objects.select_for_update().get(pk=payment.order_id)
-        if payment.provider != "pesapal" or payment.status == "paid":
-            return payment.status
-        merchant_reference = str(payload.get("merchant_reference") or "")
-        expected_reference = str(payment.raw_response.get("merchant_reference") or "")
-        currency = str(payload.get("currency") or "").upper()
-        try:
-            paid_amount = Decimal(str(payload.get("amount")))
-        except (InvalidOperation, TypeError, ValueError):
-            paid_amount = Decimal("-1")
-        if merchant_reference != expected_reference or currency != "KES" or paid_amount != Decimal(payment.amount):
-            payment.status = "failed"
-            payment.raw_response = {"verification_error": "Pesapal verification mismatch", "provider_response": payload}
-            payment.save(update_fields=["status", "raw_response", "updated_at"])
-            order.payment_status = "failed"
-            order.save(update_fields=["payment_status"])
-            return payment.status
-
-        code = int(payload.get("status_code") or -1)
-        if code == 1 and str(payload.get("payment_status_description", "")).upper() == "COMPLETED":
-            payment.status = "paid"
-            payment.provider_reference = str(payment.provider_reference)
-            payment.paid_at = timezone.now()
-            payment.raw_response = payload
-            payment.save(update_fields=["status", "paid_at", "raw_response", "updated_at"])
-            order.payment_status = "paid"
-            order.status = "paid"
-            order.payment_reference = str(payload.get("confirmation_code") or payment.provider_reference)
-            order.paid_at = timezone.now()
-            order.save(update_fields=["payment_status", "status", "payment_reference", "paid_at"])
-            OrderEvent.objects.create(order=order, event_type="paid", note=f"Pesapal payment confirmed via {payload.get('payment_method') or 'online payment'}.")
-            _create_seller_settlements(order)
-        elif code in (2, 3):
-            payment.status = "failed" if code == 2 else "cancelled"
-            payment.raw_response = payload
-            if not payment.inventory_released:
-                _release_reserved_inventory(order)
-                payment.inventory_released = True
-            payment.save(update_fields=["status", "raw_response", "inventory_released", "updated_at"])
-            order.payment_status = "failed"
-            order.save(update_fields=["payment_status"])
-        else:
-            payment.status = "pending"
-            payment.raw_response = payload
-            payment.save(update_fields=["status", "raw_response", "updated_at"])
-        return payment.status
-
-
-def pesapal_callback(request):
-    tracking_id = request.GET.get("OrderTrackingId", "").strip()
-    merchant_reference = request.GET.get("OrderMerchantReference", "").strip()
-    payment = PaymentTransaction.objects.filter(provider="pesapal", provider_reference=tracking_id).select_related("order").first()
-    if not payment or not tracking_id:
-        return render(request, "card_payment_result.html", {"success": False, "order": None, "error": "Payment reference could not be verified."})
-    expected = str(payment.raw_response.get("merchant_reference") or "")
-    if merchant_reference and merchant_reference != expected:
-        return render(request, "card_payment_result.html", {"success": False, "order": payment.order, "error": "Payment reference mismatch."})
-    try:
-        payload = query_pesapal_payment(tracking_id)
-        status = _finalize_pesapal_payment(payment, payload)
-    except Exception as exc:
-        status = payment.status
-        payment.raw_response = {"verification_error": str(exc)}
-        payment.save(update_fields=["raw_response", "updated_at"])
-    if status == "paid":
-        return redirect("order_success", order_id=payment.order_id)
-    return render(request, "card_payment_result.html", {"success": False, "order": payment.order, "error": "Payment is not confirmed yet. Shopiva will update the order when Pesapal confirms it."})
-
-
-@csrf_exempt
-def pesapal_ipn(request):
-    tracking_id = request.GET.get("OrderTrackingId") or request.POST.get("OrderTrackingId")
-    merchant_reference = request.GET.get("OrderMerchantReference") or request.POST.get("OrderMerchantReference")
-    if not tracking_id:
-        return JsonResponse({"orderNotificationType": "IPNCHANGE", "status": 500})
-    payment = PaymentTransaction.objects.filter(provider="pesapal", provider_reference=str(tracking_id)).first()
-    if not payment:
-        return JsonResponse({"orderNotificationType": "IPNCHANGE", "status": 200})
-    expected = str(payment.raw_response.get("merchant_reference") or "")
-    if merchant_reference and merchant_reference != expected:
-        return JsonResponse({"orderNotificationType": "IPNCHANGE", "status": 500})
-    try:
-        payload = query_pesapal_payment(str(tracking_id))
-        _finalize_pesapal_payment(payment, payload)
-        return JsonResponse({"orderNotificationType": "IPNCHANGE", "orderTrackingId": tracking_id, "orderMerchantReference": merchant_reference or expected, "status": 200})
-    except Exception:
-        return JsonResponse({"orderNotificationType": "IPNCHANGE", "orderTrackingId": tracking_id, "orderMerchantReference": merchant_reference or expected, "status": 500})
-
-
-def pesapal_cancel(request):
-    tracking_id = request.GET.get("OrderTrackingId", "").strip()
-    payment = PaymentTransaction.objects.filter(provider="pesapal", provider_reference=tracking_id).first()
-    if payment and payment.status != "paid":
-        with transaction.atomic():
-            payment = PaymentTransaction.objects.select_for_update().get(pk=payment.pk)
-            order = Order.objects.select_for_update().get(pk=payment.order_id)
-            payment.status = "cancelled"
-            if not payment.inventory_released:
-                _release_reserved_inventory(order)
-                payment.inventory_released = True
-            payment.save(update_fields=["status", "inventory_released", "updated_at"])
-            order.payment_status = "failed"
-            order.save(update_fields=["payment_status"])
-    return redirect("order_success", order_id=payment.order_id) if payment else redirect("checkout")
-
-
 def _safe_order_notification(user_id, order_id, tracking):
     """Order notifications are post-commit side effects and must never block checkout."""
     try:
@@ -470,14 +275,14 @@ def checkout_mpesa(request):
             return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "Please select an active Shopiva pickup station."})
         if pickup_point.county.casefold() != delivery_county.casefold():
             return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "The selected pickup station does not match your county."})
-    payment_method = request.POST.get("payment_method", "").strip().lower() or ("pesapal" if pesapal_ready() else "cod")
+    payment_method = request.POST.get("payment_method", "").strip().lower() or "mpesa"
 
     if not all([customer_name, email, phone, address]) or not items:
         return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "Please complete all customer details and make sure your cart is not empty."})
-    if payment_method not in {"mpesa", "pesapal", "card", "cod"}:
+    if payment_method not in {"mpesa", "cod"}:
         return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "Please select a valid payment method."})
     if payment_method == "mpesa" and not mpesa_production_ready():
-        return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "M-PESA is temporarily unavailable while Safaricom production onboarding is being finalized. Please use the available alternative payment method or Cash on Delivery."})
+        return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "M-PESA is temporarily unavailable while Safaricom production onboarding is being finalized. Please use Cash on Delivery."})
     if payment_method == "mpesa":
         normalized_payment_phone = normalize_phone(phone)
         if not __import__("re").fullmatch(r"254[17]\d{8}", normalized_payment_phone):
@@ -490,8 +295,6 @@ def checkout_mpesa(request):
                     "error": "Enter a valid Kenyan M-PESA mobile number, for example 0712345678 or 254712345678.",
                 },
             )
-    if payment_method in {"pesapal", "card"} and not pesapal_ready():
-        return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": "Online card/M-PESA checkout through the payment gateway is not configured yet. Please use Cash on Delivery until the payment provider is activated."})
 
     try:
         customer_latitude = Decimal(str(request.POST.get("delivery_latitude", "")).strip())
@@ -597,40 +400,13 @@ def checkout_mpesa(request):
             request.session.modified = True
             return redirect("order_success", order_id=order.id)
 
-        if payment_method in {"pesapal", "card"}:
-            payment = PaymentTransaction.objects.create(order=order, method="card", status="initiated", provider="pesapal", amount=final_total, phone=phone, idempotency_key=f"PESAPAL-{order.id}")
-            order.payment_status = "pending"
-            order.save(update_fields=["payment_status"])
-            OrderEvent.objects.create(order=order, event_type="payment_pending", note="Waiting for secure Pesapal payment selection.")
-        else:
-            payment = PaymentTransaction.objects.create(order=order, method="mpesa", status="initiated", provider="daraja", amount=final_total, phone=normalize_phone(phone), idempotency_key=f"MPESA-{order.id}")
+        payment = PaymentTransaction.objects.create(order=order, method="mpesa", status="initiated", provider="daraja", amount=final_total, phone=normalize_phone(phone), idempotency_key=f"MPESA-{order.id}")
         order.payment_status = "pending"
         order.save(update_fields=["payment_status"])
         payment_note = "Waiting for M-PESA STK payment."
         if mpesa_rounding_adjustment > 0:
             payment_note += f" Whole-KSh payment adjustment: KSh {mpesa_rounding_adjustment:.2f}."
         OrderEvent.objects.create(order=order, event_type="payment_pending", note=payment_note)
-
-    if payment_method in {"pesapal", "card"}:
-        try:
-            checkout_url = create_pesapal_checkout(order, payment)
-        except Exception as exc:
-            with transaction.atomic():
-                order = Order.objects.select_for_update().get(pk=order.pk)
-                payment = PaymentTransaction.objects.select_for_update().get(pk=payment.pk)
-                payment.status = "failed"
-                payment.raw_response = {"error": str(exc)}
-                if not payment.inventory_released:
-                    _release_reserved_inventory(order)
-                    payment.inventory_released = True
-                payment.save(update_fields=["status", "raw_response", "inventory_released", "updated_at"])
-                order.payment_status = "failed"
-                order.save(update_fields=["payment_status"])
-            return render(request, "customer_checkout_map.html", {"items": items, "total": total, "error": str(exc)})
-        request.session["cart"] = {}
-        request.session["payment_order_id"] = order.id
-        request.session.modified = True
-        return redirect(checkout_url)
 
     try:
         initiate_mpesa_stk(order, payment, payment.phone)
