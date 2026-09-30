@@ -15,7 +15,6 @@ from .models import DeliveryAgent, DeliveryLocationPing, DeliveryPayout, Deliver
 from .notification_service import notify_user
 from .forms import DeliveryRegistrationForm
 from .delivery_payouts import (
-    normalize_payout_phone,
     get_active_delivery_pay_profile,
     get_or_create_delivery_wallet,
     queue_delivery_payout,
