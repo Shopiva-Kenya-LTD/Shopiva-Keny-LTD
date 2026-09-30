@@ -15,6 +15,9 @@
 <main class="container">
   <div class="notice-bar"><span>🔔 Stay updated on orders, payments and delivery.</span><a href="{% url 'customer_notifications' %}">Open Notification Center →</a></div>
   <section class="welcome"><h1>Welcome, {{ request.user.username }} 👋</h1><p>Your Shopiva customer account is ready. Manage orders, delivery and notifications from one place.</p></section>
+  <section class="nia-widget" data-nia-widget data-role="customer" data-csrf-token="{{ csrf_token }}" aria-label="Nia live customer copilot"></section>
+  <link rel="stylesheet" href="/static/shopiva/nia-widget.css?v=nia-20260929">
+  <script src="/static/shopiva/nia-widget.js?v=nia-20260929"></script>
   <section class="cards">
     <a href="{% url 'customer_orders' %}" class="card"><div class="icon">📦</div><h2>My Orders</h2><p>View purchases, order status and delivery events.</p></a>
     <a href="{% url 'customer_profile' %}" class="card"><div class="icon">👤</div><h2>My Profile</h2><p>Manage your personal account information.</p></a>
