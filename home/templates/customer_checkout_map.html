@@ -42,10 +42,9 @@ body{margin:0;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f
 <label class="pay" id="pickup-option" style="opacity:.55"><input id="pickup-mode" type="radio" name="delivery_mode" value="pickup" disabled><strong>📦 Pickup Station</strong><small id="pickup-help">Select a county/town to see available Shopiva pickup stations.</small></label><div id="pickup-picker" style="display:none;margin:8px 0 14px"><label for="delivery_pickup_point">Pickup station</label><select id="delivery_pickup_point" name="delivery_pickup_point"><option value="">Select pickup station</option></select></div>
 <label class="pay" style="opacity:.55"><input type="radio" name="delivery_mode" value="express" disabled><strong>⚡ Express Delivery</strong><small>Not activated for customer selection yet.</small></label>
 </div>
-<h2 class="section">Payment</h2><div class="status ok" style="margin-bottom:10px">After you click <strong>Pay with M-PESA</strong>, Shopiva creates the order and takes you directly to the payment status screen. You will not be sent to the old checkout page.</div><div class="payOptions">
-<label class="pay"><input type="radio" name="payment_method" value="pesapal" {% if request.POST.payment_method == "pesapal" or not request.POST.payment_method and pesapal_ready %}checked{% endif %} {% if not pesapal_ready %}disabled{% endif %}><strong>💳 Pay Online — Pesapal</strong><small>{% if pesapal_ready %}Continue to the supported secure payment options available for the Shopiva merchant account.{% else %}Online payment is not configured yet. Cash on Delivery remains available.{% endif %}</small></label>
-<label class="pay" {% if not mpesa_ready %}style="opacity:.55"{% endif %}><input type="radio" name="payment_method" value="mpesa" {% if request.POST.payment_method == "mpesa" %}checked{% endif %} {% if not mpesa_ready %}disabled{% endif %}><strong>📱 M-PESA Direct</strong><small>{% if mpesa_ready %}Shopiva Daraja payment path.{% else %}Temporarily unavailable until the approved production M-PESA merchant configuration is active.{% endif %}</small></label>
-<label class="pay"><input type="radio" name="payment_method" value="cod" {% if request.POST.payment_method == "cod" or not request.POST.payment_method and not pesapal_ready %}checked{% endif %}><strong>💵 Cash on Delivery</strong><small>Pay when your order arrives, where enabled.</small></label>
+<h2 class="section">Payment</h2><div class="status ok" style="margin-bottom:10px">Choose M-PESA for automatic payment through Shopiva Daraja, or Cash on Delivery if you prefer to pay when the parcel arrives.</div><div class="payOptions">
+<label class="pay" {% if not mpesa_ready %}style="opacity:.55"{% endif %}><input type="radio" name="payment_method" value="mpesa" {% if request.POST.payment_method == "mpesa" or not request.POST.payment_method %}checked{% endif %} {% if not mpesa_ready %}disabled{% endif %}><strong>📱 Pay with M-PESA</strong><small>{% if mpesa_ready %}Shopiva Daraja will send an M-PESA payment prompt to your phone.{% else %}M-PESA is temporarily unavailable until the approved production merchant configuration is active.{% endif %}</small></label>
+<label class="pay"><input type="radio" name="payment_method" value="cod" {% if request.POST.payment_method == "cod" %}checked{% endif %}><strong>💵 Cash on Delivery</strong><small>Pay when your order arrives, where enabled.</small></label>
 </div>
 <button class="submit" id="pay-submit" type="submit">Pay with M-PESA →</button>
 </form><a class="back" href="{% url 'cart' %}">← Back to cart</a>
@@ -197,7 +196,6 @@ function updatePayButton(){
   const method=(document.querySelector('input[name="payment_method"]:checked')||{}).value||'mpesa';
   const totalText=(document.getElementById('quote-total')||{}).textContent||'';
   if(method==='cod') paySubmit.textContent='Place Cash on Delivery order →';
-  else if(method==='pesapal') paySubmit.textContent='Continue to Secure Payment '+(totalText.includes('KSh')?'• '+totalText:'→');
   else paySubmit.textContent='Pay with M-PESA '+(totalText.includes('KSh')?'• '+totalText:'→');
 }
 window.shopivaRefreshQuote=refreshQuote;
