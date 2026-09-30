@@ -2,7 +2,9 @@
 function init(el){
  if(el.dataset.niaReady)return; el.dataset.niaReady='1';
  const role=el.dataset.role||'customer';
- el.innerHTML='<div class="nia-widget-main"><div class="nia-ring"><svg viewBox="0 0 118 118"><circle cx="59" cy="59" r="50"></circle><circle class="nia-ring-live" cx="59" cy="59" r="50"></circle></svg><div class="nia-core">◉</div></div><div class="nia-copy"><div class="nia-kicker">Nia · '+role+' operations</div><h3>Nia Live Copilot</h3><p class="nia-status" data-nia-status>Idle — ready for Shopiva data.</p><div class="nia-actions"><button class="nia-action primary" data-nia-monitor type="button">🎙️ Start voice monitor</button><button class="nia-action" data-nia-refresh type="button">↻ Refresh</button></div></div></div><div class="nia-stats"><div class="nia-stat"><b data-s1>—</b><span data-l1>Orders</span></div><div class="nia-stat"><b data-s2>—</b><span data-l2>Stock</span></div><div class="nia-stat"><b data-s3>—</b><span data-l3>Today</span></div></div><div class="nia-widget-note">Nia can listen and answer by voice. The microphone is used only while the voice session is active.</div><div class="nia-digest" data-nia-digest style="display:none"></div>';
+ const context=el.dataset.context||'dashboard';
+ const supportMode=context==='support' && role==='customer';
+ el.innerHTML='<div class="nia-widget-main"><div class="nia-ring"><svg viewBox="0 0 118 118"><circle cx="59" cy="59" r="50"></circle><circle class="nia-ring-live" cx="59" cy="59" r="50"></circle></svg><div class="nia-core">◉</div></div><div class="nia-copy"><div class="nia-kicker">'+(supportMode?'Nia · customer support':'Nia · '+role+' operations')+'</div><h3>'+(supportMode?'Nia Support Assistant':'Nia Live Copilot')+'</h3><p class="nia-status" data-nia-status>'+(supportMode?'Ready to help with your Shopiva support, orders and delivery.':'Idle — ready for Shopiva data.')+'</p><div class="nia-actions"><button class="nia-action primary" data-nia-monitor type="button">🎙️ Start voice monitor</button><button class="nia-action" data-nia-refresh type="button">↻ Refresh</button></div></div></div><div class="nia-stats"><div class="nia-stat"><b data-s1>—</b><span data-l1>Orders</span></div><div class="nia-stat"><b data-s2>—</b><span data-l2>Stock</span></div><div class="nia-stat"><b data-s3>—</b><span data-l3>Today</span></div></div><div class="nia-widget-note">'+(supportMode?'Nia can read your own support cases and help you understand what to do next. Voice actions that create or reply to a support case require your explicit confirmation.':'Nia can listen and answer by voice. The microphone is used only while the voice session is active.')+'</div><div class="nia-digest" data-nia-digest style="display:none"></div>';
  const status=el.querySelector('[data-nia-status]'),btn=el.querySelector('[data-nia-monitor]'),refresh=el.querySelector('[data-nia-refresh]');
  const csrf=el.dataset.csrfToken||'';
  let stream=null,ctx=null,analyser=null,raf=0,pc=null,dc=null,audio=null,voiceActive=false,mediaRecorder=null,recordedChunks=[];
@@ -32,6 +34,11 @@ function init(el){
    el.querySelector('[data-s1]').textContent=s.primary_value??'0';el.querySelector('[data-l1]').textContent=s.primary_label||'Orders';
    el.querySelector('[data-s2]').textContent=s.secondary_value??'0';el.querySelector('[data-l2]').textContent=s.secondary_label||'Stock';
    el.querySelector('[data-s3]').textContent=s.tertiary_value??'0';el.querySelector('[data-l3]').textContent=s.tertiary_label||'Today';
+   if(supportMode){
+    el.querySelector('[data-s1]').textContent=el.dataset.supportOpen||'0';el.querySelector('[data-l1]').textContent='Active support cases';
+    el.querySelector('[data-s2]').textContent=el.dataset.supportWaiting||'0';el.querySelector('[data-l2]').textContent='Waiting for you';
+    el.querySelector('[data-s3]').textContent=el.dataset.supportMessages||'0';el.querySelector('[data-l3]').textContent='Support messages';
+   }
    if(role==='admin'&&d.digest){const box=el.querySelector('[data-nia-digest]');box.textContent='Daily operations digest: '+d.digest;box.style.display='block'}
    if(!voiceActive)setStatus('Live Shopiva data updated just now.');
   }catch(e){
