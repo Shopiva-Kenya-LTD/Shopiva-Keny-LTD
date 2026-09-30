@@ -270,16 +270,15 @@ def delivery_payouts(request):
     if request.method == "POST":
         action = request.POST.get("action", "").strip().lower()
 
-        if action == "save_bank":
-            wallet.bank_name = request.POST.get("bank_name", "").strip()
-            wallet.bank_code = request.POST.get("bank_code", "").strip()
-            wallet.bank_account_name = request.POST.get("bank_account_name", "").strip()
-            wallet.bank_account_number = request.POST.get("bank_account_number", "").strip()
-            if not all((wallet.bank_name, wallet.bank_code, wallet.bank_account_name, wallet.bank_account_number)):
-                message = "Complete all bank payout details before saving."
+        if action == "save_payout_phone":
+            try:
+                wallet.payout_phone = request.POST.get("payout_phone", "").strip()
+                wallet.payout_phone = __import__("home.delivery_payouts", fromlist=["normalize_payout_phone"]).normalize_payout_phone(wallet.payout_phone)
+            except ValueError as exc:
+                message = str(exc)
             else:
-                wallet.save(update_fields=("bank_name", "bank_code", "bank_account_name", "bank_account_number", "updated_at"))
-                message = "Bank payout details saved."
+                wallet.save(update_fields=("payout_phone", "updated_at"))
+                message = "M-Pesa payout number saved."
 
         elif action == "request_payout":
             try:
