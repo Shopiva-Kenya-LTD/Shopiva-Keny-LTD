@@ -87,6 +87,12 @@ class DeliveryPayoutTests(TestCase):
         self.assertEqual(order.customer_delivery_confirmed_by_id, self.customer.id)
 
     def test_automatic_payout_queues_after_customer_confirmation(self):
+        wallet = DeliveryWallet.objects.get(agent=self.agent)
+        wallet.bank_name = "Co-operative Bank"
+        wallet.bank_code = "11"
+        wallet.bank_account_name = "Rider One"
+        wallet.bank_account_number = "0123456789"
+        wallet.save(update_fields=("bank_name", "bank_code", "bank_account_name", "bank_account_number", "updated_at"))
         order = self.make_order("500.00")
         self.mark_delivered_as_rider(order)
         self.client.force_login(self.customer)
