@@ -14,13 +14,8 @@ def google_maps(request):
             "MPESA_TILL_NUMBER",
         ))
     )
-    pesapal_ready = all(
-        os.getenv(name, "").strip()
-        for name in ("PESAPAL_CONSUMER_KEY", "PESAPAL_CONSUMER_SECRET", "PESAPAL_IPN_ID")
-    )
     return {
         "google_maps_api_key": getattr(settings, "GOOGLE_MAPS_API_KEY", ""),
         "google_maps_map_id": getattr(settings, "GOOGLE_MAPS_MAP_ID", ""),
         "mpesa_ready": mpesa_ready,
-        "pesapal_ready": pesapal_ready,
     }
