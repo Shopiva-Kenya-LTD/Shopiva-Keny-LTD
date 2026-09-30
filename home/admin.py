@@ -6,6 +6,7 @@ import uuid
 from django import forms
 from django.contrib import admin
 from django.contrib.auth import logout as auth_logout
+from django.core.exceptions import ValidationError
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group, User
 from django.db import transaction
@@ -572,42 +573,81 @@ class DeliveryEarningAdmin(admin.ModelAdmin):
 @admin.register(DeliveryPayout, site=shopiva_admin_site)
 class DeliveryPayoutAdmin(admin.ModelAdmin):
     list_display = (
-        "id", "agent", "amount", "bank_name", "bank_account_number", "status", "trigger", "provider",
+        "id", "agent", "amount", "phone", "status", "trigger", "provider",
         "provider_reference", "created_at", "processed_at", "paid_at",
     )
     list_filter = ("status", "trigger", "provider", "created_at")
     search_fields = (
-        "agent__user__username", "agent__user__email", "bank_name", "bank_account_number",
+        "agent__user__username", "agent__user__email", "phone",
         "provider_reference", "idempotency_key",
     )
     readonly_fields = (
-        "agent", "amount", "phone", "bank_name", "bank_code", "bank_account_name", "bank_account_number", "trigger", "provider",
-        "provider_reference", "provider_response", "idempotency_key",
+        "agent", "amount", "phone", "bank_name", "bank_code", "bank_account_name", "bank_account_number",
+        "trigger", "provider", "provider_response", "idempotency_key",
         "created_at", "updated_at", "processed_at", "paid_at",
     )
+    list_editable = ("status",)
     list_per_page = 25
 
     def save_model(self, request, obj, form, change):
         previous_status = None
         if change and obj.pk:
             previous_status = DeliveryPayout.objects.get(pk=obj.pk).status
+
+        if obj.status == DeliveryPayout.STATUS_PAID:
+            if not obj.provider_reference.strip():
+                raise ValidationError("Enter the M-Pesa transaction/reference number before marking this payout paid.")
+            if previous_status == DeliveryPayout.STATUS_PAID:
+                raise ValidationError("This payout is already marked paid and cannot be paid again.")
+
         super().save_model(request, obj, form, change)
+
         if not change or previous_status == obj.status:
             return
-        if obj.status == DeliveryPayout.STATUS_PAID:
-            complete_delivery_payout(obj, provider_reference=obj.provider_reference, provider_response=obj.provider_response)
+
+        if obj.status == DeliveryPayout.STATUS_PROCESSING:
+            notify_user(
+                obj.agent.user,
+                "payout",
+                "Delivery payout being processed",
+                f"Shopiva admin is processing payout #{obj.id} of KSh {obj.amount:,.2f} to M-Pesa {obj.phone}.",
+                link="/delivery/payouts/",
+                phone=obj.agent.phone,
+            )
+        elif obj.status == DeliveryPayout.STATUS_PAID:
+            complete_delivery_payout(
+                obj,
+                provider_reference=obj.provider_reference,
+                provider_response={"method": "admin_manual_mpesa", "admin_user_id": request.user.id},
+            )
             notify_user(
                 obj.agent.user,
                 "payout",
                 "Delivery payout confirmed",
-                f"Your Shopiva delivery payout #{obj.id} for KSh {obj.amount:,.2f} has been marked paid.",
+                f"Your Shopiva delivery payout #{obj.id} of KSh {obj.amount:,.2f} has been paid to M-Pesa {obj.phone}. Reference: {obj.provider_reference}.",
                 link="/delivery/payouts/",
                 phone=obj.agent.phone,
             )
         elif obj.status == DeliveryPayout.STATUS_FAILED:
             fail_delivery_payout(obj, obj.failure_reason or "Payout marked failed by Shopiva admin.")
+            notify_user(
+                obj.agent.user,
+                "payout",
+                "Delivery payout failed",
+                f"Payout #{obj.id} of KSh {obj.amount:,.2f} was not paid. {obj.failure_reason or 'Please review your payout request.'}",
+                link="/delivery/payouts/",
+                phone=obj.agent.phone,
+            )
         elif obj.status == DeliveryPayout.STATUS_CANCELLED:
             cancel_delivery_payout(obj, obj.failure_reason or "Payout cancelled by Shopiva admin.")
+            notify_user(
+                obj.agent.user,
+                "payout",
+                "Delivery payout cancelled",
+                f"Payout #{obj.id} of KSh {obj.amount:,.2f} was cancelled by Shopiva admin.",
+                link="/delivery/payouts/",
+                phone=obj.agent.phone,
+            )
 
 
 @admin.register(ShopivaBranch, site=shopiva_admin_site)
