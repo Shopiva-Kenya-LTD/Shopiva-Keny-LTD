@@ -450,7 +450,7 @@ class DeliveryWallet(models.Model):
     pending_payout_balance = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     total_earned = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
     total_paid = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
-    auto_payout_enabled = models.BooleanField(default=True)
+    auto_payout_enabled = models.BooleanField(default=False)
     auto_payout_threshold = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("100.00"))
     last_payout_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
