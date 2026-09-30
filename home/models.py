@@ -469,23 +469,21 @@ class DeliveryWallet(models.Model):
 
 
 class DeliveryPayout(models.Model):
-    STATUS_QUEUED = "queued"
+    STATUS_REQUESTED = "requested"
     STATUS_PROCESSING = "processing"
     STATUS_PAID = "paid"
     STATUS_FAILED = "failed"
     STATUS_CANCELLED = "cancelled"
     STATUS_CHOICES = (
-        (STATUS_QUEUED, "Queued"),
+        (STATUS_REQUESTED, "Awaiting admin payment"),
         (STATUS_PROCESSING, "Processing"),
         (STATUS_PAID, "Paid"),
         (STATUS_FAILED, "Failed"),
         (STATUS_CANCELLED, "Cancelled"),
     )
-    TRIGGER_AUTOMATIC = "automatic"
     TRIGGER_MANUAL = "manual"
     TRIGGER_ADMIN = "admin"
     TRIGGER_CHOICES = (
-        (TRIGGER_AUTOMATIC, "Automatic"),
         (TRIGGER_MANUAL, "Rider requested"),
         (TRIGGER_ADMIN, "Admin"),
     )
@@ -495,7 +493,7 @@ class DeliveryPayout(models.Model):
     phone = models.CharField(max_length=30, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_QUEUED)
     trigger = models.CharField(max_length=20, choices=TRIGGER_CHOICES, default=TRIGGER_AUTOMATIC)
-    provider = models.CharField(max_length=30, default="pesalink")
+    provider = models.CharField(max_length=30, default="admin_mpesa")
     bank_name = models.CharField(max_length=120, blank=True)
     bank_code = models.CharField(max_length=20, blank=True)
     bank_account_name = models.CharField(max_length=160, blank=True)
