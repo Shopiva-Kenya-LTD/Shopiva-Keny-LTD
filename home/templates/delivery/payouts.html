@@ -20,7 +20,7 @@ h2{margin:0;font-size:14px}h3{margin:0;font-size:12px}.sub{margin-top:4px;color:
 label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b4035}input{width:100%;padding:12px 13px;border:1px solid #d6e6dd;border-radius:12px;font-size:13px;outline:none}input:focus{border-color:#19aa67;box-shadow:0 0 0 4px rgba(25,170,103,.1)}
 .button{display:inline-block;border:0;border-radius:11px;padding:10px 13px;background:#087a46;color:#fff;font-size:10px;font-weight:950;cursor:pointer;text-decoration:none}.button.secondary{background:#eff7f3;color:#087448;border:1px solid #d5e8de}.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .notice{margin-top:12px;padding:11px 12px;border-radius:12px;background:#f2f8f4;border:1px solid #dcebe2;color:#496157;font-size:9px;line-height:1.55}.notice b{color:#087448}
-.rows{display:grid;gap:8px;margin-top:11px}.row{padding:12px;border:1px solid #e1ebe5;border-radius:14px;background:#fbfdfc}.row-top{display:flex;justify-content:space-between;gap:10px}.meta{margin-top:5px;color:#708078;font-size:9px;line-height:1.55}.pill{display:inline-flex;padding:6px 9px;border-radius:999px;background:#e7f8ef;color:#087448;font-size:8px;font-weight:950;white-space:nowrap}.status-paid{background:#e6f7ed;color:#087448}.status-queued,.status-processing{background:#fff8e6;color:#795d25}.status-failed,.status-cancelled{background:#fff0f0;color:#9b3636}
+.rows{display:grid;gap:8px;margin-top:11px}.row{padding:12px;border:1px solid #e1ebe5;border-radius:14px;background:#fbfdfc}.row-top{display:flex;justify-content:space-between;gap:10px}.meta{margin-top:5px;color:#708078;font-size:9px;line-height:1.55}.pill{display:inline-flex;padding:6px 9px;border-radius:999px;background:#e7f8ef;color:#087448;font-size:8px;font-weight:950;white-space:nowrap}.status-paid{background:#e6f7ed;color:#087448}.status-requested,.status-processing{background:#fff8e6;color:#795d25}.status-failed,.status-cancelled{background:#fff0f0;color:#9b3636}
 .empty{padding:25px;text-align:center;color:#7a8b82;font-size:10px}
 @media(max-width:760px){.grid{grid-template-columns:1fr}.balance{grid-template-columns:1fr 1fr}.wrap{padding:12px}.hero{padding:20px}}
 </style>
@@ -44,8 +44,8 @@ label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b40
 </div>
 <div class="balance" style="margin-top:10px">
 <div class="metric"><small>Total paid</small><strong>KSh {{ wallet.total_paid|floatformat:2 }}</strong></div>
-<div class="metric"><small>Auto payout</small><strong>{% if wallet.auto_payout_enabled %}ON{% else %}OFF{% endif %}</strong></div>
-<div class="metric"><small>Next threshold</small><strong>KSh {{ wallet.auto_payout_threshold|floatformat:2 }}</strong></div>
+<div class="metric"><small>Payment method</small><strong>M-PESA</strong></div>
+<div class="metric"><small>Approval</small><strong>ADMIN</strong></div>
 </div>
 </section>
 
@@ -61,28 +61,22 @@ label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b40
 </section>
 
 <section class="card">
-<h2>Bank payout details</h2>
-<div class="sub">Automatic rider cashout uses a Kenyan bank payout through PesaLink. No Daraja B2C rider payout is used.</div>
+<h2>M-Pesa payout details</h2>
+<div class="sub">Shopiva does not use B2C, PesaLink or automatic bank disbursement for rider payouts. You request your available commission, then an authorized Shopiva admin makes the M-Pesa payment and records the transaction reference.</div>
 <form method="post" style="margin-top:4px">
 {% csrf_token %}
-<input type="hidden" name="action" value="save_bank">
-<label for="bank_name">Bank name</label>
-<input id="bank_name" name="bank_name" value="{{ wallet.bank_name }}" placeholder="e.g. Co-operative Bank">
-<label for="bank_code">Bank code</label>
-<input id="bank_code" name="bank_code" value="{{ wallet.bank_code }}" placeholder="Bank code">
-<label for="bank_account_name">Account name</label>
-<input id="bank_account_name" name="bank_account_name" value="{{ wallet.bank_account_name }}" placeholder="Name on bank account">
-<label for="bank_account_number">Account number</label>
-<input id="bank_account_number" name="bank_account_number" value="{{ wallet.bank_account_number }}" placeholder="Bank account number" inputmode="numeric">
-<div class="actions"><button class="button" type="submit">Save bank details</button></div>
+<input type="hidden" name="action" value="save_payout_phone">
+<label for="payout_phone">M-Pesa number</label>
+<input id="payout_phone" name="payout_phone" value="{{ wallet.payout_phone }}" placeholder="e.g. 0712345678" inputmode="tel">
+<div class="actions"><button class="button" type="submit">Save M-Pesa number</button></div>
 </form>
 <form method="post">
 {% csrf_token %}
 <input type="hidden" name="action" value="request_payout">
-<div class="actions"><button class="button" type="submit" {% if wallet.available_balance < minimum_payout %}disabled style="opacity:.5;cursor:not-allowed"{% endif %}>Request available payout</button></div>
+<div class="actions"><button class="button" type="submit" {% if wallet.available_balance < minimum_payout %}disabled style="opacity:.5;cursor:not-allowed"{% endif %}>Request admin payout</button></div>
 </form>
-<div class="notice"><b>Automatic payout:</b> when your available wallet reaches the configured threshold, Shopiva automatically creates a payout queue entry. Actual money movement is only confirmed after the approved disbursement provider reports success.</div>
-</section>
+<div class="notice"><b>Approval flow:</b> after you request payout, all active Shopiva administrators receive an in-app notification. An admin verifies the amount and M-Pesa number, sends the money, then records the M-Pesa transaction reference to complete the payout.</div>
+</section></section>
 </div>
 
 <section class="card">
@@ -100,12 +94,12 @@ label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b40
 
 <section class="card">
 <h2>Payout history</h2>
-<div class="sub">All payout attempts are ledgered with amount, destination, status and provider reference.</div>
+<div class="sub">All payout requests are ledgered with amount, M-Pesa destination, approval status and transaction reference.</div>
 <div class="rows">
 {% for payout in payouts %}
 <article class="row">
 <div class="row-top"><h3>Payout #{{ payout.id }} · KSh {{ payout.amount|floatformat:2 }}</h3><span class="pill status-{{ payout.status }}">{{ payout.get_status_display }}</span></div>
-<div class="meta">Destination {{ payout.bank_name }} · A/C {{ payout.bank_account_number }} · {{ payout.get_trigger_display }} · {{ payout.provider }} · {{ payout.created_at|date:"d M Y, H:i" }}{% if payout.provider_reference %}<br>Reference: {{ payout.provider_reference }}{% endif %}{% if payout.failure_reason %}<br>Reason: {{ payout.failure_reason }}{% endif %}</div>
+<div class="meta">M-Pesa {{ payout.phone }} · {{ payout.get_trigger_display }} · Admin payment · {{ payout.created_at|date:"d M Y, H:i" }}{% if payout.provider_reference %}<br>Reference: {{ payout.provider_reference }}{% endif %}{% if payout.failure_reason %}<br>Reason: {{ payout.failure_reason }}{% endif %}</div>
 </article>
 {% empty %}<div class="empty">No payouts have been queued yet.</div>{% endfor %}
 </div>
