@@ -125,6 +125,14 @@ def support_center(request):
                 messages.error(request, "Select at least one support case to delete.")
             return redirect("support_center")
 
+        if action == "delete_all_messages_all":
+            deleted_count = SupportMessage.objects.filter(ticket__in=tickets).delete()[0]
+            if deleted_count:
+                messages.success(request, f"All {deleted_count} support message{' was' if deleted_count == 1 else 's were'} deleted from your inbox. Your support cases remain available.")
+            else:
+                messages.info(request, "There are no support messages to delete.")
+            return redirect("support_center")
+
         if action == "delete_all_messages" and selected_ticket:
             deleted_count = selected_ticket.messages.count()
             if deleted_count:
