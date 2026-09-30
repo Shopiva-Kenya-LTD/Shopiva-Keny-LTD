@@ -24,7 +24,33 @@ from .delivery_payouts import cancel_delivery_payout, complete_delivery_payout, 
 from .notifications import notify_user
 from .notification_service import notify_wishlist_product_change
 from .nia_admin import answer_admin_question
-from .models import CustomerAddress, DeliveryAgent, DeliveryEarning, DeliveryPayProfile, DeliveryPayout, DeliveryWallet, Order, OrderEvent, OrderItem, PaymentTransaction, Product, SellerPayoutRequest, SellerProfile, SellerSettlement, SellerWallet, WishlistItem, ProductReview, Notification, NotificationDelivery, DeliveryTariff, DeliveryHub, DeliveryPricingProfile, DeliveryPickupPoint, DeliveryRateCard, ShopivaBranch, ShopivaOutlet, NiaCallSession, NiaTask, NiaCallerVerification, NiaAuditLog
+from .models import CustomerAddress, DeliveryAgent, DeliveryEarning, DeliveryPayProfile, DeliveryPayout, DeliveryWallet, Order, OrderEvent, OrderItem, PaymentTransaction, Product, SellerPayoutRequest, SellerProfile, SellerSettlement, SellerWallet, StaffPayment, WishlistItem, ProductReview, Notification, NotificationDelivery, DeliveryTariff, DeliveryHub, DeliveryPricingProfile, DeliveryPickupPoint, DeliveryRateCard, ShopivaBranch, ShopivaOutlet, NiaCallSession, NiaTask, NiaCallerVerification, NiaAuditLog
+
+
+class StaffPaymentForm(forms.ModelForm):
+    class Meta:
+        model = StaffPayment
+        fields = ("recipient", "amount", "payment_method", "destination", "purpose", "notes")
+        widgets = {
+            "purpose": forms.TextInput(attrs={"placeholder": "Salary, allowance, bonus, reimbursement, etc."}),
+            "destination": forms.TextInput(attrs={"placeholder": "M-PESA number, bank account/reference, or other destination"}),
+            "notes": forms.Textarea(attrs={"rows": 3, "placeholder": "Optional payment notes"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["recipient"].queryset = (
+            User.objects.filter(is_staff=True, is_active=True, is_superuser=False)
+            .order_by("first_name", "last_name", "username")
+        )
+
+    def clean(self):
+        cleaned = super().clean()
+        method = cleaned.get("payment_method")
+        destination = (cleaned.get("destination") or "").strip()
+        if method in {StaffPayment.METHOD_MPESA, StaffPayment.METHOD_BANK} and not destination:
+            self.add_error("destination", "Enter the M-PESA number or bank destination before creating this payment.")
+        return cleaned
 
 
 class ProductForm(forms.ModelForm):
@@ -132,8 +158,94 @@ class ShopivaAdminSite(admin.AdminSite):
             path("support-center/", self.admin_view(support_admin_center), name="support_center"),
             path("operations-center/", self.admin_view(admin_operations_center), name="operations_center"),
             path("nia-assistant/", self.admin_view(self.nia_assistant), name="nia_assistant"),
+            path("staff-payments/", self.admin_view(self.staff_payments), name="staff_payments"),
         ]
         return custom_urls + urls
+
+    def staff_payments(self, request):
+        if request.method == "POST":
+            action = (request.POST.get("action") or "").strip()
+            if action == "create":
+                form = StaffPaymentForm(request.POST)
+                if form.is_valid():
+                    payment = form.save(commit=False)
+                    payment.created_by = request.user
+                    payment.status = StaffPayment.STATUS_PENDING
+                    payment.idempotency_key = uuid.uuid4().hex
+                    payment.save()
+                    notify_user(
+                        payment.recipient,
+                        "payment",
+                        "Shopiva staff payment created",
+                        (
+                            f"A Shopiva staff payment of KSh {payment.amount:,.2f} was created for "
+                            f"{payment.purpose}. Status: pending. Payment mode: {payment.get_payment_method_display()}."
+                        ),
+                        "/admin/staff-payments/",
+                    )
+                    self.message_user(request, f"Payment #{payment.id} created and awaiting payment.")
+                    return redirect("shopiva_admin:staff_payments")
+            elif action == "mark_paid":
+                payment_id = request.POST.get("payment_id")
+                reference = (request.POST.get("provider_reference") or "").strip()
+                with transaction.atomic():
+                    payment = get_object_or_404(
+                        StaffPayment.objects.select_for_update(),
+                        id=payment_id,
+                    )
+                    if payment.status == StaffPayment.STATUS_PAID:
+                        self.message_user(request, f"Payment #{payment.id} is already marked paid.", level="warning")
+                        return redirect("shopiva_admin:staff_payments")
+                    if payment.status == StaffPayment.STATUS_CANCELLED:
+                        self.message_user(request, f"Payment #{payment.id} is cancelled and cannot be marked paid.", level="error")
+                        return redirect("shopiva_admin:staff_payments")
+                    if not reference:
+                        self.message_user(request, "Enter the M-PESA transaction ID, bank reference, or receipt number before marking the payment paid.", level="error")
+                        return redirect("shopiva_admin:staff_payments")
+                    payment.status = StaffPayment.STATUS_PAID
+                    payment.provider_reference = reference
+                    payment.paid_by = request.user
+                    payment.paid_at = timezone.now()
+                    payment.save(update_fields=("status", "provider_reference", "paid_by", "paid_at", "updated_at"))
+                notify_user(
+                    payment.recipient,
+                    "payment",
+                    "Shopiva staff payment completed",
+                    (
+                        f"Shopiva has recorded your payment of KSh {payment.amount:,.2f} for "
+                        f"{payment.purpose} as paid. Reference: {payment.provider_reference}."
+                    ),
+                    "/admin/staff-payments/",
+                )
+                self.message_user(request, f"Payment #{payment.id} marked paid.")
+                return redirect("shopiva_admin:staff_payments")
+            elif action == "cancel":
+                payment_id = request.POST.get("payment_id")
+                with transaction.atomic():
+                    payment = get_object_or_404(
+                        StaffPayment.objects.select_for_update(),
+                        id=payment_id,
+                    )
+                    if payment.status != StaffPayment.STATUS_PAID:
+                        payment.status = StaffPayment.STATUS_CANCELLED
+                        payment.save(update_fields=("status", "updated_at"))
+                self.message_user(request, f"Payment #{payment_id} cancelled.")
+                return redirect("shopiva_admin:staff_payments")
+        else:
+            form = StaffPaymentForm()
+
+        payments = StaffPayment.objects.select_related("recipient", "created_by", "paid_by").order_by("-created_at")[:100]
+        pending_count = StaffPayment.objects.filter(status__in=(StaffPayment.STATUS_PENDING, StaffPayment.STATUS_PROCESSING)).count()
+        paid_total = StaffPayment.objects.filter(status=StaffPayment.STATUS_PAID).aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
+        context = {
+            **self.each_context(request),
+            "form": form,
+            "payments": payments,
+            "pending_count": pending_count,
+            "paid_total": paid_total,
+            "page_title": "Shopiva Staff Payments",
+        }
+        return TemplateResponse(request, "admin/staff_payments.html", context)
 
     def nia_assistant(self, request):
         if request.method != "POST":
@@ -640,6 +752,16 @@ class DeliveryPayoutAdmin(admin.ModelAdmin):
                 link="/delivery/payouts/",
                 phone=obj.agent.phone,
             )
+
+
+@admin.register(StaffPayment, site=shopiva_admin_site)
+class StaffPaymentAdmin(admin.ModelAdmin):
+    list_display = ("id", "recipient", "amount", "payment_method", "destination", "purpose", "status", "provider_reference", "created_at", "paid_at")
+    list_filter = ("payment_method", "status", "created_at")
+    search_fields = ("recipient__username", "recipient__email", "recipient__first_name", "recipient__last_name", "destination", "purpose", "provider_reference")
+    readonly_fields = ("idempotency_key", "created_by", "paid_by", "created_at", "updated_at", "paid_at")
+    ordering = ("-created_at",)
+    list_per_page = 50
 
 
 @admin.register(ShopivaBranch, site=shopiva_admin_site)
