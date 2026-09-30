@@ -12,7 +12,7 @@ from django.http import FileResponse, JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 
 from .ai import _catalog
-from .models import DeliveryAgent, DeliveryEarning, Order, OrderItem, Product, PaymentTransaction, SellerProfile, SellerSettlement, SellerWallet, DeliveryWallet
+from .models import CustomerAddress, DeliveryAgent, DeliveryEarning, Notification, Order, OrderItem, Product, PaymentTransaction, SellerProfile, SellerSettlement, SellerWallet, DeliveryWallet, WishlistItem
 
 
 VOICE_RATE_WINDOW_SECONDS = int(os.getenv("NIA_VOICE_RATE_WINDOW_SECONDS", "60"))
@@ -626,6 +626,71 @@ Never claim a delivery was completed, assigned, cancelled or paid unless live Sh
                     "additionalProperties": False,
                 },
             },
+            {
+                "type": "function",
+                "name": "remove_from_cart",
+                "description": "Remove a product from the current customer's cart.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"product_id": {"type": "integer"}},
+                    "required": ["product_id"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "type": "function",
+                "name": "set_cart_quantity",
+                "description": "Set the quantity of a real product in the current customer's cart.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "product_id": {"type": "integer"},
+                        "quantity": {"type": "integer", "minimum": 0, "maximum": 20},
+                    },
+                    "required": ["product_id", "quantity"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "type": "function",
+                "name": "get_my_wishlist",
+                "description": "Return the customer's saved wishlist products.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "add_to_wishlist",
+                "description": "Save a real Shopiva product to the authenticated customer's wishlist.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"product_id": {"type": "integer"}},
+                    "required": ["product_id"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "type": "function",
+                "name": "remove_from_wishlist",
+                "description": "Remove a product from the authenticated customer's wishlist.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {"product_id": {"type": "integer"}},
+                    "required": ["product_id"],
+                    "additionalProperties": False,
+                },
+            },
+            {
+                "type": "function",
+                "name": "get_my_addresses",
+                "description": "Return the customer's saved delivery addresses without exposing other users' data.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
+            {
+                "type": "function",
+                "name": "get_my_notifications",
+                "description": "Return recent notifications belonging only to the authenticated customer.",
+                "parameters": {"type": "object", "properties": {}, "additionalProperties": False},
+            },
         ]
 
     session = {
@@ -754,6 +819,100 @@ def realtime_action(request):
         request.session["cart"] = cart
         request.session.modified = True
         return JsonResponse({"ok": True, "message": f"Added {quantity} {product.name} to your cart.", "product": product.name, "quantity": new_quantity})
+
+    if action == "remove_from_cart":
+        try:
+            product_id = int(payload.get("product_id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid product id."}, status=400)
+        cart = request.session.get("cart", {})
+        removed = cart.pop(str(product_id), None)
+        request.session["cart"] = cart
+        request.session.modified = True
+        if removed is None:
+            return JsonResponse({"ok": False, "error": "That product is not in your cart."}, status=404)
+        _audit_voice_action(request, action, {"product_id": product_id})
+        return JsonResponse({"ok": True, "message": "Product removed from your cart."})
+
+    if action == "set_cart_quantity":
+        try:
+            product_id = int(payload.get("product_id"))
+            quantity = int(payload.get("quantity", 0))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid product or quantity."}, status=400)
+        if quantity < 0 or quantity > 20:
+            return JsonResponse({"ok": False, "error": "Quantity must be between 0 and 20."}, status=400)
+        product = Product.objects.filter(id=product_id, is_active=True).first()
+        if not product:
+            return JsonResponse({"ok": False, "error": "That product is no longer available."}, status=404)
+        if quantity > product.stock_quantity:
+            return JsonResponse({"ok": False, "error": f"Only {product.stock_quantity} units of {product.name} are currently in stock."}, status=409)
+        cart = request.session.get("cart", {})
+        if quantity == 0:
+            cart.pop(str(product_id), None)
+        else:
+            cart[str(product_id)] = quantity
+        request.session["cart"] = cart
+        request.session.modified = True
+        _audit_voice_action(request, action, {"product_id": product_id, "quantity": quantity})
+        return JsonResponse({"ok": True, "message": f"Cart quantity for {product.name} is now {quantity}."})
+
+    if action == "get_my_wishlist":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to use your wishlist."}, status=401)
+        rows = list(
+            WishlistItem.objects.filter(user=request.user, product__is_active=True)
+            .select_related("product")
+            .values("product__id", "product__name", "product__category", "product__discount_percent", "product__stock_quantity", "product__price")[:30]
+        )
+        return JsonResponse({"ok": True, "items": rows})
+
+    if action == "add_to_wishlist":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to save wishlist items."}, status=401)
+        try:
+            product_id = int(payload.get("product_id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid product id."}, status=400)
+        product = Product.objects.filter(id=product_id, is_active=True).first()
+        if not product:
+            return JsonResponse({"ok": False, "error": "That product is not available."}, status=404)
+        _, created = WishlistItem.objects.get_or_create(user=request.user, product=product)
+        _audit_voice_action(request, action, {"product_id": product_id})
+        return JsonResponse({"ok": True, "saved": True, "created": created, "product": product.name})
+
+    if action == "remove_from_wishlist":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to manage your wishlist."}, status=401)
+        try:
+            product_id = int(payload.get("product_id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": "Invalid product id."}, status=400)
+        deleted, _ = WishlistItem.objects.filter(user=request.user, product_id=product_id).delete()
+        if not deleted:
+            return JsonResponse({"ok": False, "error": "That product is not in your wishlist."}, status=404)
+        _audit_voice_action(request, action, {"product_id": product_id})
+        return JsonResponse({"ok": True, "removed": True})
+
+    if action == "get_my_addresses":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to view saved addresses."}, status=401)
+        rows = list(
+            CustomerAddress.objects.filter(user=request.user)
+            .values("id", "label", "full_name", "phone", "county", "town", "address_line", "landmark", "latitude", "longitude", "is_default")[:20]
+        )
+        return JsonResponse({"ok": True, "addresses": rows})
+
+    if action == "get_my_notifications":
+        if not request.user.is_authenticated:
+            return JsonResponse({"ok": False, "error": "Please sign in to view notifications."}, status=401)
+        rows = list(
+            Notification.objects.filter(user=request.user)
+            .order_by("-created_at")
+            .values("id", "notification_type", "title", "message", "is_read", "created_at")[:20]
+        )
+        unread = Notification.objects.filter(user=request.user, is_read=False).count()
+        return JsonResponse({"ok": True, "notifications": rows, "unread_count": unread})
 
     if action == "get_my_orders":
         if not request.user.is_authenticated:
