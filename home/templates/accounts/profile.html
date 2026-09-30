@@ -1,28 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Profile | Shopiva Kenya</title>
-    <style>
-        body{margin:0;font-family:Arial,sans-serif;background:#f5f8f6;color:#17211d}.top{background:#087f5b;color:#fff;padding:18px 24px}.wrap{max-width:700px;margin:30px auto;padding:0 20px}.top a{color:#fff;text-decoration:none;font-weight:700}.card{background:#fff;border-radius:18px;padding:28px;box-shadow:0 8px 24px rgba(0,0,0,.06)}label{display:block;font-weight:700;margin:16px 0 7px}input{width:100%;padding:13px;border:1px solid #d8e0db;border-radius:10px;font-size:15px;box-sizing:border-box}button{margin-top:20px;border:0;border-radius:10px;padding:13px 18px;background:#087f5b;color:#fff;font-weight:700;cursor:pointer}.message{padding:12px;border-radius:10px;background:#eefaf4;color:#087f5b;margin-bottom:16px}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile | Shopiva Kenya</title>
+<style>
+:root{--green:#087f5b;--dark:#10231d;--muted:#64756e;--line:#dfe8e3;--bg:#f3f8f5}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--dark)}
+.top{background:linear-gradient(135deg,#075d45,#0a936a);color:#fff;padding:20px 24px}.top-inner{max-width:1050px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:11px}.avatar{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:900;font-size:17px}.brand b{display:block;font-size:17px}.brand small{display:block;margin-top:3px;opacity:.78;font-size:10px;letter-spacing:.12em}.back{color:#fff;text-decoration:none;font-weight:800;font-size:13px}
+.wrap{max-width:1050px;margin:30px auto;padding:0 20px}.heading{margin-bottom:20px}.eyebrow{display:inline-block;color:var(--green);background:#e5f7ef;border:1px solid #c5ebdc;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.heading h1{font-size:34px;letter-spacing:-1px;margin:10px 0 5px}.heading p{margin:0;color:var(--muted);font-size:14px}
+.layout{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 10px 28px rgba(10,42,30,.06)}.card h2{margin:0 0 5px;font-size:19px}.sub{margin:0 0 18px;color:var(--muted);font-size:12px;line-height:1.5}
+.message{padding:12px 13px;border-radius:11px;background:#eaf9f2;color:#087f5b;border:1px solid #ccecdf;margin-bottom:16px;font-size:12px;font-weight:700}
+.field{margin:16px 0}.field label{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:12px;margin-bottom:7px}.field label span{font-size:9px;color:#087f5b;background:#eaf9f2;border-radius:999px;padding:4px 7px}.input{width:100%;padding:13px;border:1px solid var(--line);border-radius:11px;font-size:14px;background:#f8faf9;color:#4d5d56}.helper{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.account-badge{display:flex;align-items:center;gap:12px;padding:14px;background:#f5faf7;border:1px solid #dcebe4;border-radius:14px;margin-bottom:18px}.big-avatar{width:50px;height:50px;border-radius:15px;background:#087f5b;color:#fff;display:grid;place-items:center;font-size:18px;font-weight:900}.account-badge b{display:block}.account-badge span{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.quick{display:grid;gap:9px}.quick a{display:flex;align-items:center;gap:11px;padding:13px;border:1px solid var(--line);border-radius:13px;text-decoration:none;color:var(--dark);background:#fff}.quick a:hover{border-color:#9bd9c2;background:#f7fcf9}.icon{width:32px;height:32px;border-radius:10px;background:#eaf8f1;display:grid;place-items:center}.quick b{font-size:12px}.quick small{display:block;color:var(--muted);margin-top:2px;font-size:10px}
+.notice{margin-top:12px;padding:12px;border-radius:12px;background:#fff8e8;border:1px solid #f1dfaa;color:#6d5b2c;font-size:10px;line-height:1.5}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.heading h1{font-size:29px}.top-inner{align-items:flex-start}}
+</style>
 </head>
 <body>
-<div class="top"><div class="wrap"><a href="{% url 'customer_dashboard' %}">← My Account</a></div></div>
+<header class="top"><div class="top-inner"><div class="brand"><div class="avatar">{{ request.user.username|first|upper }}</div><div><b>Shopiva Kenya</b><small>CUSTOMER ACCOUNT</small></div></div><a class="back" href="{% url 'customer_dashboard' %}">← My Account</a></div></header>
 <main class="wrap">
-    <div class="card">
-        <h1>My Profile</h1>
-        {% if messages %}{% for message in messages %}<div class="message">{{ message }}</div>{% endfor %}{% endif %}
-        <form method="post">
-            {% csrf_token %}
-            <label>Username</label>
-            <input type="text" value="{{ request.user.username }}" disabled>
-            <label for="email">Email address</label>
-            <input id="email" type="email" value="{{ request.user.email }}" disabled><p style="color:#66756e;font-size:13px;line-height:1.5">Your account email is protected because it is used for account recovery and order communications. Contact Shopiva support for a verified email change.</p>
-            <button type="submit">Save Profile</button>
-        </form>
-    </div>
+<div class="heading"><span class="eyebrow">● Account settings</span><h1>My Profile</h1><p>Manage your Shopiva account information and quickly reach the services you use most.</p></div>
+<div class="layout">
+<section class="card">
+<h2>Account information</h2><p class="sub">Your username identifies your Shopiva account. Your email is protected because it is used for account recovery and order communications.</p>
+{% if messages %}{% for message in messages %}<div class="message">✓ {{ message }}</div>{% endfor %}{% endif %}
+<div class="account-badge"><div class="big-avatar">{{ request.user.username|first|upper }}</div><div><b>{{ request.user.username }}</b><span>Shopiva customer account</span></div></div>
+<form method="post">
+{% csrf_token %}
+<div class="field"><label>Username <span>PROTECTED</span></label><input class="input" type="text" value="{{ request.user.username }}" disabled></div>
+<div class="field"><label for="email">Email address <span>PROTECTED</span></label><input id="email" class="input" type="email" value="{{ request.user.email }}" disabled><p class="helper">Need to change this email? Contact Shopiva Support so the change can be verified safely.</p></div>
+</form>
+</section>
+<aside class="card">
+<h2>Quick access</h2><p class="sub">Jump directly to the part of your account you need.</p>
+<div class="quick">
+<a href="{% url 'customer_dashboard' %}"><div class="icon">🏠</div><div><b>My Account</b><small>Return to your customer dashboard</small></div></a>
+<a href="{% url 'customer_addresses' %}"><div class="icon">📍</div><div><b>Saved Addresses</b><small>Manage delivery locations</small></div></a>
+<a href="{% url 'customer_notifications' %}"><div class="icon">🔔</div><div><b>Notifications</b><small>See order and account alerts</small></div></a>
+<a href="{% url 'support_center' %}"><div class="icon">🎧</div><div><b>Contact Center</b><small>Get help or ask Nia for assistance</small></div></a>
+</div>
+<div class="notice"><b>🔐 Account safety</b><br>Never share your M-PESA PIN, OTP, password or other security codes with anyone, including someone claiming to be Shopiva Support.</div>
+</aside>
+</div>
 </main>
 </body>
 </html>
