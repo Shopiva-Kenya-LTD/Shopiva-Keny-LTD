@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,7 @@
 <title>My Profile | Shopiva Kenya</title>
 <style>
 :root{--green:#087f5b;--dark:#10231d;--muted:#64756e;--line:#dfe8e3;--bg:#f3f8f5}
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--dark)}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--dark);position:relative;min-height:100vh}body:before{content:"";position:fixed;inset:0;background:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}") center/cover no-repeat;opacity:.42;pointer-events:none;z-index:0}body:after{content:"";position:fixed;inset:0;background:rgba(243,248,245,.64);pointer-events:none;z-index:0}.top,.wrap{position:relative;z-index:1}
 .top{background:linear-gradient(135deg,#075d45,#0a936a);color:#fff;padding:20px 24px}.top-inner{max-width:1050px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:11px}.avatar{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:900;font-size:17px}.brand b{display:block;font-size:17px}.brand small{display:block;margin-top:3px;opacity:.78;font-size:10px;letter-spacing:.12em}.back{color:#fff;text-decoration:none;font-weight:800;font-size:13px}
 .wrap{max-width:1050px;margin:30px auto;padding:0 20px}.heading{margin-bottom:20px}.eyebrow{display:inline-block;color:var(--green);background:#e5f7ef;border:1px solid #c5ebdc;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}.heading h1{font-size:34px;letter-spacing:-1px;margin:10px 0 5px}.heading p{margin:0;color:var(--muted);font-size:14px}
 .layout{display:grid;grid-template-columns:1.25fr .75fr;gap:18px}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:0 10px 28px rgba(10,42,30,.06)}.card h2{margin:0 0 5px;font-size:19px}.sub{margin:0 0 18px;color:var(--muted);font-size:12px;line-height:1.5}
