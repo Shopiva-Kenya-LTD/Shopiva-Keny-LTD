@@ -51,25 +51,30 @@ label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b40
 
 <div class="grid">
 <section class="card">
-<h2>Shopiva rider pay formula</h2>
-<div class="sub">The active pay profile is controlled by Shopiva administrators and is saved with each earning for auditability.</div>
+<h2>Shopiva rider commission</h2>
+<div class="sub">Riders are paid a commission on the customer delivery fee. Distance is used to calculate the customer's delivery fee; riders do not receive a separate base or per-kilometre payment.</div>
 <div class="rate">
-<span class="chip">KSh 100 base / delivery</span>
-<span class="chip">+ KSh 15 / km</span>
-<span class="chip">Auto queue from KSh 500</span>
+<span class="chip">Commission: {{ earning_commission_percent|default:"Configured by Shopiva" }}%</span>
+<span class="chip">Auto queue: KSh {{ minimum_payout|floatformat:2 }}</span>
 </div>
-<div class="notice"><b>Example:</b> A verified 10 km delivery earns KSh 250 (KSh 100 base + KSh 150 distance). The recorded order distance is used; the rider cannot edit the distance.</div>
+<div class="notice"><b>Important:</b> Commission is credited only after the customer confirms that the parcel was received. Shopiva then queues any eligible automatic bank payout.</div>
 </section>
 
 <section class="card">
-<h2>Payout details</h2>
-<div class="sub">Set the Kenyan mobile number that Shopiva should use for rider payouts.</div>
+<h2>Bank payout details</h2>
+<div class="sub">Automatic rider cashout uses a Kenyan bank payout through PesaLink. No Daraja B2C rider payout is used.</div>
 <form method="post" style="margin-top:4px">
 {% csrf_token %}
-<input type="hidden" name="action" value="save_phone">
-<label for="payout_phone">M-PESA payout number</label>
-<input id="payout_phone" name="payout_phone" value="{{ wallet.payout_phone }}" placeholder="07XXXXXXXX or 2547XXXXXXXX" inputmode="numeric" autocomplete="tel">
-<div class="actions"><button class="button" type="submit">Save payout number</button></div>
+<input type="hidden" name="action" value="save_bank">
+<label for="bank_name">Bank name</label>
+<input id="bank_name" name="bank_name" value="{{ wallet.bank_name }}" placeholder="e.g. Co-operative Bank">
+<label for="bank_code">Bank code</label>
+<input id="bank_code" name="bank_code" value="{{ wallet.bank_code }}" placeholder="Bank code">
+<label for="bank_account_name">Account name</label>
+<input id="bank_account_name" name="bank_account_name" value="{{ wallet.bank_account_name }}" placeholder="Name on bank account">
+<label for="bank_account_number">Account number</label>
+<input id="bank_account_number" name="bank_account_number" value="{{ wallet.bank_account_number }}" placeholder="Bank account number" inputmode="numeric">
+<div class="actions"><button class="button" type="submit">Save bank details</button></div>
 </form>
 <form method="post">
 {% csrf_token %}
@@ -87,7 +92,7 @@ label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b40
 {% for earning in earnings %}
 <article class="row">
 <div class="row-top"><h3>Order #{{ earning.order_id }} · {{ earning.order.tracking_code }}</h3><span class="pill">{{ earning.get_status_display }}</span></div>
-<div class="meta">{{ earning.distance_km|floatformat:2 }} km · {{ earning.distance_source }} distance · Base KSh {{ earning.base_amount|floatformat:2 }} · Distance KSh {{ earning.distance_amount|floatformat:2 }} · <strong>Total KSh {{ earning.total_amount|floatformat:2 }}</strong></div>
+<div class="meta">Delivery fee KSh {{ earning.base_amount|floatformat:2 }} · Commission {{ earning.commission_percent|floatformat:2 }}% · <strong>Rider commission KSh {{ earning.commission_amount|floatformat:2 }}</strong></div>
 </article>
 {% empty %}<div class="empty">No delivery earnings have been recorded yet.</div>{% endfor %}
 </div>
@@ -100,7 +105,7 @@ label{display:block;margin:13px 0 7px;font-size:10px;font-weight:950;color:#2b40
 {% for payout in payouts %}
 <article class="row">
 <div class="row-top"><h3>Payout #{{ payout.id }} · KSh {{ payout.amount|floatformat:2 }}</h3><span class="pill status-{{ payout.status }}">{{ payout.get_status_display }}</span></div>
-<div class="meta">Destination {{ payout.phone }} · {{ payout.get_trigger_display }} · {{ payout.provider }} · {{ payout.created_at|date:"d M Y, H:i" }}{% if payout.provider_reference %}<br>Reference: {{ payout.provider_reference }}{% endif %}{% if payout.failure_reason %}<br>Reason: {{ payout.failure_reason }}{% endif %}</div>
+<div class="meta">Destination {{ payout.bank_name }} · A/C {{ payout.bank_account_number }} · {{ payout.get_trigger_display }} · {{ payout.provider }} · {{ payout.created_at|date:"d M Y, H:i" }}{% if payout.provider_reference %}<br>Reference: {{ payout.provider_reference }}{% endif %}{% if payout.failure_reason %}<br>Reason: {{ payout.failure_reason }}{% endif %}</div>
 </article>
 {% empty %}<div class="empty">No payouts have been queued yet.</div>{% endfor %}
 </div>
