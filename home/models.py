@@ -605,6 +605,15 @@ class Order(models.Model):
     delivery_confirmation_code = models.CharField(max_length=6, blank=True, editable=False)
     delivery_verification_attempts = models.PositiveSmallIntegerField(default=0, editable=False)
     delivery_verification_locked_at = models.DateTimeField(null=True, blank=True, editable=False)
+    customer_delivery_confirmed = models.BooleanField(default=False)
+    customer_delivery_confirmed_at = models.DateTimeField(null=True, blank=True)
+    customer_delivery_confirmed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="confirmed_shopiva_deliveries",
+    )
     delivered_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
