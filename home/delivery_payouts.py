@@ -48,7 +48,7 @@ def get_active_delivery_pay_profile():
         name="Shopiva Standard Rider Pay",
         commission_percent=DEFAULT_COMMISSION_PERCENT,
         minimum_payout=DEFAULT_MINIMUM_PAYOUT,
-        auto_payout_enabled=True,
+        auto_payout_enabled=False,
         auto_payout_threshold=DEFAULT_MINIMUM_PAYOUT,
         is_active=True,
         notes="Commission-only rider pay. Configure the approved percentage of the customer delivery fee before enabling automatic cashout.",
@@ -60,7 +60,7 @@ def get_or_create_delivery_wallet(agent):
         agent=agent,
         defaults={
             "payout_phone": agent.phone or "",
-            "auto_payout_enabled": True,
+            "auto_payout_enabled": False,
             "auto_payout_threshold": DEFAULT_MINIMUM_PAYOUT,
         },
     )
