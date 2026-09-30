@@ -113,15 +113,3 @@ services:
         sync: false
       - key: MPESA_CALLBACK_URL
         sync: false
-      - key: PESALINK_ENABLED
-        value: "false"
-      - key: INTASEND_API_TOKEN
-        sync: false
-      - key: INTASEND_DEVICE_ID
-        sync: false
-      - key: INTASEND_PAYOUT_WALLET_ID
-        sync: false
-      - key: INTASEND_PAYOUT_CALLBACK_URL
-        sync: false
-      - key: INTASEND_WEBHOOK_CHALLENGE
-        sync: false
