@@ -254,6 +254,7 @@ def initiate_delivery_payout(payout):
         "device_id": os.getenv("INTASEND_DEVICE_ID", "").strip(),
         "callback_url": os.getenv("INTASEND_PAYOUT_CALLBACK_URL", "").strip(),
         "batch_reference": payout.idempotency_key,
+        "wallet_id": os.getenv("INTASEND_PAYOUT_WALLET_ID", "").strip(),
         "requires_approval": "NO",
         "transactions": [{
             "name": payout.bank_account_name,
