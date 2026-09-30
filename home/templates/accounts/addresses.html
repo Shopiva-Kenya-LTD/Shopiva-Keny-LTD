@@ -1,5 +1,124 @@
 <!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Delivery Addresses | Shopiva</title>
-<style>body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#17211d}.top{background:#0f766e;color:#fff;padding:16px 20px}.wrap{max-width:1080px;margin:auto;padding:0 18px}.top a{color:#fff;text-decoration:none;font-weight:800}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:25px auto}.card{background:#fff;border:1px solid #dfe7ee;border-radius:18px;padding:22px}label{display:block;font-weight:700;margin:11px 0 5px}input{width:100%;padding:11px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:9px}.mapbox{margin-top:14px;padding:12px;background:#f8fbff;border:1px solid #dbe8f5;border-radius:12px}.map{height:300px;margin-top:9px;border-radius:10px}.tools{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}button,.tool{border:0;border-radius:9px;padding:9px 11px;background:#0f766e;color:#fff;font-weight:800;font-size:11px;cursor:pointer;text-decoration:none}.alt{background:#fff;color:#0f766e;border:1px solid #c9ddd5}.status{margin-top:9px;padding:9px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:11px}.addr{border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px}.default{font-size:10px;color:#166534;background:#dcfce7;padding:3px 7px;border-radius:20px}@media(max-width:760px){.grid{grid-template-columns:1fr}.map{height:270px}}</style></head>
+<style>body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#17211d}.top{background:#0f766e;color:#fff;padding:16px 20px}.wrap{max-width:1080px;margin:auto;padding:0 18px}.top a{color:#fff;text-decoration:none;font-weight:800}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:25px auto}.card{background:#fff;border:1px solid #dfe7ee;border-radius:18px;padding:22px}label{display:block;font-weight:700;margin:11px 0 5px}input{width:100%;padding:11px;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:9px}.mapbox{margin-top:14px;padding:12px;background:#f8fbff;border:1px solid #dbe8f5;border-radius:12px}.map-search{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:10px;box-sizing:border-box;margin-bottom:8px;font-size:12px}.map{height:300px;margin-top:9px;border-radius:10px;overflow:hidden}.pac-container{z-index:9999}.tools{display:flex;gap:7px;flex-wrap:wrap;margin:9px 0}button,.tool{border:0;border-radius:9px;padding:9px 11px;background:#0f766e;color:#fff;font-weight:800;font-size:11px;cursor:pointer;text-decoration:none}.alt{background:#fff;color:#0f766e;border:1px solid #c9ddd5}.status{margin-top:9px;padding:9px;border-radius:9px;background:#fff7ed;color:#9a3412;font-size:11px}.addr{border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px}.default{font-size:10px;color:#166534;background:#dcfce7;padding:3px 7px;border-radius:20px}@media(max-width:760px){.grid{grid-template-columns:1fr}.map{height:270px}}</style></head>
 <body><div class="top"><div class="wrap"><a href="{% url 'customer_dashboard' %}">← My Account</a></div></div><main class="wrap"><h1>📍 Delivery Addresses</h1><p>Save each address with an exact Google Maps location.</p><div class="grid"><section class="card"><h2>Add an address</h2><form id="address-form" method="post">{% csrf_token %}<label>Label</label><input name="label" value="Home"><label>Full name</label><input name="full_name" required><label>Phone</label><input name="phone" required><label>County</label><input name="county" required><label>Town / City</label><input name="town" required><label>Address</label><input id="address_line" name="address_line" required><label>Landmark</label><input name="landmark"><div class="mapbox"><div id="autocomplete"></div><div class="tools"><button type="button" id="gps">⌖ Use my location</button><button type="button" id="clear" class="alt">Clear pin</button><a id="open" class="tool alt" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=-1.2921,36.8219">Open Google Maps ↗</a></div><div id="map" class="map"></div><div id="status" class="status">Pin the exact delivery point before saving.</div></div><input type="hidden" name="latitude" id="lat"><input type="hidden" name="longitude" id="lng"><button type="submit" style="margin-top:12px">Save Address</button></form></section><section class="card"><h2>Your addresses</h2>{% for a in addresses %}<div class="addr"><strong>{{ a.label }}</strong>{% if a.is_default %} <span class="default">DEFAULT</span>{% endif %}<p>{{a.full_name}} · {{a.phone}}<br>{{a.address_line}}, {{a.town}}, {{a.county}}{% if a.landmark %}<br>{{a.landmark}}{% endif %}</p>{% if a.latitude and a.longitude %}<small>📍 {{a.latitude}}, {{a.longitude}}</small><br><a class="tool alt" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query={{a.latitude}},{{a.longitude}}">Open map ↗</a>{% endif %}</div>{% empty %}<p>No saved addresses yet.</p>{% endfor %}</section></div></main>
-{% if google_maps_api_key %}<script src="https://maps.googleapis.com/maps/api/js?key={{google_maps_api_key|urlencode}}&v=weekly&loading=async" async></script><script>(async()=>{const s=document.getElementById('status'),la=document.getElementById('lat'),lo=document.getElementById('lng'),ai=document.getElementById('address_line');try{for(let i=0;i<100&&!window.google;i++)await new Promise(r=>setTimeout(r,100));if(!window.google)throw 0;const[{Map},{AdvancedMarkerElement},{PlaceAutocompleteElement}]=await Promise.all([google.maps.importLibrary('maps'),google.maps.importLibrary('marker'),google.maps.importLibrary('places')]);const map=new Map(document.getElementById('map'),{center:{lat:-1.2921,lng:36.8219},zoom:6,mapId:'{{google_maps_map_id|default:"DEMO_MAP_ID"|escapejs}}'});let mk;function pin(a,b,t){const p={lat:+a,lng:+b};if(!Number.isFinite(p.lat)||!Number.isFinite(p.lng))return;la.value=p.lat.toFixed(6);lo.value=p.lng.toFixed(6);if(t)ai.value=t;if(!mk){mk=new AdvancedMarkerElement({map,position:p,gmpDraggable:true});mk.addListener('dragend',()=>pin(mk.position.lat(),mk.position.lng(),ai.value||'Pinned address'));}else mk.position=p;map.panTo(p);map.setZoom(15);document.getElementById('open').href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.lat+','+p.lng);s.style='background:#ecfdf3;color:#166534';s.textContent='Exact delivery location pinned.'}const ac=new PlaceAutocompleteElement();ac.includedRegionCodes=['ke'];ac.placeholder='Search Kenyan estate, street, town or landmark';document.getElementById('autocomplete').appendChild(ac);ac.addEventListener('gmp-select',async e=>{const p=e.placePrediction?.toPlace();if(!p)return;await p.fetchFields({fields:['displayName','formattedAddress','location']});if(p.location)pin(p.location.lat(),p.location.lng(),p.formattedAddress||p.displayName||'')});map.addListener('click',e=>e.latLng&&pin(e.latLng.lat(),e.latLng.lng(),ai.value||'Pinned address'));document.getElementById('gps').onclick=()=>navigator.geolocation?.getCurrentPosition(p=>pin(p.coords.latitude,p.coords.longitude,ai.value||'Current device location'),()=>s.textContent='Location permission denied or unavailable.');document.getElementById('clear').onclick=()=>{la.value='';lo.value='';ai.value='';if(mk)mk.map=null;mk=null;map.setCenter({lat:-1.2921,lng:36.8219});map.setZoom(6);s.textContent='Pin the exact delivery point before saving.'};document.getElementById('address-form').onsubmit=e=>{if(!la.value||!lo.value){e.preventDefault();s.textContent='Please pin the exact delivery point before saving.'}}}catch(e){s.textContent='Google Maps failed to load. Check API key, billing, Maps JavaScript API, Places API (New), restrictions and Map ID.'}})()</script>{% else %}<div class="status">Google Maps is not configured. Add GOOGLE_MAPS_API_KEY in Render.</div>{% endif %}</body></html>
+{% if google_maps_api_key %}
+<script>
+window.ShopivaAddressMapReady=false;
+window.initShopivaAddressMap=function(){
+  try{
+    const mapEl=document.getElementById('map'),status=document.getElementById('status');
+    const latEl=document.getElementById('lat'),lngEl=document.getElementById('lng'),addressEl=document.getElementById('address_line');
+    if(!mapEl||!window.google||!google.maps) throw new Error('Google Maps JavaScript API did not initialize.');
+    const center={lat:-1.2921,lng:36.8219};
+    const map=new google.maps.Map(mapEl,{center,zoom:6,streetViewControl:false,mapTypeControl:false,fullscreenControl:true,gestureHandling:'greedy'});
+    let marker=null;
+    const setStatus=(text,ok)=>{
+      status.textContent=text;
+      status.style.background=ok?'#ecfdf3':'#fff7ed';
+      status.style.color=ok?'#166534':'#9a3412';
+    };
+    const pin=(lat,lng,label)=>{
+      lat=Number(lat);lng=Number(lng);
+      if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+      const position={lat,lng};
+      latEl.value=lat.toFixed(6);lngEl.value=lng.toFixed(6);
+      if(label && label!=='Pinned address' && label!=='Current device location') addressEl.value=label;
+      if(!marker){
+        marker=new google.maps.Marker({map,position,draggable:true,title:'Shopiva delivery location'});
+        marker.addListener('dragend',()=>{const p=marker.getPosition();pin(p.lat(),p.lng(),'Pinned address')});
+      }else marker.setPosition(position);
+      map.panTo(position);map.setZoom(16);
+      document.getElementById('open').href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(lat+','+lng);
+      setStatus('✓ Exact delivery location pinned. You can drag the marker to fine-tune it.',true);
+    };
+    map.addListener('click',e=>{if(e.latLng)pin(e.latLng.lat(),e.latLng.lng(),'Pinned address')});
+    const search=document.createElement('input');
+    search.type='text';search.placeholder='Search Kenyan street, estate, town or landmark';search.className='map-search';
+    mapEl.parentElement.insertBefore(search,mapEl);
+    if(google.maps.places && google.maps.places.Autocomplete){
+      const autocomplete=new google.maps.places.Autocomplete(search,{componentRestrictions:{country:'ke'},fields:['formatted_address','geometry','name'],types:['geocode']});
+      autocomplete.bindTo('bounds',map);
+      autocomplete.addListener('place_changed',()=>{
+        const place=autocomplete.getPlace();
+        if(place.geometry?.location){
+          pin(place.geometry.location.lat(),place.geometry.location.lng(),place.formatted_address||place.name||'');
+        }else setStatus('Choose a result from the search suggestions.',false);
+      });
+    }else{
+      search.placeholder='Search unavailable — click the map to place your pin';
+      setStatus('✓ Map is ready. Click anywhere on the map to place your exact pin.',true);
+    }
+    document.getElementById('gps').onclick=()=>{
+      if(!navigator.geolocation){setStatus('This browser does not provide device location. Click the map instead.',false);return}
+      setStatus('Getting your current location…',false);
+      navigator.geolocation.getCurrentPosition(
+        p=>pin(p.coords.latitude,p.coords.longitude,'Current device location'),
+        ()=>setStatus('Location permission was denied or unavailable. Click the map to place the pin.',false),
+        {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
+      );
+    };
+    document.getElementById('clear').onclick=()=>{
+      latEl.value='';lngEl.value='';addressEl.value='';search.value='';
+      if(marker){marker.setMap(null);marker=null}
+      map.setCenter(center);map.setZoom(6);
+      document.getElementById('open').href='https://www.google.com/maps/search/?api=1&query='+center.lat+','+center.lng;
+      setStatus('Pin the exact delivery point before saving.',false);
+    };
+    document.getElementById('address-form').addEventListener('submit',e=>{
+      if(!latEl.value||!lngEl.value){e.preventDefault();setStatus('Please pin the exact delivery point before saving.',false);window.scrollTo({top:document.getElementById('map').offsetTop-100,behavior:'smooth'})}
+    });
+    window.ShopivaAddressMapReady=true;
+    setStatus('✓ Google Maps is ready. Search or click the map to choose your delivery point.',true);
+  }catch(err){
+    console.error('Shopiva Google Maps initialization failed:',err);
+    window.ShopivaAddressMapError=err;
+    window.ShopivaStartMapFallback?.('Google Maps loaded but could not initialize: '+(err.message||'unknown error'));
+  }
+};
+window.shopivaGoogleMapsLoadFailed=function(message){
+  console.error('Shopiva Google Maps load failed:',message);
+  window.ShopivaStartMapFallback?.(message||'Google Maps could not be loaded.');
+};
+</script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{google_maps_api_key|urlencode}}&libraries=places&v=weekly&callback=initShopivaAddressMap"></script>
+<script>
+(function(){
+  const fallback=()=>{
+    if(window.ShopivaAddressMapReady)return;
+    const mapEl=document.getElementById('map'),status=document.getElementById('status');
+    if(!mapEl||!status)return;
+    if(!window.L){
+      status.textContent='Map service is unavailable. You can still open Google Maps, or refresh and try again.';
+      status.style.background='#fff7ed';status.style.color='#9a3412';return;
+    }
+    const center=[-1.2921,36.8219],map=L.map(mapEl,{scrollWheelZoom:true}).setView(center,6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+    let marker=null;
+    const pin=(lat,lng)=>{
+      lat=Number(lat);lng=Number(lng);if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+      document.getElementById('lat').value=lat.toFixed(6);document.getElementById('lng').value=lng.toFixed(6);
+      if(marker)marker.setLatLng([lat,lng]);else marker=L.marker([lat,lng],{draggable:true}).addTo(map);
+      marker.on('dragend',()=>{const p=marker.getLatLng();pin(p.lat,p.lng)});
+      map.setView([lat,lng],16);
+      document.getElementById('open').href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(lat+','+lng);
+      status.textContent='✓ Exact delivery location pinned using the fallback map. You can drag the marker.';
+      status.style.background='#ecfdf3';status.style.color='#166534';
+    };
+    map.on('click',e=>pin(e.latlng.lat,e.latlng.lng));
+    document.getElementById('gps').onclick=()=>navigator.geolocation?.getCurrentPosition(p=>pin(p.coords.latitude,p.coords.longitude),()=>{status.textContent='Location permission denied. Click the map to place the pin.'});
+    document.getElementById('clear').onclick=()=>{document.getElementById('lat').value='';document.getElementById('lng').value='';if(marker){map.removeLayer(marker);marker=null}map.setView(center,6);status.textContent='Pin the exact delivery point before saving.'};
+    document.getElementById('address-form').addEventListener('submit',e=>{if(!document.getElementById('lat').value||!document.getElementById('lng').value){e.preventDefault();status.textContent='Please pin the exact delivery point before saving.'}});
+  };
+  window.ShopivaStartMapFallback=reason=>{
+    const status=document.getElementById('status');if(status){status.textContent=reason+' Showing the fallback map so you can continue.';status.style.background='#fff7ed';status.style.color='#9a3412'}
+    if(window.L)fallback();
+  };
+  setTimeout(()=>{if(!window.ShopivaAddressMapReady&&!window.google)window.ShopivaStartMapFallback('Google Maps did not load.');},9000);
+})();
+</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+{% else %}
+<div class="status">Google Maps is not configured. Add GOOGLE_MAPS_API_KEY in Render.</div>
+{% endif %}</body></html>
