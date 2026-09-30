@@ -112,6 +112,17 @@ def support_center(request):
 
     if request.method == "POST":
         action = request.POST.get("action", "")
+        if action == "delete_selected":
+            selected_ids = [value for value in request.POST.getlist("ticket_ids") if value]
+            owned_tickets = tickets.filter(id__in=selected_ids)
+            count = owned_tickets.count()
+            if count:
+                owned_tickets.delete()
+                messages.success(request, f"{count} support case{' was' if count == 1 else 's were'} deleted.")
+            else:
+                messages.error(request, "Select at least one support case to delete.")
+            return redirect("support_center")
+
         if action == "new":
             subject = request.POST.get("subject", "").strip()
             body = _valid_message(request.POST.get("body"))
