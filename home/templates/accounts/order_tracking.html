@@ -1,3 +1,23 @@
+{% if messages %}
+<div style="margin:12px 0">
+{% for message in messages %}<div style="padding:10px 12px;border-radius:12px;background:#eef9f2;border:1px solid #cfe9da;color:#17613f;font-size:12px">{{ message }}</div>{% endfor %}
+</div>
+{% endif %}
+{% if order.status == "delivered" and not order.customer_delivery_confirmed %}
+<section style="margin:14px 0;padding:18px;border:1px solid #bfe3ce;border-radius:18px;background:#f5fbf7">
+  <h3 style="margin:0 0 6px">Did you receive your parcel?</h3>
+  <p style="margin:0 0 12px;font-size:12px;color:#52665b">Confirm receipt only after you have physically received and checked the parcel. This confirmation releases the delivery partner's commission for this order.</p>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="confirm_received">
+    <button type="submit" style="border:0;border-radius:12px;padding:11px 15px;background:#087a46;color:#fff;font-weight:800;cursor:pointer">✓ Confirm I received my parcel</button>
+  </form>
+</section>
+{% elif order.customer_delivery_confirmed %}
+<section style="margin:14px 0;padding:14px;border:1px solid #cfe9da;border-radius:18px;background:#f5fbf7;color:#17613f;font-size:12px">
+  ✓ Receipt confirmed{% if order.customer_delivery_confirmed_at %} on {{ order.customer_delivery_confirmed_at|date:"d M Y, H:i" }}{% endif %}. The delivery partner commission has been released to the Shopiva rider wallet.
+</section>
+{% endif %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
