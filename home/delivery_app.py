@@ -10,7 +10,6 @@ from django.db import transaction, IntegrityError
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 
 from .models import DeliveryAgent, DeliveryLocationPing, DeliveryPayout, DeliveryWallet, Order, OrderEvent, SellerSettlement, SellerWallet
 from .notification_service import notify_user
@@ -19,9 +18,6 @@ from .delivery_payouts import (
     get_active_delivery_pay_profile,
     get_or_create_delivery_wallet,
     queue_delivery_payout,
-    record_delivery_earning,
-    initiate_delivery_payout,
-    handle_pesalink_webhook,
 )
 
 
@@ -197,17 +193,15 @@ def delivery_action(request, order_id):
             order.save(update_fields=["status", "delivered_at", "delivery_verification_attempts", "delivery_verification_locked_at"])
             OrderEvent.objects.create(order=order, event_type=event_type, note=note, actor=request.user, delivery_agent=agent)
 
-            rider_earning = record_delivery_earning(order, agent, now=now)
-            if rider_earning:
-                notifications.append((
-                    agent.user,
-                    "Delivery earnings pending customer receipt",
-                    f"Order {order.tracking_code} is marked delivered. Rider commission will be credited only after the customer confirms receipt.",
-                    "payout",
-                    "/delivery/payouts/",
-                    "",
-                    agent.phone,
-                ))
+            notifications.append((
+                agent.user,
+                "Delivery awaiting customer receipt confirmation",
+                f"Order {order.tracking_code} was delivered. Your commission will be credited only after the customer confirms receipt and the order payment is confirmed.",
+                "payout",
+                "/delivery/payouts/",
+                "",
+                agent.phone,
+            ))
 
             released = _release_seller_settlements(order, now)
             for settlement in released:
@@ -263,44 +257,6 @@ def delivery_history(request):
 
 
 
-@csrf_exempt
-def delivery_payout_webhook(request):
-    if request.method != "POST":
-        return JsonResponse({"ok": False, "error": "POST required."}, status=405)
-
-    import json
-    try:
-        payload = json.loads(request.body.decode("utf-8") or "{}")
-    except (TypeError, ValueError):
-        return JsonResponse({"ok": False, "error": "Invalid JSON payload."}, status=400)
-
-    expected = os.getenv("INTASEND_WEBHOOK_CHALLENGE", "").strip()
-    if expected and str(payload.get("challenge") or "").strip() != expected:
-        return JsonResponse({"ok": False, "error": "Invalid webhook challenge."}, status=403)
-
-    payout, status = handle_pesalink_webhook(payload)
-    if payout is not None and status == "paid":
-        notify_user(
-            payout.agent.user,
-            "payout",
-            "Delivery commission paid",
-            f"Shopiva has confirmed bank payout #{payout.id} of KSh {payout.amount:,.2f}. Reference: {payout.provider_reference or 'received'}",
-            link="/delivery/payouts/",
-            phone=payout.agent.phone,
-        )
-    elif payout is not None and status == "failed":
-        notify_user(
-            payout.agent.user,
-            "payout",
-            "Delivery commission payout failed",
-            f"Shopiva could not complete payout #{payout.id} of KSh {payout.amount:,.2f}. {payout.failure_reason or 'Please review your bank payout details.'}",
-            link="/delivery/payouts/",
-            phone=payout.agent.phone,
-        )
-
-    return JsonResponse({"ok": True, "status": status, "payout_id": payout.id if payout else None})
-
-
 @login_required(login_url="delivery_login")
 def delivery_payouts(request):
     agent = _agent(request)
@@ -332,11 +288,7 @@ def delivery_payouts(request):
                 message = str(exc)
             else:
                 if payout:
-                    payout = initiate_delivery_payout(payout)
-                    if payout.status == DeliveryPayout.STATUS_PROCESSING:
-                        message = f"Payout #{payout.id} submitted to the automatic bank payout provider: KSh {payout.amount:,.2f}."
-                    else:
-                        message = f"Payout #{payout.id} queued for bank payout: KSh {payout.amount:,.2f}."
+                    message = f"Payout request #{payout.id} sent to Shopiva admin for payment: KSh {payout.amount:,.2f}."
                 else:
                     message = "No payout was queued. Check your available commission balance or an existing pending payout."
 
