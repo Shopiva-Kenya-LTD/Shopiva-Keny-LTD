@@ -141,6 +141,46 @@ def queue_delivery_payout(agent):
         return payout
 
 
+
+def record_delivery_earning(order, agent, now=None):
+    """Create rider commission only after customer receipt and payment are confirmed."""
+    if not agent or not order:
+        return None
+    if order.status != "delivered" or not order.customer_delivery_confirmed:
+        return None
+    if order.payment_status != "paid":
+        return None
+
+    with transaction.atomic():
+        existing = DeliveryEarning.objects.select_for_update().filter(order=order).first()
+        if existing:
+            return existing
+
+        profile = get_active_delivery_pay_profile()
+        delivery_fee, commission_percent, total_amount = calculate_delivery_earning(order, profile)
+        if total_amount <= ZERO:
+            raise ValueError("Rider commission is not configured or the customer delivery fee is zero.")
+        wallet = get_or_create_delivery_wallet(agent)
+
+        earning = DeliveryEarning.objects.create(
+            agent=agent,
+            order=order,
+            distance_km=max(Decimal("0.00"), _money(order.delivery_distance_km)),
+            distance_source=order.delivery_distance_source or "estimated",
+            pay_profile=profile,
+            base_amount=delivery_fee,
+            distance_amount=Decimal("0.00"),
+            commission_percent=commission_percent,
+            commission_amount=total_amount,
+            total_amount=total_amount,
+            status=DeliveryEarning.STATUS_AVAILABLE,
+            earned_at=now or timezone.now(),
+        )
+        wallet.available_balance = _money(wallet.available_balance + total_amount)
+        wallet.total_earned = _money(wallet.total_earned + total_amount)
+        wallet.save(update_fields=("available_balance", "total_earned", "updated_at"))
+        return earning
+
 def complete_delivery_payout(payout, provider_reference="", provider_response=None):
     with transaction.atomic():
         locked = DeliveryPayout.objects.select_for_update().select_related("agent").get(pk=payout.pk)
