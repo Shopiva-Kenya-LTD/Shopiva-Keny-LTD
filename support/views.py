@@ -209,7 +209,9 @@ def support_center(request):
     if selected_ticket is None:
         selected_ticket = tickets.first()
 
-    open_user_count = tickets.filter(status__in=("open", "in_progress", "waiting_for_customer")).count()
+    open_user_count = tickets.filter(status__in=("open", "in_progress")).count()
+    waiting_user_count = tickets.filter(status="waiting_for_customer").count()
+    message_count = SupportMessage.objects.filter(ticket__user=request.user).count()
     system_count = sum(1 for ticket in tickets if _is_system_ticket(ticket))
     customer_count = tickets.filter(role="customer").count()
     seller_count = tickets.filter(role="seller").count()
@@ -226,6 +228,8 @@ def support_center(request):
             "back_url": back_url,
             "is_empty": not tickets.exists(),
             "open_user_count": open_user_count,
+            "waiting_user_count": waiting_user_count,
+            "message_count": message_count,
             "system_count": system_count,
             "customer_raised_count": customer_count,
             "seller_raised_count": seller_count,
