@@ -1,0 +1,109 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root{--bg:#07111f;--card:#0f1d2d;--card2:#132438;--text:#edf5fb;--muted:#91a5ba;--border:rgba(255,255,255,.10);--accent:#22d3ee;--green:#22c55e;--gold:#facc15;--danger:#fb7185}
+  body{background:linear-gradient(135deg,#07111f,#0b1f2a 55%,#12383d)!important;color:var(--text)}
+  #content{max-width:1500px;margin:auto;padding:18px 24px 44px;background:transparent}
+  .wrap{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .hero{padding:26px;border:1px solid var(--border);border-radius:20px;background:linear-gradient(135deg,#0b1728,#0b3040 60%,#087f83);box-shadow:0 18px 45px rgba(0,0,0,.25);margin-bottom:18px}
+  .eyebrow{color:var(--gold);font-size:11px;font-weight:900;letter-spacing:.18em}.hero h1{margin:8px 0;color:#fff;font-size:32px}.hero p{margin:0;color:#bfd0df;line-height:1.6;max-width:850px;font-size:13px}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.actions a{padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.08);border:1px solid var(--border);color:#fff!important;text-decoration:none;font-size:12px;font-weight:800}
+  .grid{display:grid;grid-template-columns:minmax(330px,.75fr) minmax(0,1.6fr);gap:18px}
+  .panel{padding:18px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(145deg,#0e1a2a,#0b1624);box-shadow:0 12px 30px rgba(0,0,0,.16);margin-bottom:18px}
+  .head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}.head h2{margin:0;color:#f4f8fc;font-size:17px}.sub{color:var(--muted);font-size:11px;margin-top:3px}
+  form .field{margin-bottom:12px}label{display:block;color:#c9d7e5;font-size:11px;font-weight:800;margin-bottom:6px}input,select,textarea{width:100%;box-sizing:border-box;padding:10px 11px;border-radius:9px;border:1px solid #33465b;background:#0a1421;color:#eef6ff;font-size:12px}textarea{min-height:82px;resize:vertical}
+  .help{color:#8297ab;font-size:10px;margin-top:4px}.submit{width:100%;border:0;border-radius:10px;padding:11px 14px;background:linear-gradient(135deg,#facc15,#f59e0b);color:#111827;font-weight:900;cursor:pointer}
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:11px}table{width:100%;border-collapse:collapse;background:#fff}th{padding:10px;text-align:left;background:#263446;color:#f1f5f9;font-size:9px;text-transform:uppercase;letter-spacing:.05em}td{padding:10px;color:#263445;background:#fff;border-top:1px solid #e2e8f0;font-size:11px;vertical-align:top}tr:nth-child(even) td{background:#f4f7f9}
+  .pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef5ff;color:#1e40af;font-weight:800;font-size:9px}.paid{background:#dcfce7;color:#166534}.cancelled{background:#ffe4e6;color:#9f1239}
+  .inline{display:flex;gap:6px;align-items:center}.inline input{min-width:150px;background:#fff;color:#263445;border-color:#cbd5e1;padding:7px}.smallbtn{border:0;border-radius:7px;padding:7px 9px;font-size:10px;font-weight:900;cursor:pointer;background:#0f766e;color:#fff}.cancelbtn{background:#9f1239}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}.stat{padding:13px;border:1px solid var(--border);border-radius:12px;background:#0b1725}.stat small{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;font-weight:800}.stat strong{display:block;color:#fff;font-size:20px;margin-top:4px}
+  .notice{padding:11px;border-radius:10px;background:rgba(34,211,238,.07);border:1px solid rgba(34,211,238,.18);color:#b8d7e8;font-size:11px;line-height:1.5;margin-bottom:14px}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}}@media(max-width:650px){#content{padding:10px 12px 28px}.hero h1{font-size:27px}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <section class="hero">
+    <div class="eyebrow">STAFF FINANCE</div>
+    <h1>Shopiva Staff Payments</h1>
+    <p>Create, track and reconcile payments made to Shopiva staff. The system records the payment; the administrator completes the actual M-PESA, bank or cash transfer and then enters the transaction/reference number.</p>
+    <div class="actions">
+      <a href="/admin/">← Admin Control Center</a>
+      <a href="/admin/auth/user/">👥 Staff Accounts</a>
+      <a href="/admin/notifications/">🔔 Notifications</a>
+    </div>
+  </section>
+
+  <div class="grid">
+    <aside>
+      <section class="panel">
+        <div class="head"><div><h2>💳 New staff payment</h2><div class="sub">Admin-created payment record</div></div></div>
+        <div class="notice">For M-PESA payments, pay the staff member using the approved Shopiva payment process outside this screen, then record the M-PESA transaction ID here. Safaricom documents that a successful Send Money transaction displays a Transaction ID.</div>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create">
+          {% for field in form %}
+            <div class="field">
+              {{ field.label_tag }}
+              {{ field }}
+              {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+              {% for error in field.errors %}<div class="help" style="color:#fb7185">{{ error }}</div>{% endfor %}
+            </div>
+          {% endfor %}
+          <button class="submit" type="submit">Create payment record</button>
+        </form>
+      </section>
+    </aside>
+
+    <main>
+      <section class="stats">
+        <div class="stat"><small>Pending / processing</small><strong>{{ pending_count }}</strong></div>
+        <div class="stat"><small>Total recorded as paid</small><strong>KSh {{ paid_total|floatformat:2 }}</strong></div>
+      </section>
+
+      <section class="panel">
+        <div class="head"><div><h2>📋 Payment ledger</h2><div class="sub">Latest 100 staff payment records</div></div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Staff</th><th>Amount</th><th>Mode / Destination</th><th>Purpose</th><th>Status</th><th>Admin action</th></tr></thead>
+            <tbody>
+            {% for p in payments %}
+              <tr>
+                <td>#{{ p.id }}<br><small>{{ p.created_at|date:"M d, H:i" }}</small></td>
+                <td><strong>{{ p.recipient.get_full_name|default:p.recipient.username }}</strong><br><small>{{ p.recipient.username }}</small></td>
+                <td>KSh {{ p.amount|floatformat:2 }}</td>
+                <td>{{ p.get_payment_method_display }}<br><small>{{ p.destination|default:"—" }}</small></td>
+                <td>{{ p.purpose }}{% if p.notes %}<br><small>{{ p.notes }}</small>{% endif %}</td>
+                <td>
+                  <span class="pill {% if p.status == 'paid' %}paid{% elif p.status == 'cancelled' %}cancelled{% endif %}">{{ p.get_status_display }}</span>
+                  {% if p.provider_reference %}<br><small>Ref: {{ p.provider_reference }}</small>{% endif %}
+                </td>
+                <td>
+                  {% if p.status != 'paid' and p.status != 'cancelled' %}
+                    <form method="post" class="inline" style="margin-bottom:5px">
+                      {% csrf_token %}<input type="hidden" name="action" value="mark_paid"><input type="hidden" name="payment_id" value="{{ p.id }}">
+                      <input name="provider_reference" placeholder="Transaction / receipt ref" required>
+                      <button class="smallbtn" type="submit">Mark paid</button>
+                    </form>
+                    <form method="post">
+                      {% csrf_token %}<input type="hidden" name="action" value="cancel"><input type="hidden" name="payment_id" value="{{ p.id }}">
+                      <button class="smallbtn cancelbtn" type="submit">Cancel</button>
+                    </form>
+                  {% else %}—{% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7">No staff payments recorded yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+{% endblock %}
