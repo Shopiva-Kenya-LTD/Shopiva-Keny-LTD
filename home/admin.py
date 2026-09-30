@@ -524,20 +524,13 @@ class DeliveryAgentAdmin(admin.ModelAdmin):
 
 @admin.register(DeliveryPayProfile, site=shopiva_admin_site)
 class DeliveryPayProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "name", "commission_percent", "minimum_payout",
-        "auto_payout_threshold", "auto_payout_enabled", "is_active", "updated_at",
-    )
-    list_filter = ("is_active", "auto_payout_enabled")
+    list_display = ("name", "commission_percent", "minimum_payout", "is_active", "updated_at")
+    list_filter = ("is_active",)
     search_fields = ("name", "notes")
-    list_editable = (
-        "commission_percent", "minimum_payout",
-        "auto_payout_threshold", "auto_payout_enabled", "is_active",
-    )
+    list_editable = ("commission_percent", "minimum_payout", "is_active")
     ordering = ("-is_active", "-updated_at")
     fieldsets = (
-        ("Rider commission", {"fields": ("name", "commission_percent")}),
-        ("Payout policy", {"fields": ("minimum_payout", "auto_payout_enabled", "auto_payout_threshold")}),
+        ("Rider commission", {"fields": ("name", "commission_percent", "minimum_payout")}),
         ("Governance", {"fields": ("is_active", "notes")}),
     )
 
@@ -545,12 +538,11 @@ class DeliveryPayProfileAdmin(admin.ModelAdmin):
 @admin.register(DeliveryWallet, site=shopiva_admin_site)
 class DeliveryWalletAdmin(admin.ModelAdmin):
     list_display = (
-        "agent", "bank_name", "bank_account_number", "available_balance", "pending_payout_balance",
-        "total_earned", "total_paid", "auto_payout_enabled", "last_payout_at",
+        "agent", "payout_phone", "available_balance", "pending_payout_balance",
+        "total_earned", "total_paid", "last_payout_at",
     )
-    list_filter = ("auto_payout_enabled",)
-    search_fields = ("agent__user__username", "agent__user__email", "agent__phone", "bank_name", "bank_account_number")
-    list_editable = ("bank_name", "bank_account_number", "auto_payout_enabled")
+    search_fields = ("agent__user__username", "agent__user__email", "agent__phone", "payout_phone")
+    list_editable = ("payout_phone",)
     readonly_fields = ("agent", "available_balance", "pending_payout_balance", "total_earned", "total_paid", "last_payout_at", "updated_at")
     list_per_page = 25
 
