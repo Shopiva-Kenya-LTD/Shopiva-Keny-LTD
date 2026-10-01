@@ -1032,7 +1032,7 @@ class NiaCallerVerification(models.Model):
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone_e164 = models.CharField(max_length=20, db_index=True)
-    pin_code = models.CharField(max_length=4)
+    pin_code = models.CharField(max_length=128)
     attempts = models.PositiveSmallIntegerField(default=0)
     expires_at = models.DateTimeField(db_index=True)
     verified_at = models.DateTimeField(null=True, blank=True)
