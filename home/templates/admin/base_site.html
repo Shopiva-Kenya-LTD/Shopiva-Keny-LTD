@@ -6,11 +6,11 @@
 <style>
 /* Shopiva Admin: keep Django as the engine, not the visual identity. */
 :root{--shopiva-navy:#061a2f;--shopiva-green:#19d978;--shopiva-ink:#132033;--shopiva-paper:#f4f7fa;--shopiva-line:#dfe7ee;--shopiva-muted:#708093}
-html,body{background:#06111f!important;color:var(--shopiva-ink)!important}body{position:relative;overflow-x:hidden}body:before{content:"";position:fixed;inset:66px 0 0 0;z-index:-2;background:radial-gradient(circle at 78% 34%,rgba(22,197,145,.18),transparent 26%),radial-gradient(circle at 92% 76%,rgba(250,204,21,.10),transparent 24%),linear-gradient(135deg,#06111f 0%,#071c2c 48%,#06271f 100%);pointer-events:none}body:after{content:"";position:fixed;z-index:-1;right:-8vw;top:15vh;width:min(52vw,760px);height:76vh;background-image:linear-gradient(90deg,rgba(6,17,31,.98) 0%,rgba(6,17,31,.62) 28%,rgba(6,17,31,.12) 62%,rgba(6,17,31,.18) 100%),url("/static/shopiva/shopiva-admin-logo.svg");background-repeat:no-repeat;background-position:center;background-size:cover, min(44vw,620px) auto;opacity:.46;filter:saturate(1.05) drop-shadow(0 25px 60px rgba(0,0,0,.35));pointer-events:none}
+html,body{background:#06111f!important;color:var(--shopiva-ink)!important}body{position:relative;overflow-x:hidden;background-image:linear-gradient(135deg,rgba(6,17,31,.76),rgba(6,39,31,.68)),url("/static/shopiva/shopiva-admin-logo.svg")!important;background-repeat:no-repeat!important;background-position:center, right 82px!important;background-size:cover, min(68vw,980px) auto!important;background-attachment:fixed!important}body:before,body:after{display:none!important}
 body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 /* Remove the stock Django left navigation so it cannot dominate the workspace. */
 #nav-sidebar{display:none!important}
-#container{background:transparent!important;min-height:100vh}#main{background:transparent!important}
+#container{background:transparent!important;min-height:100vh;position:relative;z-index:1}#main{background:transparent!important;position:relative;z-index:1}
 #header{background:linear-gradient(135deg,var(--shopiva-navy),#0b344f 62%,#0c5b3f)!important;color:#fff!important;padding:12px 24px!important;box-shadow:0 10px 28px rgba(6,26,47,.18)!important;display:flex!important;align-items:center!important;min-height:66px!important}
 #branding{padding:0!important;margin:0!important}
 #site-name{margin:0!important}
