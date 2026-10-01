@@ -5,8 +5,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.db import IntegrityError
 from django.test import TestCase
+from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from django.template.loader import get_template
 from unittest.mock import patch
 
 from .commission import get_platform_commission_percent, split_sale_amount
@@ -23,9 +25,43 @@ from .models import (
     SellerWallet,
     Product,
     ProductReview,
+    SellerPayoutRequest,
 )
 from .payments import _create_seller_settlements
 
+
+class ReleaseSecurityHardeningTests(TestCase):
+    def test_admin_logout_requires_post_and_csrf(self):
+        admin = User.objects.create_user("release_admin", password="StrongPass123!", is_staff=True)
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(admin)
+        self.assertEqual(client.get(reverse("admin_logout")).status_code, 405)
+        self.assertEqual(client.post(reverse("admin_logout")).status_code, 403)
+
+    def test_seller_payout_reserves_balance_and_blocks_duplicate_open_requests(self):
+        user = User.objects.create_user("payout_seller", password="StrongPass123!")
+        seller = SellerProfile.objects.create(user=user, business_name="Payout Seller")
+        wallet = SellerWallet.objects.create(seller=seller, available_balance=Decimal("500.00"))
+        self.client.force_login(user)
+
+        response = self.client.post(
+            reverse("seller_request_payout"), {"amount": "300.00", "phone": "0712345678"}
+        )
+        self.assertEqual(response.status_code, 302)
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.available_balance, Decimal("200.00"))
+        self.assertEqual(SellerPayoutRequest.objects.filter(seller=seller).count(), 1)
+
+        self.client.post(reverse("seller_request_payout"), {"amount": "100.00", "phone": "0712345678"})
+        wallet.refresh_from_db()
+        self.assertEqual(wallet.available_balance, Decimal("200.00"))
+        self.assertEqual(SellerPayoutRequest.objects.filter(seller=seller).count(), 1)
+
+    def test_product_creation_template_resolves_to_current_home_template(self):
+        self.assertIn(
+            "/home/templates/admin/products/form.html",
+            str(get_template("admin/products/form.html").origin.name),
+        )
 
 class CustomerRegistrationTests(TestCase):
     def test_duplicate_username_is_rejected_case_insensitively(self):

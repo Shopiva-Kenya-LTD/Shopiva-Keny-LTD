@@ -11,6 +11,7 @@ services:
       pip install -r requirements.txt &&
       python manage.py check --deploy &&
       python manage.py check &&
+      python manage.py makemigrations --check --dry-run &&
       python manage.py migrate --noinput &&
       python manage.py migrate --check &&
       python manage.py system_preflight &&

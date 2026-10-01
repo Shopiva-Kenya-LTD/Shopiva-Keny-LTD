@@ -931,6 +931,17 @@ class SellerPayoutRequestAdmin(admin.ModelAdmin):
         previous_status = None
         if change and obj.pk:
             previous_status = SellerPayoutRequest.objects.get(pk=obj.pk).status
+            allowed_transitions = {
+                "requested": {"processing", "paid", "failed", "cancelled"},
+                "processing": {"paid", "failed", "cancelled"},
+                "paid": set(),
+                "failed": set(),
+                "cancelled": set(),
+            }
+            if obj.status != previous_status and obj.status not in allowed_transitions[previous_status]:
+                raise ValidationError("A terminal seller payout cannot be changed or processed again.")
+            if obj.status == "paid" and not obj.provider_reference.strip():
+                raise ValidationError("Enter the manual payment reference before marking a seller payout paid.")
         super().save_model(request, obj, form, change)
         if not change or previous_status == obj.status:
             return

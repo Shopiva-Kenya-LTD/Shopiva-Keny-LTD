@@ -12,7 +12,7 @@
     </style>
 </head>
 <body>
-<header class="topbar"><div class="topbar-inner"><a href="/" class="logo shopiva-brand"><img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva logo"><span>Shopiva<span>Kenya</span></span></a><div class="top-actions"><a class="notice" href="{% url 'customer_notifications' %}">🔔 Notifications</a><a href="{% url 'customer_logout' %}">Sign out</a></div></div></header>
+<header class="topbar"><div class="topbar-inner"><a href="/" class="logo shopiva-brand"><img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva logo"><span>Shopiva<span>Kenya</span></span></a><div class="top-actions"><a class="notice" href="{% url 'customer_notifications' %}">🔔 Notifications</a><form method="post" action="{% url 'customer_logout' %}" style="display:inline">{% csrf_token %}<button type="submit" class="link-button">Sign out</button></form></div></div></header>
 <main class="container">
   <div class="notice-bar"><span>🔔 Stay updated on orders, payments and delivery.</span><a href="{% url 'customer_notifications' %}">Open Notification Center →</a></div>
   <section class="welcome"><h1>Welcome, {{ request.user.username }} 👋</h1><p>Your Shopiva customer account is ready. Manage orders, delivery and notifications from one place.</p></section>

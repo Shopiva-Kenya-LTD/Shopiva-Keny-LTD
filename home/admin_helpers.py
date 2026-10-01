@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from .models import DeliveryAgent, Order, PaymentTransaction, Product
 from .nia_admin import answer_admin_question
@@ -62,15 +62,12 @@ def admin_login(request):
     return render(request, "admin/login.html", context)
 
 
-@csrf_exempt
 @never_cache
+@require_POST
 def admin_logout(request):
     """Destroy the admin session and explicitly prevent cached authenticated pages."""
-    if request.method not in {"GET", "POST"}:
-        return _no_store(JsonResponse({"ok": False, "error": "Method not allowed."}, status=405))
     if not _require_admin(request):
         return _no_store(HttpResponseRedirect(reverse("shopiva_admin:login")))
     logout(request)
     return _no_store(HttpResponseRedirect(reverse("shopiva_admin:login")))
-
 
