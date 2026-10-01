@@ -15,12 +15,12 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 /* Remove the stock Django left navigation so it cannot dominate the workspace. */
 #nav-sidebar{display:none!important}
 #container{background:transparent!important;min-height:100vh;position:relative;z-index:1}#main{background:transparent!important;position:relative;z-index:1}
-#header{background:linear-gradient(135deg,var(--shopiva-navy),#0b344f 62%,#0c5b3f)!important;color:#fff!important;padding:12px 24px!important;box-shadow:0 10px 28px rgba(6,26,47,.18)!important;display:flex!important;align-items:center!important;min-height:66px!important}
+#header{background:linear-gradient(135deg,var(--shopiva-navy),#0b344f 62%,#0c5b3f)!important;color:#fff!important;padding:4px 24px!important;box-shadow:0 10px 28px rgba(6,26,47,.18)!important;display:flex!important;align-items:center!important;min-height:66px!important}
 #branding{padding:0!important;margin:0!important}
 #site-name{margin:0!important}
 #site-name a{display:flex;align-items:center;gap:11px;text-decoration:none;color:#fff!important}
-.shopiva-admin-logo{width:42px;height:42px;border-radius:12px;box-shadow:0 5px 14px rgba(0,0,0,.18);object-fit:cover;background:rgba(255,255,255,.06)}
-.shopiva-admin-name{display:flex;flex-direction:column;line-height:1.02}
+.shopiva-admin-logo{width:178px;height:58px;border-radius:12px;box-shadow:0 5px 14px rgba(0,0,0,.18);object-fit:contain;display:block;background:transparent}
+.shopiva-admin-name{display:none;flex-direction:column;line-height:1.02}
 .shopiva-admin-name strong{font-size:19px;letter-spacing:-.03em;color:#fff}
 .shopiva-admin-name small{margin-top:4px;font-size:8px;letter-spacing:2px;opacity:.72;color:#d8fff0}
 #user-tools{margin-left:auto;padding:0!important;font-size:11px!important;line-height:1.5!important;color:rgba(255,255,255,.8)!important}
@@ -53,11 +53,11 @@ input:focus,select:focus,textarea:focus{border-color:#19d978!important;box-shado
 .messagelist li{border-radius:12px!important;box-shadow:0 6px 18px rgba(7,24,46,.04)}
 #footer{padding:20px 28px!important;color:#7b8794!important;background:transparent!important}
 .toggle-nav-sidebar{display:none!important}
-@media(max-width:800px){body:after{right:-25vw;top:20vh;width:85vw;height:70vh;opacity:.20;background-size:cover,75vw auto}#header{padding:10px 14px!important}.shopiva-admin-logo{width:36px;height:36px}.shopiva-admin-name strong{font-size:16px}.shopiva-admin-name small{font-size:7px;letter-spacing:1.6px}#shopiva-user-tools{gap:6px;font-size:9px!important}.shopiva-user-name{display:none}.shopiva-logout-button{padding:8px 10px}.shopiva-logout-button span{display:none}#content{padding:16px 12px 32px!important}.breadcrumbs{margin:0 12px 14px!important}}
+@media(max-width:800px){body:after{right:-25vw;top:20vh;width:85vw;height:70vh;opacity:.20;background-size:cover,75vw auto}#header{padding:4px 14px!important}.shopiva-admin-logo{width:150px;height:52px}.shopiva-admin-name strong{font-size:16px}.shopiva-admin-name small{font-size:7px;letter-spacing:1.6px}#shopiva-user-tools{gap:6px;font-size:9px!important}.shopiva-user-name{display:none}.shopiva-logout-button{padding:8px 10px}.shopiva-logout-button span{display:none}#content{padding:16px 12px 32px!important}.breadcrumbs{margin:0 12px 14px!important}}
 </style>
 {% endblock %}
 {% block branding %}
-<h1 id="site-name"><a href="{% url 'shopiva_admin:index' %}" aria-label="Shopiva Admin Control Center home"><img class="shopiva-admin-logo" src="{% static 'shopiva/shopiva-admin-logo.svg' %}" alt="Shopiva Admin logo"><span class="shopiva-admin-name"><strong>Shopiva Admin</strong><small>CONTROL CENTER · KENYA LTD</small></span></a></h1>
+<h1 id="site-name"><a href="{% url 'shopiva_admin:index' %}" aria-label="Shopiva Admin Control Center home"><img class="shopiva-admin-logo" src="{% static 'shopiva/shopiva-admin-logo.svg' %}" alt="Shopiva Admin logo"></a></h1>
 {% endblock %}
 {% block usertools %}
 <div id="shopiva-user-tools" aria-label="Administrator account controls">
