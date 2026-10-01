@@ -5,8 +5,10 @@ from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect
 from django.db import IntegrityError
 from django.test import TestCase
+from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from django.template.loader import get_template
 from unittest.mock import patch
 
 from .commission import get_platform_commission_percent, split_sale_amount
@@ -23,6 +25,7 @@ from .models import (
     SellerWallet,
     Product,
     ProductReview,
+    SellerPayoutRequest,
 )
 from .payments import _create_seller_settlements
 
