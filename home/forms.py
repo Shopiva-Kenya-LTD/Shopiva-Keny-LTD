@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 import uuid
 import re
+from PIL import Image, UnidentifiedImageError
 
 from .models import Product, ProductReview
 from .media_pipeline import enhance_product_image, upload_product_image
@@ -289,8 +290,38 @@ class MultipleImageField(forms.FileField):
         if not data:
             return []
         if isinstance(data, (list, tuple)):
-            return [super().clean(item, initial=None) for item in data]
-        return [super().clean(data, initial=initial)]
+            files = [super().clean(item, initial=None) for item in data]
+        else:
+            files = [super().clean(data, initial=initial)]
+        for file_obj in files:
+            _validate_product_image(file_obj)
+        return files
+
+
+MAX_PRODUCT_IMAGE_BYTES = 10 * 1024 * 1024
+MAX_PRODUCT_IMAGE_DIMENSION = 6000
+ALLOWED_PRODUCT_IMAGE_FORMATS = {"JPEG", "PNG", "WEBP"}
+
+
+def _validate_product_image(file_obj):
+    """Reject non-images and oversized/decompression-bomb upload inputs before Cloudinary."""
+    if file_obj.size > MAX_PRODUCT_IMAGE_BYTES:
+        raise forms.ValidationError("Images must be 10 MB or smaller.")
+    try:
+        file_obj.seek(0)
+        image = Image.open(file_obj)
+        image.verify()
+        if image.format not in ALLOWED_PRODUCT_IMAGE_FORMATS:
+            raise forms.ValidationError("Upload a JPEG, PNG, or WebP image.")
+        file_obj.seek(0)
+        image = Image.open(file_obj)
+        width, height = image.size
+        if width > MAX_PRODUCT_IMAGE_DIMENSION or height > MAX_PRODUCT_IMAGE_DIMENSION:
+            raise forms.ValidationError("Image dimensions must not exceed 6000 pixels.")
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
+        raise forms.ValidationError("Upload a valid JPEG, PNG, or WebP image.")
+    finally:
+        file_obj.seek(0)
 
 
 class CatalogSearchWidget(forms.TextInput):
@@ -407,6 +438,12 @@ class SellerProductForm(forms.ModelForm):
                 "No catalogue product matched that search. Choose a suggestion or type CUSTOM PRODUCT to enter your own item."
             )
         return item["key"]
+
+    def clean_image(self):
+        image = self.cleaned_data.get("image")
+        if image:
+            _validate_product_image(image)
+        return image
 
     def clean(self):
         cleaned = super().clean()
