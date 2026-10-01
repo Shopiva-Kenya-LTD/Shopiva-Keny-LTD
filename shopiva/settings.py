@@ -43,6 +43,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "home.security_middleware.ShopivaSecurityHeadersMiddleware",
     "home.admin_portal_boundary.ShopivaAdminPortalBoundaryMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -56,7 +57,10 @@ ROOT_URLCONF = "shopiva.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        # Application templates are intentional overrides.  In particular,
+        # the Product Creation Studio lives in home/templates and must win
+        # over legacy project-level admin/product templates.
+        "DIRS": [BASE_DIR / "home" / "templates", BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -170,8 +174,10 @@ SECURE_CSP_REPORT_ONLY = {
 if not DEBUG:
     SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "true").lower() == "true"
     SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    # Do not preload without an external DNS/TLS audit of every present and
+    # future subdomain. HSTS still protects this application and www.
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv("SECURE_HSTS_INCLUDE_SUBDOMAINS", "false").lower() == "true"
+    SECURE_HSTS_PRELOAD = False
 else:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
