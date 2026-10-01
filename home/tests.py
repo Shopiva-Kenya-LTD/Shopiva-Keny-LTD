@@ -27,6 +27,7 @@ from .models import (
     ProductReview,
     SellerPayoutRequest,
     NiaCallerVerification,
+    NiaCallSession,
 )
 from .payments import _create_seller_settlements
 from .nia_phone import issue_caller_pin
