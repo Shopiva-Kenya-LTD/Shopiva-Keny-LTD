@@ -26,8 +26,10 @@ from .models import (
     Product,
     ProductReview,
     SellerPayoutRequest,
+    NiaCallerVerification,
 )
 from .payments import _create_seller_settlements
+from .nia_phone import issue_caller_pin
 
 
 class ReleaseSecurityHardeningTests(TestCase):
@@ -851,3 +853,42 @@ class MpesaCheckoutNavigationTests(TestCase):
         order.refresh_from_db()
         self.assertEqual(order.delivery_latitude, Decimal("-1.292100"))
         self.assertEqual(order.delivery_longitude, Decimal("36.821900"))
+
+
+class NiaSecurityHardeningTests(TestCase):
+    def test_caller_pin_is_hashed_at_rest(self):
+        user = User.objects.create_user(
+            username="nia_pin_user",
+            email="nia-pin@example.com",
+            password="StrongPass123!",
+        )
+        CustomerAddress.objects.create(
+            user=user,
+            label="Home",
+            full_name="Nia User",
+            phone="254712345678",
+            county="Nairobi",
+            town="Nairobi",
+            address_line="Test address",
+            is_default=True,
+        )
+        verification = issue_caller_pin(user)
+        self.assertEqual(len(verification._raw_pin), 4)
+        self.assertNotEqual(len(verification.pin_code), 4)
+        self.assertNotEqual(verification.pin_code, verification._raw_pin)
+        from django.contrib.auth.hashers import check_password
+        self.assertTrue(check_password(verification._raw_pin, verification.pin_code))
+
+    def test_outbound_twilio_answer_endpoint_rejects_get(self):
+        session = NiaCallSession.objects.create(
+            user=User.objects.create_user(
+                username="nia_answer_user",
+                email="nia-answer@example.com",
+                password="StrongPass123!",
+            ),
+            role="customer",
+            direction="outbound",
+            phone_e164="254712345678",
+        )
+        response = self.client.get(reverse("nia_phone_answer", args=[session.id]))
+        self.assertEqual(response.status_code, 405)
