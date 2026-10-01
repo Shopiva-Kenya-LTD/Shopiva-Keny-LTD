@@ -420,7 +420,11 @@ class ShopivaAdminSite(admin.AdminSite):
             form = ProductForm()
 
         context = {**self.each_context(request), "form": form, "page_title": "Add Product", "mode": "add"}
-        return TemplateResponse(request, "admin/products/form.html", context)
+        response = TemplateResponse(request, "admin/products/form.html", context)
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response["Pragma"] = "no-cache"
+        response["X-Shopiva-Product-Form"] = "product-form-v3"
+        return response
 
     def product_edit(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
