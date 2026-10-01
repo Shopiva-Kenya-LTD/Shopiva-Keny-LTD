@@ -16,7 +16,7 @@ services:
       python manage.py migrate --check &&
       python manage.py system_preflight &&
       python manage.py collectstatic --noinput
-    startCommand: gunicorn shopiva.wsgi:application
+    startCommand: python -m gunicorn shopiva.asgi:application -k uvicorn.workers.UvicornWorker
     envVars:
       - key: DATABASE_URL
         sync: false
