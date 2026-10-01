@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 {% load static %}
 {% block branding %}
-<div class="shopiva-brand-row"><a href="{% url 'admin:index' %}" class="shopiva-admin-brand" aria-label="Shopiva Admin Control Center"><span class="shopiva-admin-mark" aria-hidden="true">SA</span><span>Shopi<strong>va</strong><small>ADMIN CONTROL CENTER · KENYA LTD</small></span></a><div class="shopiva-admin-search" role="search"><span aria-hidden="true">⌕</span><input id="shopiva-admin-search" type="search" placeholder="Search admin..." aria-label="Search admin"><kbd>Ctrl + K</kbd></div></div>
+<div class="shopiva-brand-row"><a href="{% url 'admin:index' %}" class="shopiva-admin-brand" aria-label="Shopiva Admin Control Center"><img class="shopiva-admin-header-logo" src="{% static 'shopiva/shopiva-admin-logo.svg' %}" alt="Shopiva Admin Control Center"><span class="shopiva-admin-brand-copy">Shopi<strong>va</strong><small>ADMIN CONTROL CENTER · KENYA LTD</small></span></a><div class="shopiva-admin-search" role="search"><span aria-hidden="true">⌕</span><input id="shopiva-admin-search" type="search" placeholder="Search admin..." aria-label="Search admin"><kbd>Ctrl + K</kbd></div></div>
 {% endblock %}
 {% block extrastyle %}{{ block.super }}
 <style>
@@ -84,6 +84,12 @@ input,select,textarea{border-radius:10px!important;border-color:#d7e4eb!importan
   #changelist-filter{margin-top:12px!important}
 }
 
+/* Full Shopiva Admin logo is the header branding and the workspace backdrop. */
+html,body{background:#ffffff!important;background-image:none!important}
+#container,#main,#content,.main{background:transparent!important;background-image:none!important}
+#main{position:relative!important;isolation:isolate!important}
+#main:before{content:""!important;position:fixed!important;top:76px!important;left:0!important;right:0!important;bottom:0!important;background:url("{% static 'shopiva/shopiva-admin-logo.svg' %}") no-repeat right 8vw center / min(55vw,820px) auto!important;opacity:1!important;pointer-events:none!important;z-index:0!important}
+#content,#content-main{position:relative!important;z-index:1!important}
 /* Shopiva filter panel polish */
 #changelist-filter{
     overflow:hidden!important;
@@ -173,12 +179,9 @@ input,select,textarea{border-radius:10px!important;border-color:#d7e4eb!importan
 }
 #branding{display:flex!important;align-items:center!important}
 .shopiva-admin-brand{gap:13px!important}
-.shopiva-admin-mark{
-  width:46px!important;height:46px!important;border-radius:14px!important;
-  background:linear-gradient(145deg,#20c77b,#078f54)!important;
-  box-shadow:0 8px 20px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.2)!important;
-  font-size:15px!important;
-}
+.shopiva-admin-mark{display:none!important}
+.shopiva-admin-header-logo{width:174px!important;height:58px!important;display:block!important;object-fit:contain!important;border-radius:10px!important;box-shadow:0 6px 18px rgba(0,0,0,.18)!important;background:transparent!important}
+.shopiva-admin-brand-copy{display:none!important}
 .shopiva-admin-brand > span:last-child{
   font-size:17px!important;letter-spacing:-.02em!important;
   text-shadow:0 1px 8px rgba(0,0,0,.12)!important;
