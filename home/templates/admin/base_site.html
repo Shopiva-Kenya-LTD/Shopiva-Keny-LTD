@@ -6,11 +6,11 @@
 <style>
 /* Shopiva Admin: keep Django as the engine, not the visual identity. */
 :root{--shopiva-navy:#061a2f;--shopiva-green:#19d978;--shopiva-ink:#132033;--shopiva-paper:#f4f7fa;--shopiva-line:#dfe7ee;--shopiva-muted:#708093}
-html,body{background:linear-gradient(180deg,#f7fafc 0%,#edf3f7 100%)!important;color:var(--shopiva-ink)!important}
+html,body{background:#06111f!important;color:var(--shopiva-ink)!important}body{position:relative;overflow-x:hidden}body:before{content:"";position:fixed;inset:66px 0 0 0;z-index:-2;background:radial-gradient(circle at 78% 34%,rgba(22,197,145,.18),transparent 26%),radial-gradient(circle at 92% 76%,rgba(250,204,21,.10),transparent 24%),linear-gradient(135deg,#06111f 0%,#071c2c 48%,#06271f 100%);pointer-events:none}body:after{content:"";position:fixed;z-index:-1;right:-8vw;top:15vh;width:min(52vw,760px);height:76vh;background-image:linear-gradient(90deg,rgba(6,17,31,.98) 0%,rgba(6,17,31,.62) 28%,rgba(6,17,31,.12) 62%,rgba(6,17,31,.18) 100%),url("/static/shopiva/shopiva-admin-logo.svg");background-repeat:no-repeat;background-position:center;background-size:cover, min(44vw,620px) auto;opacity:.46;filter:saturate(1.05) drop-shadow(0 25px 60px rgba(0,0,0,.35));pointer-events:none}
 body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 /* Remove the stock Django left navigation so it cannot dominate the workspace. */
 #nav-sidebar{display:none!important}
-#container{background:transparent!important;min-height:100vh}
+#container{background:transparent!important;min-height:100vh}#main{background:transparent!important}
 #header{background:linear-gradient(135deg,var(--shopiva-navy),#0b344f 62%,#0c5b3f)!important;color:#fff!important;padding:12px 24px!important;box-shadow:0 10px 28px rgba(6,26,47,.18)!important;display:flex!important;align-items:center!important;min-height:66px!important}
 #branding{padding:0!important;margin:0!important}
 #site-name{margin:0!important}
@@ -29,10 +29,10 @@ body{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}
 
 #user-tools a{color:#fff!important;text-decoration:none!important;border-bottom:1px solid transparent!important}
 #user-tools a:hover{color:var(--shopiva-green)!important;border-color:var(--shopiva-green)!important}
-#content{max-width:none!important;margin:0!important;padding:24px 28px 44px!important}
+#content{max-width:none!important;margin:0!important;padding:24px 28px 44px!important;min-height:calc(100vh - 100px)}
 #content-main{max-width:1400px;margin:0 auto}
-.breadcrumbs{background:rgba(255,255,255,.82)!important;border:1px solid var(--shopiva-line)!important;border-radius:12px!important;margin:0 28px 18px!important;padding:10px 14px!important;color:var(--shopiva-muted)!important;box-shadow:0 6px 18px rgba(7,24,46,.035)!important}
-.breadcrumbs a{color:#0a8b4c!important;text-decoration:none!important}
+.breadcrumbs{background:rgba(9,25,40,.82)!important;border:1px solid var(--shopiva-line)!important;border-radius:12px!important;margin:0 28px 18px!important;padding:10px 14px!important;color:#9fb4c4!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+.breadcrumbs a{color:#54e69a!important;text-decoration:none!important}
 .module,.inline-group,.submit-row,.object-tools a,.paginator,.calendarbox,.clockbox,.selector,.dashboard .module{border-radius:16px!important;border-color:var(--shopiva-line)!important;box-shadow:0 10px 30px rgba(7,24,46,.045)!important;background:#fff!important}
 .module caption,.module h2,.inline-group h2{border-radius:16px 16px 0 0!important;background:linear-gradient(135deg,var(--shopiva-navy),#0d3149)!important;color:#fff!important}
 .module table,.results{border-radius:0 0 16px 16px!important;overflow:hidden}
@@ -49,7 +49,7 @@ input:focus,select:focus,textarea:focus{border-color:#19d978!important;box-shado
 .messagelist li{border-radius:12px!important;box-shadow:0 6px 18px rgba(7,24,46,.04)}
 #footer{padding:20px 28px!important;color:#7b8794!important;background:transparent!important}
 .toggle-nav-sidebar{display:none!important}
-@media(max-width:800px){#header{padding:10px 14px!important}.shopiva-admin-logo{width:36px;height:36px}.shopiva-admin-name strong{font-size:16px}.shopiva-admin-name small{font-size:7px;letter-spacing:1.6px}#shopiva-user-tools{gap:6px;font-size:9px!important}.shopiva-user-name{display:none}.shopiva-logout-button{padding:8px 10px}.shopiva-logout-button span{display:none}#content{padding:16px 12px 32px!important}.breadcrumbs{margin:0 12px 14px!important}}
+@media(max-width:800px){body:after{right:-25vw;top:20vh;width:85vw;height:70vh;opacity:.20;background-size:cover,75vw auto}#header{padding:10px 14px!important}.shopiva-admin-logo{width:36px;height:36px}.shopiva-admin-name strong{font-size:16px}.shopiva-admin-name small{font-size:7px;letter-spacing:1.6px}#shopiva-user-tools{gap:6px;font-size:9px!important}.shopiva-user-name{display:none}.shopiva-logout-button{padding:8px 10px}.shopiva-logout-button span{display:none}#content{padding:16px 12px 32px!important}.breadcrumbs{margin:0 12px 14px!important}}
 </style>
 {% endblock %}
 {% block branding %}
