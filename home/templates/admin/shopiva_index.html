@@ -5,7 +5,10 @@
 {{ block.super }}
 <style>
   :root{--bg:#07111f;--card:#0f1d2d;--card2:#132438;--text:#edf5fb;--muted:#91a5ba;--border:rgba(255,255,255,.10);--accent:#22d3ee;--green:#22c55e;--gold:#facc15}
-  body{background:linear-gradient(135deg,#07111f,#0b1f2a 55%,#12383d)!important;color:var(--text)}
+  body{background:#07111f!important;color:var(--text);position:relative;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;background:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}") center center / min(52vw,760px) auto no-repeat;opacity:.30;pointer-events:none;z-index:0}
+body:after{content:"";position:fixed;inset:0;background:linear-gradient(rgba(7,17,31,.58),rgba(7,17,31,.58));pointer-events:none;z-index:0}
+#container,#main,#content,.shopiva-shell{position:relative;z-index:1}
   #content{max-width:1500px;margin:auto;padding:18px 24px 44px;background:transparent}
   #content-main{width:100%}
   .shopiva-shell{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
