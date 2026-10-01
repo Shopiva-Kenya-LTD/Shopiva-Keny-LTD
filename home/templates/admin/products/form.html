@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ page_title }} · Shopiva</title>
 <style>
+/* Shared Shopiva workspace background */
+body{position:relative;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;background:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}") center center / min(50vw,700px) auto no-repeat;opacity:.24;pointer-events:none;z-index:0}
+.wrap{position:relative;z-index:1}
+
 /* Shopiva Product Creation Studio — UI only; form fields and POST contract remain unchanged. */
 :root{--navy:#071827;--teal:#087f83;--green:#16b66d;--gold:#facc15;--ink:#172033;--muted:#68798b;--line:#d7e2e8}
 *{box-sizing:border-box}
