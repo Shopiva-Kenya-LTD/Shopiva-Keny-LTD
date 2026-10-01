@@ -3,6 +3,7 @@ import os
 import re
 import secrets
 
+from django.contrib.auth.hashers import check_password, make_password
 from django.core.cache import cache
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -339,25 +340,17 @@ def issue_caller_pin(user):
         expires_at__gt=now,
     ).update(used_at=now)
 
-    for _ in range(20):
-        pin = f"{secrets.randbelow(10000):04d}"
-        if not NiaCallerVerification.objects.filter(
-            phone_e164=phone,
-            pin_code=pin,
-            used_at__isnull=True,
-            expires_at__gt=now,
-        ).exists():
-            break
-    else:
-        raise RuntimeError("Please try generating the Nia PIN again.")
-
+    pin = f"{secrets.randbelow(10000):04d}"
     verification = NiaCallerVerification.objects.create(
         user=user,
         role=role,
         phone_e164=phone,
-        pin_code=pin,
+        pin_code=make_password(pin),
         expires_at=now + timezone.timedelta(minutes=10),
     )
+    # Keep the raw PIN only in memory for the immediate authenticated response;
+    # never persist or log it.
+    verification._raw_pin = pin
     _log_audit(
         user,
         role,
@@ -378,7 +371,7 @@ def nia_phone_pin(request):
     return JsonResponse(
         {
             "ok": True,
-            "pin": verification.pin_code,
+            "pin": getattr(verification, "_raw_pin", ""),
             "expires_at": verification.expires_at.isoformat(),
             "role": verification.role,
         }
@@ -558,7 +551,7 @@ def nia_phone_verify(request, session_id):
         response.hangup()
         return HttpResponse(str(response), content_type="application/xml")
 
-    if len(digits) != 4 or not secrets.compare_digest(digits, verification.pin_code):
+    if len(digits) != 4 or not check_password(digits, verification.pin_code):
         verification.attempts += 1
         if verification.attempts >= 5:
             verification.used_at = timezone.now()
@@ -604,9 +597,9 @@ def nia_phone_verify(request, session_id):
 @csrf_exempt
 def nia_phone_answer(request, session_id):
     session = get_object_or_404(NiaCallSession, id=session_id)
-    if request.method not in {"GET", "POST"}:
+    if request.method != "POST":
         return HttpResponse(status=405)
-    if request.method == "POST" and not _twilio_webhook_valid(request):
+    if not _twilio_webhook_valid(request):
         return HttpResponse("Forbidden", status=403)
     if session.direction == NiaCallSession.DIRECTION_INBOUND and not session.caller_verified:
         return HttpResponse("Forbidden", status=403)
