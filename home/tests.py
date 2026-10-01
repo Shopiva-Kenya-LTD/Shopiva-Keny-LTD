@@ -171,6 +171,29 @@ class AdminLoginTests(TestCase):
         )
         self.assertRedirects(response, reverse("shopiva_admin:index"), fetch_redirect_response=False)
 
+    def test_admin_logout_requires_post(self):
+        admin = User.objects.create_user(
+            username="admin_logout_test",
+            email="admin-logout@example.com",
+            password="StrongPass123!",
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+        response = self.client.get(reverse("admin_logout"), secure=True)
+        self.assertEqual(response.status_code, 405)
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+    def test_admin_logout_accepts_csrf_protected_post(self):
+        admin = User.objects.create_user(
+            username="admin_logout_post",
+            email="admin-logout-post@example.com",
+            password="StrongPass123!",
+            is_staff=True,
+        )
+        self.client.force_login(admin)
+        response = self.client.post(reverse("admin_logout"), secure=True)
+        self.assertRedirects(response, reverse("admin_login"), fetch_redirect_response=False)
+
     def test_customer_cannot_login_to_control_center(self):
         User.objects.create_user(username="customer_test", email="customer@example.com", password="StrongPass123!", is_staff=False)
         response = self.client.post(
