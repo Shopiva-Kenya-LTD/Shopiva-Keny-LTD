@@ -25,6 +25,12 @@ body{background:linear-gradient(135deg,#f3f7fa 0%,#edf4f4 100%)}
 .selected-queue-head{min-height:82px;padding:18px 18px}.selected-queue-head b{display:block;font-size:14px;line-height:1.35}.selected-queue-head .queue-description{display:block;margin-top:7px;color:var(--muted);font-size:9px;font-weight:500;line-height:1.45}.selected-queue-head>span{font-size:9px;color:var(--muted);white-space:nowrap}.filters{padding:16px;background:#fbfdfd}.filters form{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.filters .search{grid-column:1/-1;height:40px;padding:10px 12px}.filters input,.filters select{min-height:38px;padding:9px 11px;font-size:10px}.tickets{scroll-behavior:smooth}.detail-head{padding:22px 20px;gap:20px}.identity{gap:10px;padding:14px 20px}.identity div{padding:11px;min-height:58px}.messages{padding:22px 20px}.reply-tools{padding:12px 16px;gap:8px}.reply{padding:14px 16px;gap:10px}.reply textarea{min-height:70px;padding:11px}.reply button{min-height:70px}
 @media(max-width:1050px){.issue-queues{grid-template-columns:1fr 1fr}}@media(max-width:700px){.issue-queues{grid-template-columns:1fr}.issue-queue{padding:12px}.filters form{grid-template-columns:1fr}.filters .search{grid-column:auto}}
 @media(max-width:1050px){.support-sidebar{display:none}.wrap{margin-left:0}.workspace{grid-template-columns:1fr}}
+
+/* Full-width empty support queue: use the entire workspace when no case is selected. */
+.workspace:has(> .panel.detail > .empty){grid-template-columns:minmax(0,1fr)!important}
+.workspace:has(> .panel.detail > .empty) > .panel:first-child{width:100%!important;min-width:0!important}
+.workspace:has(> .panel.detail > .empty) > .panel.detail{display:none!important}
+.workspace:has(> .panel.detail > .empty) .filters{width:100%}
 </style>
 </head>
 <body>
