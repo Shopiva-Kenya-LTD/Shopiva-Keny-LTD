@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.db import IntegrityError, transaction
 from django.contrib.auth import login as auth_login, logout as auth_logout, get_user_model
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.paginator import Paginator
 from django.db.models import Q, Sum
@@ -128,6 +129,7 @@ def customer_login(request):
     return render(request, "accounts/login.html", {"form": form})
 
 
+@require_POST
 def customer_logout(request):
     was_admin = bool(
         request.user.is_authenticated
@@ -887,18 +889,44 @@ def seller_product_delete(request, product_id):
 @login_required(login_url="customer_login")
 def seller_request_payout(request):
     seller = getattr(request.user, "seller_profile", None)
-    if not seller:
+    if not seller or not seller.is_active:
         return redirect("seller_register")
-    wallet = get_object_or_404(SellerWallet, seller=seller)
-    if request.method == "POST":
-        try:
-            amount = Decimal(request.POST.get("amount", "0"))
-        except InvalidOperation:
-            amount = Decimal("0")
-        phone = request.POST.get("phone", "").strip()
-        if amount <= 0 or amount > wallet.available_balance or not phone:
-            messages.error(request, "Enter a valid payout amount, phone number and keep the request within your available balance.")
+    if request.method != "POST":
+        return redirect("seller_dashboard")
+
+    try:
+        amount = Decimal(request.POST.get("amount", "0")).quantize(Decimal("0.01"))
+    except (InvalidOperation, TypeError, ValueError):
+        amount = Decimal("0")
+    phone = request.POST.get("phone", "").strip()
+    # Payouts are recorded by administrators, but the destination still must be
+    # a plausible Kenyan mobile number so a seller cannot queue arbitrary data.
+    normalized_phone = "".join(char for char in phone if char.isdigit())
+    if normalized_phone.startswith("0") and len(normalized_phone) == 10:
+        normalized_phone = "254" + normalized_phone[1:]
+    elif len(normalized_phone) == 9 and normalized_phone.startswith(("1", "7")):
+        normalized_phone = "254" + normalized_phone
+
+    if amount <= 0 or not __import__("re").fullmatch(r"254[17]\d{8}", normalized_phone):
+        messages.error(request, "Enter a valid payout amount and Kenyan M-PESA phone number.")
+        return redirect("seller_dashboard")
+
+    with transaction.atomic():
+        # Lock the wallet before checking and reserving funds.  This makes two
+        # concurrent browser requests unable to reserve the same balance.
+        wallet = SellerWallet.objects.select_for_update().get(seller=seller)
+        if SellerPayoutRequest.objects.filter(seller=seller, status__in={"requested", "processing"}).exists():
+            messages.error(request, "A payout request is already awaiting administrator processing.")
+        elif amount > wallet.available_balance:
+            messages.error(request, "The requested payout exceeds your available balance.")
         else:
-            SellerPayoutRequest.objects.create(seller=seller, amount=amount, phone=phone, idempotency_key=uuid.uuid4().hex)
-            messages.success(request, "Payout request submitted for processing.")
+            SellerPayoutRequest.objects.create(
+                seller=seller,
+                amount=amount,
+                phone=normalized_phone,
+                idempotency_key=uuid.uuid4().hex,
+            )
+            wallet.available_balance -= amount
+            wallet.save(update_fields=("available_balance", "updated_at"))
+            messages.success(request, "Payout request submitted for administrator processing.")
     return redirect("seller_dashboard")
