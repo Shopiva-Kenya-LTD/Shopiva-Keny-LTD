@@ -5,6 +5,7 @@ from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 
 def seller_login(request):
@@ -55,6 +56,7 @@ def seller_login(request):
     return render(request, "seller/login.html", {"form": form})
 
 
+@require_POST
 def seller_logout(request):
     was_admin = bool(
         request.user.is_authenticated
