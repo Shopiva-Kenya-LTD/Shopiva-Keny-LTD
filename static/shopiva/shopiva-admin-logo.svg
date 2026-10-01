@@ -1,17 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-<title>Shopiva Admin</title><desc>Shopiva Kenya LTD private administration logo</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+<title>Shopiva Admin — Kenya LTD</title>
+<desc>Modern Shopiva Admin Control Center logo</desc>
 <defs>
- <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#063d2b"/><stop offset=".52" stop-color="#021a13"/><stop offset="1" stop-color="#0a4027"/></linearGradient>
- <linearGradient id="green" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8ff63"/><stop offset=".45" stop-color="#35e66b"/><stop offset="1" stop-color="#00965a"/></linearGradient>
- <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3a1"/><stop offset=".45" stop-color="#ffd34f"/><stop offset="1" stop-color="#d88908"/></linearGradient>
- <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop stop-color="#071d2b"/><stop offset=".55" stop-color="#083b43"/><stop offset="1" stop-color="#087a68"/>
+  </linearGradient>
+  <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+    <stop stop-color="#48f0a0"/><stop offset=".55" stop-color="#13bd72"/><stop offset="1" stop-color="#087f55"/>
+  </linearGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+    <stop stop-color="#ffe98a"/><stop offset=".5" stop-color="#ffc83d"/><stop offset="1" stop-color="#d98b0b"/>
+  </linearGradient>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000" flood-opacity=".24"/>
+  </filter>
 </defs>
-<rect x="8" y="8" width="496" height="496" rx="112" fill="url(#bg)" stroke="#39ed7c" stroke-width="8"/>
-<path d="M256 43l18 34 36-22-8 40 39 4-34 23 26 30-43-8-10 40-24-34-24 34-10-40-43 8 26-30-34-23 39-4-8-40 36 22z" fill="url(#gold)" filter="url(#glow)"/>
-<path d="M126 174h260v178H126z" rx="28" fill="#0a6240" opacity=".92" stroke="#d9ffe7" stroke-opacity=".22" stroke-width="5"/>
-<path d="M162 216h188M162 254h132M162 292h160" stroke="#fff" stroke-width="12" stroke-linecap="round" opacity=".92"/>
-<circle cx="163" cy="323" r="14" fill="url(#green)"/><path d="M191 323h142" stroke="url(#green)" stroke-width="14" stroke-linecap="round"/>
-<path d="M105 208h33M94 238h44M105 268h33" stroke="url(#green)" stroke-width="14" stroke-linecap="round" filter="url(#glow)"/>
-<text x="256" y="407" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="62" font-weight="900" letter-spacing="-2" fill="#fff">Shop<tspan fill="url(#green)">iva</tspan></text>
-<text x="256" y="444" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" letter-spacing="6" fill="#ffe58a">ADMIN · KENYA LTD</text>
+
+<!-- Premium horizontal lockup -->
+<rect x="8" y="8" width="1184" height="344" rx="64" fill="url(#bg)" stroke="#3ce79b" stroke-width="4"/>
+
+<!-- Standalone Admin mark -->
+<rect x="42" y="42" width="276" height="276" rx="58" fill="#061a25" stroke="#35df93" stroke-width="4" filter="url(#shadow)"/>
+<path d="M180 79 L259 111 L259 180 C259 235 225 274 180 291 C135 274 101 235 101 180 L101 111 Z"
+      fill="url(#mark)" opacity=".98"/>
+<path d="M143 148 C151 126 177 119 198 129 C213 136 218 151 212 164 C207 175 195 180 178 185 L163 190 C151 194 149 202 155 208 C162 216 179 217 191 210"
+      fill="none" stroke="#ffffff" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M151 235 L173 256 L217 205" fill="none" stroke="url(#gold)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="246" cy="101" r="17" fill="url(#gold)"/>
+<circle cx="246" cy="101" r="7" fill="#fff5bd"/>
+
+<!-- Wordmark -->
+<text x="365" y="177" font-family="Arial,Helvetica,sans-serif" font-size="104" font-weight="900" letter-spacing="-5" fill="#ffffff">Shop<tspan fill="#4af0a2">iva</tspan></text>
+<rect x="370" y="199" width="150" height="5" rx="2.5" fill="url(#gold)"/>
+<text x="365" y="250" font-family="Arial,Helvetica,sans-serif" font-size="31" font-weight="800" letter-spacing="7" fill="#d8f7ee">ADMIN CONTROL CENTER</text>
+<text x="367" y="291" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="700" letter-spacing="5" fill="#9ed7cd">KENYA LTD  ·  SECURE OPERATIONS</text>
 </svg>
