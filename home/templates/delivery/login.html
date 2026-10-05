@@ -119,12 +119,10 @@ button:hover{filter:brightness(1.02);transform:translateY(-1px)}
 {{ form.username }}
 <label for="{{ form.password.id_for_label }}">Password</label>
 {{ form.password }}
-<div class="row"><label class="check"><input type="checkbox" name="remember_me"> Remember me</label><a href="#">Forgot password?</a></div>
+<div class="row"><span>🔒 Secure rider session</span><span>GPS starts after sign-in</span></div>
 <button type="submit">🚚 &nbsp; Sign in to Delivery &nbsp; →</button>
 </form>
 <div class="signup">New delivery partner? <a href="{% url 'delivery_signup' %}">Create an account →</a></div>
-<div class="or"><span>OR</span></div>
-<button type="button" class="phone" onclick="alert('Phone sign-in will be available through the approved delivery authentication flow.')">☎ &nbsp; Sign in with phone number</button>
 <div class="trust"><div><b>🔒</b>Protected login</div><div><b>📍</b>Live GPS</div><div><b>✓</b>Verified handover</div></div>
 </section>
 
