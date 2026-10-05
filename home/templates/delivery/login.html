@@ -2,122 +2,70 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#087f5b">
+<meta name="description" content="Shopiva Delivery secure rider login">
 <link rel="manifest" href="{% url 'delivery_manifest' %}">
 <title>Shopiva Delivery | Rider Login</title>
 <style>
 *{box-sizing:border-box}
-:root{--green:#10b968;--green2:#35e58a;--deep:#063525;--ink:#102d23}
-html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-body{min-height:100vh;background:#06150f;color:#fff;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;z-index:-3;background:linear-gradient(90deg,rgba(2,20,13,.84) 0%,rgba(3,28,18,.52) 34%,rgba(2,18,12,.16) 68%,rgba(2,18,12,.40) 100%),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600") center/cover no-repeat;filter:saturate(.92) contrast(1.05)}
-body:after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 78% 30%,rgba(29,225,133,.22),transparent 25%),linear-gradient(90deg,rgba(2,24,16,.18),transparent 50%,rgba(2,18,12,.28) 100%)}
-.page{min-height:100vh;display:flex;flex-direction:column;padding:24px 54px 20px}
-.topbar{display:flex;align-items:center;justify-content:flex-end;width:100%;max-width:1450px;margin:0 auto;position:relative;z-index:5}
-.brand{display:none;align-items:center;gap:12px;text-decoration:none;color:#fff}
-.brand-mark{width:52px;height:52px;border-radius:15px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 10px 25px rgba(0,0,0,.2)}
-.brand-mark img{width:100%;height:100%;object-fit:contain}
-.brand-copy b{display:block;font-size:18px;line-height:1}.brand-copy span{display:block;margin-top:4px;font-size:9px;letter-spacing:.2em;font-weight:900;color:#7df1ae}
-.locale{padding:12px 17px;border:1px solid rgba(255,255,255,.30);border-radius:999px;background:rgba(255,255,255,.90);color:#18251f;font-size:13px;font-weight:850;box-shadow:0 8px 25px rgba(0,0,0,.12);backdrop-filter:blur(12px)}
-.main{flex:1;display:grid;grid-template-columns:minmax(290px,.86fr) minmax(430px,555px) minmax(300px,.88fr);gap:38px;align-items:center;max-width:1450px;width:100%;margin:0 auto}
-.intro{padding:20px 0 10px;color:#fff;max-width:450px}
-.delivery-logo{width:245px;height:150px;border-radius:0;background:transparent;display:grid;place-items:start;box-shadow:none;border:0;margin-bottom:5px}
-.delivery-logo svg{width:235px;height:145px}
-.kicker{font-size:11px;letter-spacing:.23em;text-transform:uppercase;color:#67efa4;font-weight:950}
-.intro h2{font-size:55px;line-height:.98;letter-spacing:-.055em;margin:7px 0 13px;max-width:440px;color:#fff}
-.intro p{font-size:15px;line-height:1.55;color:#edf7f2;max-width:410px;margin:0}
-.features{margin-top:28px;display:grid;gap:17px}
-.feature{display:flex;gap:15px;align-items:center}
-.feature-icon{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:rgba(4,46,31,.55);border:2px solid #16d779;box-shadow:inset 0 0 0 6px rgba(22,215,121,.06);font-size:23px;flex:0 0 54px}
-.feature b{display:block;font-size:16px;color:#fff}.feature span{display:block;font-size:12px;color:#e0eee8;margin-top:3px;line-height:1.4}
-.login-card{position:relative;padding:31px 38px 25px;border-radius:29px;background:rgba(255,255,255,.985);color:var(--ink);border:1px solid rgba(255,255,255,.98);box-shadow:0 35px 90px rgba(0,0,0,.34)}
-.card-head{text-align:center}
-.mini-logo{width:112px;height:112px;margin:0 auto 12px;border-radius:30px;background:linear-gradient(145deg,#087f5b,#043525);display:grid;place-items:center;box-shadow:0 15px 35px rgba(8,127,91,.22)}
-.mini-logo svg{width:91px;height:91px}
-.card-head h1{font-size:32px;letter-spacing:-.045em;margin:0;color:#102f24}.card-head p{font-size:14px;line-height:1.48;color:#718079;margin:8px auto 20px;max-width:390px}
-label{display:block;margin:13px 0 7px;font-size:12px;font-weight:900;color:#29483d}
-input{width:100%;height:54px;border:1px solid #cbded5;border-radius:15px;background:#f9fcfb;color:#17362b;padding:0 15px;font-size:16px;outline:none}
-input:focus{border-color:#19c878;box-shadow:0 0 0 4px rgba(25,200,120,.11);background:#fff}
-.row{display:flex;justify-content:space-between;align-items:center;margin-top:11px;color:#718079;font-size:11px}
-button{width:100%;height:58px;border:0;border-radius:15px;margin-top:18px;background:linear-gradient(135deg,#23df7f,#08a85d);color:#fff;font-size:17px;font-weight:950;cursor:pointer;box-shadow:0 15px 30px rgba(16,187,105,.24)}
-.signup{text-align:center;margin-top:15px;font-size:12px;color:#718079}.signup a{color:#087f5b;font-weight:900;text-decoration:none}
-.errors{margin-bottom:12px;padding:11px 13px;border-radius:12px;background:#fff0f0;border:1px solid #efc7c7;color:#9a2e2e;font-size:12px}
-.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:17px}
-.trust div{padding:11px 5px;text-align:center;border-radius:12px;background:#f5faf7;border:1px solid #e1ebe6;color:#718079;font-size:10px}.trust b{display:block;color:#087f5b;font-size:16px;margin-bottom:3px}
-.rider{height:650px;border-radius:36px;position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(3,61,40,.50),rgba(8,127,91,.52));box-shadow:0 30px 75px rgba(0,0,0,.34);background-image:linear-gradient(180deg,rgba(3,52,35,.06),rgba(2,30,20,.72)),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600");background-size:cover;background-position:center}
-.rider:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,30,20,.05),transparent 42%,rgba(2,28,18,.84) 100%);pointer-events:none}
-.rider-copy{position:absolute;top:24px;left:24px;z-index:2;color:#fff}.rider-copy b{display:block;font-size:13px;letter-spacing:.18em}.rider-copy span{display:block;margin-top:6px;font-size:12px;color:#d0f7df}
-.badge{position:absolute;bottom:22px;left:22px;right:22px;z-index:3;padding:15px 16px;border-radius:18px;background:rgba(3,35,23,.78);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px)}
-.badge strong{display:block;font-size:14px}.badge span{display:block;margin-top:4px;font-size:10px;color:#b8d0c5}
-.footer{text-align:center;color:#d0ded8;font-size:10px;padding-top:10px;max-width:1450px;width:100%;margin:auto}
-@media(max-width:1120px){.main{grid-template-columns:1fr minmax(390px,530px);gap:30px}.rider{display:none}.intro h2{font-size:48px}.intro{max-width:520px}}
-@media(max-width:760px){.page{padding:15px 12px}.locale{display:none}.main{display:block}.intro{display:none}.login-card{max-width:530px;margin:55px auto 20px;padding:27px 21px}.footer{padding-bottom:8px}}
-@media(max-width:480px){.login-card{border-radius:24px}.card-head h1{font-size:27px}.trust{grid-template-columns:1fr}.brand-mark{width:45px;height:45px}}
+html,body{margin:0;padding:0;background:#0a2018;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{overflow-x:hidden}
+.mockup-stage{position:relative;width:100%;max-width:1374px;margin:0 auto;line-height:0}
+.mockup-stage>img{display:block;width:100%;height:auto}
+.overlay{position:absolute;inset:0;z-index:2}
+.hit{position:absolute;display:block}
+.login-form{position:absolute;left:32.45%;top:39.65%;width:33.15%;height:24.1%}
+.login-form input{position:absolute;left:8.1%;width:91.5%;height:19%;border:0;outline:0;background:transparent;color:#526171;font-size:clamp(12px,1.35vw,18px);padding:0 4.2%;line-height:1.2}
+.login-form input::placeholder{color:#68798a;opacity:1}
+.login-form input:focus{box-shadow:inset 0 0 0 2px rgba(16,185,105,.32);border-radius:14px;background:rgba(255,255,255,.06)}
+.login-form input[name="username"]{top:1%}
+.login-form input[name="password"]{top:25.5%}
+.login-submit{position:absolute;left:8.1%;top:63%;width:91.5%;height:22%;border:0;background:transparent;border-radius:15px;cursor:pointer;color:transparent;font-size:1px}
+.login-submit:focus{outline:3px solid rgba(34,225,128,.8);outline-offset:2px}
+.remember-hit{left:32.45%;top:53.25%;width:3.2%;height:3.8%;cursor:pointer}
+.remember-hit input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
+.forgot-hit{left:54.5%;top:53.3%;width:11%;height:3.4%}
+.signup-hit{left:49.2%;top:64.9%;width:14%;height:3.2%}
+.phone-hit{left:32.45%;top:72.2%;width:33.15%;height:5.5%}
+.error-box{position:absolute;left:33%;top:32%;width:32%;padding:8px 12px;background:rgba(255,239,239,.96);border:1px solid #e6aaaa;border-radius:12px;color:#8e2929;font-size:13px;line-height:1.35;z-index:5}
+@media(max-width:760px){
+  .mockup-stage{width:100%;min-width:0}
+  .mockup-stage>img{width:100%}
+  .login-form input{font-size:12px}
+  .error-box{font-size:10px}
+}
+@media(max-width:520px){
+  .mockup-stage{min-width:760px;margin-left:50%;transform:translateX(-50%)}
+  body{overflow-x:auto}
+}
 </style>
 </head>
 <body>
-<div class="page">
-<header class="topbar">
-<div class="locale">🇰🇪 &nbsp; Kenya (EN) &nbsp;⌄</div>
-</header>
+<main class="mockup-stage" aria-label="Shopiva Delivery rider login">
+  <img src="{% static 'shopiva/delivery-login-mockup.jpg' %}" alt="Shopiva Delivery secure rider login">
 
-<main class="main">
-<section class="intro">
-<div class="delivery-logo">
-<svg viewBox="0 0 250 150" aria-label="Shopiva Delivery logo">
-<defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3a2"/><stop offset=".5" stop-color="#ffd45a"/><stop offset="1" stop-color="#d99b22"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#dfffee"/></linearGradient></defs>
-<g transform="translate(42 2) scale(.88)">
-<path d="M64 8l6 15 17-9-5 17 18 4-16 9 12 14-18-4-3 18-11-14-11 14-3-18-18 4 12-14-16-9 18-4-5-17 17 9z" fill="url(#a)"/>
-<path d="M22 51c0-5 4-9 9-9h42l11 13h16c4 0 7 3 7 7v23H91a13 13 0 0 1-25 0H55a13 13 0 0 1-25 0H22z" fill="url(#b)"/>
-<path d="M75 49h8l12 13H75z" fill="#9af4bd"/><path d="M30 59h39" stroke="#22d97d" stroke-width="8" stroke-linecap="round"/><path d="M30 70h36" stroke="#20c975" stroke-width="6" stroke-linecap="round"/>
-<circle cx="43" cy="85" r="9" fill="#073b27"/><circle cx="78" cy="85" r="9" fill="#073b27"/>
-</g></svg>
-</div>
-<div class="kicker">Delivery partner app</div>
-<h2>Deliver smarter.<br>Earn with Shopiva.</h2>
-<p>Your secure rider workspace for assigned orders, live navigation and verified customer handovers.</p>
-<div class="features">
-<div class="feature"><div class="feature-icon">📍</div><div><b>Live GPS Navigation</b><span>Find efficient routes to every customer.</span></div></div>
-<div class="feature"><div class="feature-icon">📦</div><div><b>Verified Handover</b><span>Confirm successful parcel delivery.</span></div></div>
-<div class="feature"><div class="feature-icon">💳</div><div><b>Earn Commission</b><span>Get paid for successful deliveries.</span></div></div>
-<div class="feature"><div class="feature-icon">🛡️</div><div><b>Trusted Network</b><span>Secure access for approved riders.</span></div></div>
-</div>
-</section>
+  <div class="overlay">
+    {% if form.non_field_errors %}
+    <div class="error-box">{{ form.non_field_errors }}</div>
+    {% endif %}
 
-<section class="login-card">
-<div class="card-head">
-<div class="mini-logo">
-<svg viewBox="0 0 128 128" aria-hidden="true">
-<path d="M64 8l6 15 17-9-5 17 18 4-16 9 12 14-18-4-3 18-11-14-11 14-3-18-18 4 12-14-16-9 18-4-5-17 17 9z" fill="#ffd45a"/>
-<path d="M22 51c0-5 4-9 9-9h42l11 13h16c4 0 7 3 7 7v23H91a13 13 0 0 1-25 0H55a13 13 0 0 1-25 0H22z" fill="#f6fff9"/>
-<path d="M30 59h39M30 70h36" stroke="#19d376" stroke-width="7" stroke-linecap="round"/>
-<circle cx="43" cy="85" r="9" fill="#073b27"/><circle cx="78" cy="85" r="9" fill="#073b27"/>
-</svg>
-</div>
-<h1>Secure rider access</h1>
-<p>Sign in to your Shopiva delivery account to view assigned orders, navigate and complete deliveries.</p>
-</div>
+    <form class="login-form" method="post" autocomplete="on">
+      {% csrf_token %}
+      {{ form.username }}
+      {{ form.password }}
+      <button class="login-submit" type="submit" aria-label="Sign in to Delivery">Sign in to Delivery</button>
+    </form>
 
-{% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
-<form method="post" autocomplete="on">{% csrf_token %}
-<label for="{{ form.username.id_for_label }}">Shopiva username</label>
-{{ form.username }}
-<label for="{{ form.password.id_for_label }}">Password</label>
-{{ form.password }}
-<div class="row"><span>🔒 Secure rider session</span><span>GPS starts after sign-in</span></div>
-<button type="submit">🚚 &nbsp; Sign in to Delivery &nbsp; →</button>
-</form>
-<div class="signup">New delivery partner? <a href="{% url 'delivery_signup' %}">Create an account →</a></div>
-<div class="trust"><div><b>🔒</b>Protected login</div><div><b>📍</b>Live GPS</div><div><b>✓</b>Verified handover</div></div>
-</section>
+    <label class="remember-hit" aria-label="Remember me">
+      <input type="checkbox" name="remember_me">
+    </label>
 
-<aside class="rider">
-<div class="rider-copy"><b>SHOPIVA DELIVERY</b><span>Delivering a better Kenya</span></div>
-<div class="badge"><strong>Every parcel. Every customer.</strong><span>Handled with care.</span></div>
-</aside>
+    <a class="hit forgot-hit" href="#" aria-label="Forgot password"></a>
+    <a class="hit signup-hit" href="{% url 'delivery_signup' %}" aria-label="Create a delivery partner account"></a>
+    <a class="hit phone-hit" href="tel:+254700000000" aria-label="Sign in with phone number"></a>
+  </div>
 </main>
-<div class="footer">Only approved Shopiva delivery partners can access customer orders. Location sharing begins after sign-in and GPS permission.</div>
-</div>
 </body>
 </html>
