@@ -29,7 +29,7 @@
 </style>
 <link rel="stylesheet" href="/static/shopiva/nia-widget.css?v=nia-support-20260930"><script src="/static/shopiva/nia-widget.js?v=nia-support-20260930"></script></head>
 <body>
-<header class="top"><a class="brand" href="/"><span class="mark">SA</span><span><b>Shopiva Support</b><small>24/7 {{ role_label|upper }} ASSISTANCE</small></span></a><nav class="nav"><a href="{% url back_url %}">← Dashboard</a><a href="{% if role == 'seller' %}/seller/notifications/{% else %}/account/notifications/{% endif %}">🔔 Alerts</a></nav></header>
+<header class="top"><a class="brand" href="/"><span class="mark"><img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya logo"></span><span><b>Shopiva Support</b><small>24/7 {{ role_label|upper }} ASSISTANCE</small></span></a><nav class="nav"><a href="{% url back_url %}">← Dashboard</a><a href="{% if role == 'seller' %}/seller/notifications/{% else %}/account/notifications/{% endif %}">🔔 Alerts</a></nav></header>
 <main class="wrap">
 {% for message in messages %}{% if "Notification deleted." not in message|stringformat:"s" and "notifications deleted." not in message|stringformat:"s" %}<div class="flash">{{ message }}</div>{% endif %}{% endfor %}
 <section class="hero"><div><span class="eyebrow">● Shopiva Support Desk · {{ role_label }}</span><h1>Shopiva Support Center.</h1><p>Raise an issue, track every response and keep your support history in one secure place. Our support desk connects your case to the right Shopiva team for follow-up.</p></div><div class="online"><b>Support desk online</b><span>● Available for active cases</span></div></section>
