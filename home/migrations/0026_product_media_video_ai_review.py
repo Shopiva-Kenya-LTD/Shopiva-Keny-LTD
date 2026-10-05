@@ -1,4 +1,4 @@
-from django.db import migrations, models
+from django.db import migrations, models\nimport django.core.validators
 import cloudinary.models
 
 
@@ -72,8 +72,8 @@ class Migration(migrations.Migration):
                     models.PositiveSmallIntegerField(
                         default=0,
                         validators=[
-                            models.Min(0),
-                            models.Max(4),
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(4),
                         ],
                     ),
                 ),
