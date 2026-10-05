@@ -1337,6 +1337,10 @@ def speak_text(request):
     auth_error = _voice_auth_error(request)
     if auth_error:
         return auth_error
+    # Delivery staff use the authenticated realtime delivery voice flow; the
+    # standalone customer TTS endpoint must not be used as a delivery account.
+    if _delivery_for_request(request):
+        return JsonResponse({"ok": False, "error": "Standalone voice feedback is not available for delivery accounts."}, status=403)
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "POST required."}, status=405)
     rate_limit = _voice_rate_limit(request, "speak_text")
