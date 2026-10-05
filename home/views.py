@@ -135,10 +135,15 @@ def customer_logout(request):
         request.user.is_authenticated
         and (request.user.is_staff or request.user.is_superuser)
     )
+
+    # A logout is a clean boundary: do not carry notification-center
+    # success messages into the next login screen. Consume any queued
+    # Django messages before the session is closed.
+    list(get_messages(request))
     auth_logout(request)
+
     if was_admin:
         return redirect("admin_login")
-    messages.success(request, "You have been signed out of Shopiva.")
     return redirect("customer_login")
 
 
