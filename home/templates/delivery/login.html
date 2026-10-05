@@ -1,46 +1,93 @@
+{% load static %}
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#052e1b">
+<meta name="theme-color" content="#087f5b">
 <link rel="manifest" href="{% url 'delivery_manifest' %}">
-<title>Shopiva Delivery | Secure Sign in</title>
+<title>Shopiva Delivery | Secure Rider Access</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;color:#effff6;background:#02100a;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:-20%;background:radial-gradient(circle at 12% 12%,rgba(35,220,116,.28),transparent 27%),radial-gradient(circle at 86% 28%,rgba(190,255,80,.13),transparent 24%),radial-gradient(circle at 50% 100%,rgba(0,132,77,.24),transparent 35%);pointer-events:none}
-.shell{min-height:100vh;display:grid;place-items:center;padding:26px}.card{position:relative;width:min(470px,100%);padding:30px;border-radius:32px;background:linear-gradient(145deg,rgba(10,46,30,.94),rgba(3,19,13,.96));border:1px solid rgba(136,255,186,.18);box-shadow:0 34px 100px rgba(0,0,0,.46);overflow:hidden}.card:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-150px;top:-150px;background:radial-gradient(circle,rgba(77,255,137,.28),transparent 70%);pointer-events:none}
-.brand{display:flex;align-items:center;gap:15px}.logo{width:78px;height:78px;border-radius:24px;display:grid;place-items:center;background:linear-gradient(145deg,#0fa957,#042e1c);border:1px solid rgba(126,255,176,.3);box-shadow:0 15px 35px rgba(10,200,100,.22)}.logo svg{width:62px;height:62px}
-.eyebrow{font-size:10px;font-weight:950;letter-spacing:.18em;color:#78efae;text-transform:uppercase}.brand h1{margin:6px 0 0;font-size:28px;letter-spacing:-.05em}.sub{margin:17px 0 22px;color:#b7d9c6;line-height:1.55;font-size:13px}
-label{display:block;margin:14px 0 7px;font-size:11px;font-weight:900;color:#e9fff1}input{width:100%;padding:15px 16px;border-radius:14px;border:1px solid #315d48;background:#03160e;color:#fff;font-size:15px;outline:none}input:focus{border-color:#40e58b;box-shadow:0 0 0 4px rgba(64,229,139,.11)}
-button{width:100%;margin-top:19px;padding:15px;border:0;border-radius:14px;background:linear-gradient(135deg,#39e985,#11b967);color:#032616;font-weight:950;font-size:15px;cursor:pointer;box-shadow:0 12px 28px rgba(17,185,103,.22)}.signup{display:block;text-align:center;margin-top:15px;color:#8bf4b8;text-decoration:none;font-size:12px;font-weight:900}.signup:hover{text-decoration:underline}
-.errors{margin-bottom:12px;padding:12px 13px;border-radius:13px;background:#451616;border:1px solid #8c3b3b;color:#ffd7d7;font-size:12px}.trust{margin-top:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.trust div{padding:10px 8px;text-align:center;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.06);color:#9fc4ae;font-size:9px;line-height:1.4}.trust b{display:block;color:#ecfff3;font-size:13px;margin-bottom:3px}small{display:block;margin-top:18px;color:#7fa38f;text-align:center;font-size:10px;line-height:1.6}
-@media(max-width:520px){.shell{padding:14px}.card{padding:23px;border-radius:26px}.brand h1{font-size:24px}.logo{width:68px;height:68px}.trust{grid-template-columns:1fr}}
+*{box-sizing:border-box}
+:root{--green:#087f5b;--green2:#18c777;--deep:#063d2b;--ink:#16352a;--muted:#63766e;--line:#dcebe4}
+body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#edf8f3;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:-8vh -6vw;z-index:-2;pointer-events:none;background-image:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}");background-size:760px auto;background-position:center -105px;background-repeat:repeat-x;opacity:.14;filter:blur(3px);transform:scale(1.04)}
+body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.48),rgba(244,250,247,.74) 48%,rgba(255,255,255,.9))}
+.shell{min-height:100vh;display:grid;place-items:center;padding:34px 20px}
+.card{position:relative;width:min(500px,100%);padding:32px;border-radius:30px;background:rgba(255,255,255,.84);border:1px solid rgba(255,255,255,.95);box-shadow:0 28px 80px rgba(16,70,50,.18);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);overflow:hidden}
+.card:before{content:"";position:absolute;left:-120px;bottom:-150px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(24,199,119,.13),transparent 70%);pointer-events:none}
+.card:after{content:"";position:absolute;right:-110px;top:-120px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(229,194,75,.12),transparent 68%);pointer-events:none}
+.brand{display:flex;align-items:center;gap:16px;position:relative;z-index:1}
+.logo{width:82px;height:82px;flex:0 0 82px;border-radius:25px;display:grid;place-items:center;background:linear-gradient(145deg,#087f5b,#052f21);border:1px solid rgba(8,127,91,.24);box-shadow:0 14px 30px rgba(8,127,91,.24);overflow:hidden}
+.logo svg{width:68px;height:68px;display:block}
+.eyebrow{font-size:11px;font-weight:950;letter-spacing:.18em;color:var(--green);text-transform:uppercase}
+.brand h1{margin:5px 0 0;font-size:30px;line-height:1.08;letter-spacing:-.045em;color:#12362a}
+.sub{margin:19px 0 23px;color:#60746b;line-height:1.55;font-size:14px;max-width:420px;position:relative;z-index:1}
+.form-area{position:relative;z-index:1}
+label{display:block;margin:15px 0 8px;font-size:13px;font-weight:850;color:#23483a}
+input{width:100%;min-height:52px;padding:14px 16px;border-radius:15px;border:1px solid #cfe3da;background:rgba(250,255,252,.94);color:#17372c;font-size:16px;outline:none;transition:.2s}
+input:focus{border-color:#1ac979;box-shadow:0 0 0 4px rgba(26,201,121,.12);background:#fff}
+button{width:100%;min-height:54px;margin-top:21px;padding:14px 18px;border:0;border-radius:15px;background:linear-gradient(135deg,#20df7d,#0db765);color:#032b1d;font-weight:950;font-size:16px;cursor:pointer;box-shadow:0 14px 28px rgba(13,183,101,.22);transition:transform .18s,box-shadow .18s}
+button:hover{transform:translateY(-1px);box-shadow:0 17px 32px rgba(13,183,101,.28)}
+.signup{display:block;text-align:center;margin-top:16px;color:var(--green);text-decoration:none;font-size:13px;font-weight:850;position:relative;z-index:1}
+.signup:hover{text-decoration:underline}
+.errors{margin-bottom:13px;padding:12px 14px;border-radius:13px;background:#fff1f1;border:1px solid #f1c4c4;color:#9b2e2e;font-size:13px}
+.trust{margin-top:23px;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;position:relative;z-index:1}
+.trust div{padding:12px 8px;text-align:center;border-radius:14px;background:rgba(244,251,248,.86);border:1px solid #dfece6;color:#6a7e75;font-size:10px;line-height:1.35}
+.trust b{display:block;color:var(--green);font-size:17px;margin-bottom:5px}
+small{display:block;margin-top:18px;color:#7b8d86;text-align:center;font-size:10px;line-height:1.6;position:relative;z-index:1}
+.brand-note{display:inline-flex;align-items:center;gap:7px;margin-top:12px;padding:7px 10px;border-radius:999px;background:#e8f8f0;color:#087f5b;font-size:10px;font-weight:850;border:1px solid #d4eee2}
+.brand-note i{width:7px;height:7px;border-radius:50%;background:#16c775;box-shadow:0 0 0 4px rgba(22,199,117,.11)}
+@media(max-width:560px){.shell{padding:18px 12px}.card{padding:24px 20px;border-radius:25px}.brand{gap:13px}.logo{width:70px;height:70px;flex-basis:70px;border-radius:21px}.logo svg{width:58px;height:58px}.brand h1{font-size:25px}.sub{font-size:13px}.trust{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="shell"><main class="card">
+<div class="shell">
+<main class="card">
 <div class="brand">
-<div class="logo">
-<svg viewBox="0 0 128 128" aria-label="Shopiva Delivery">
-<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e7ff72"/><stop offset=".5" stop-color="#37ee83"/><stop offset="1" stop-color="#04a65c"/></linearGradient><linearGradient id="y" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7ad"/><stop offset=".55" stop-color="#ffd45a"/><stop offset="1" stop-color="#d68e13"/></linearGradient></defs>
-<path d="M64 9l6 16 16-10-4 18 18 3-15 10 12 14-18-5-4 19-11-15-11 15-4-19-18 5 12-14-15-10 18-3-4-18 16 10z" fill="url(#y)"/>
-<path d="M27 48h50l12 11h12v27H91a12 12 0 0 1-24 0H55a12 12 0 0 1-24 0H23V58a10 10 0 0 1 4-10z" fill="#f5fff9"/>
-<path d="M77 54h8l8 9H77z" fill="#9ff7bf"/>
-<circle cx="43" cy="86" r="8" fill="#06351f"/><circle cx="79" cy="86" r="8" fill="#06351f"/>
-<path d="M38 64h31" stroke="url(#g)" stroke-width="7" stroke-linecap="round"/><path d="M32 73h37" stroke="#20d979" stroke-width="6" stroke-linecap="round"/>
+<div class="logo" aria-label="Shopiva Delivery logo">
+<svg viewBox="0 0 128 128" role="img">
+<defs>
+<linearGradient id="truck" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#dfffee"/></linearGradient>
+<linearGradient id="green" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#48f18d"/><stop offset="1" stop-color="#08b969"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3a2"/><stop offset=".55" stop-color="#ffd45a"/><stop offset="1" stop-color="#d99b22"/></linearGradient>
+</defs>
+<path d="M64 8l6 15 17-9-5 17 18 4-16 9 12 14-18-4-3 18-11-14-11 14-3-18-18 4 12-14-16-9 18-4-5-17 17 9z" fill="url(#gold)"/>
+<path d="M22 51c0-5 4-9 9-9h42l11 13h16c4 0 7 3 7 7v23H91a13 13 0 0 1-25 0H55a13 13 0 0 1-25 0H22z" fill="url(#truck)"/>
+<path d="M75 49h8l12 13H75z" fill="#9af4bd"/>
+<path d="M30 59h39" stroke="url(#green)" stroke-width="8" stroke-linecap="round"/>
+<path d="M30 70h36" stroke="#1ed77a" stroke-width="6" stroke-linecap="round"/>
+<circle cx="43" cy="85" r="9" fill="#073b27"/><circle cx="78" cy="85" r="9" fill="#073b27"/>
+<circle cx="43" cy="85" r="3" fill="#64ef9e"/><circle cx="78" cy="85" r="3" fill="#64ef9e"/>
+<path d="M104 91h7" stroke="#64ef9e" stroke-width="4" stroke-linecap="round"/>
 </svg>
 </div>
-<div><div class="eyebrow">Shopiva Delivery</div><h1>Secure rider access</h1></div>
+<div>
+<div class="eyebrow">Shopiva Delivery</div>
+<h1>Secure rider access</h1>
+<div class="brand-note"><i></i>Trusted delivery network</div>
 </div>
+</div>
+
 <div class="sub">Your private delivery workspace for assigned orders, live GPS, customer navigation and verified handover.</div>
+
+<div class="form-area">
 {% if form.non_field_errors %}<div class="errors">{{ form.non_field_errors }}</div>{% endif %}
 <form method="post" autocomplete="on">{% csrf_token %}
 <label for="{{ form.username.id_for_label }}">Shopiva username</label>{{ form.username }}
 <label for="{{ form.password.id_for_label }}">Password</label>{{ form.password }}
 <button type="submit">Sign in to Delivery</button>
 </form>
+</div>
+
 <a class="signup" href="{% url 'delivery_signup' %}">New delivery partner? Create an account →</a>
-<div class="trust"><div><b>🔒</b>Protected login</div><div><b>📍</b>Live GPS</div><div><b>✓</b>Verified handover</div></div>
-<small>Only approved Shopiva delivery partners can access customer orders. Location sharing begins only after you sign in and grant GPS permission.</small>
-</main></div>
-</body></html>
+
+<div class="trust">
+<div><b>🔒</b>Protected login</div>
+<div><b>📍</b>Live GPS</div>
+<div><b>✓</b>Verified handover</div>
+</div>
+<small>Only approved Shopiva delivery partners can access customer orders. Location sharing begins after sign-in and GPS permission.</small>
+</main>
+</div>
+</body>
+</html>
