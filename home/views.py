@@ -4,6 +4,7 @@ import uuid
 from django.conf import settings
 
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.db import IntegrityError, transaction
 from django.contrib.auth import login as auth_login, logout as auth_logout, get_user_model
 from django.contrib.auth.decorators import login_required
