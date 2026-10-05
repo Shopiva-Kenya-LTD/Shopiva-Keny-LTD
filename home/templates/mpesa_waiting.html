@@ -43,8 +43,9 @@
         }
         .hero-flex{display:flex;align-items:flex-start;gap:18px}
         .icon{
-            width:66px;height:66px;border-radius:21px;display:grid;place-items:center;flex:none;
-            background:#dff5ea;color:var(--brand);font-size:31px;font-weight:950
+            width:66px;height:66px;border-radius:21px;display:block;flex:none;
+            object-fit:cover;
+            box-shadow:0 8px 18px rgba(8,127,91,.16)
         }
         .eyebrow{font-size:10px;font-weight:950;letter-spacing:.14em;color:var(--brand);text-transform:uppercase}
         h1{font-size:clamp(28px,5vw,42px);line-height:1.02;letter-spacing:-.045em;margin:6px 0 10px}
@@ -105,7 +106,7 @@
     <main class="card">
         <section class="hero">
             <div class="hero-flex">
-                <div class="icon">₿</div>
+                <img class="icon" src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya logo">
                 <div>
                     <div class="eyebrow">Secure M-PESA checkout</div>
                     <h1>Complete your payment</h1>
