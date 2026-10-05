@@ -7,7 +7,7 @@ psycopg-binary==3.3.5
 python-dotenv==1.2.3
 sqlparse==0.6.0
 Pillow==12.3.0
-openai>=2.0.0,<3
+openai>=3.19.0,<4
 whitenoise>=6.9,<7
 cloudinary==1.46.2
 requests==2.34.2
