@@ -89,8 +89,13 @@ def screen_video(uploaded_file):
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as src:
             src.write(uploaded_file.read())
             src_path = src.name
+        try:
+            import imageio_ffmpeg
+            ffmpeg_bin = imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            ffmpeg_bin = "ffmpeg"
         frame = subprocess.run(
-            ["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", "0", "-i", src_path,
+            [ffmpeg_bin, "-hide_banner", "-loglevel", "error", "-ss", "0", "-i", src_path,
              "-frames:v", "1", "-f", "image2pipe", "-vcodec", "mjpeg", "pipe:1"],
             capture_output=True,
             timeout=20,
