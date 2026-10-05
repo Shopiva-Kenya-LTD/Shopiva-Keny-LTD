@@ -76,19 +76,6 @@ def seller_product_add_map(request):
                         seller.business_longitude = longitude
                         seller.save(update_fields=["business_address", "business_latitude", "business_longitude"])
                         product.save()
-                        gallery_files = getattr(product, "_shopiva_gallery_files", [])
-                        if gallery_files:
-                            product.media.all().delete()
-                            for position, image_file in enumerate(gallery_files[:8]):
-                                review = screen_image(image_file)
-                                ProductMedia.objects.create(
-                                    product=product,
-                                    image=enhance_product_image(image_file, f"{product.name}-gallery-{position + 1}"),
-                                    position=position,
-                                    ai_status=review["status"],
-                                    ai_score=review["score"],
-                                    ai_notes=review["notes"],
-                                )
                         video_files = getattr(product, "_shopiva_video_files", [])
                         if video_files:
                             product.videos.all().delete()
@@ -149,20 +136,9 @@ def seller_product_edit_map(request, product_id):
                         seller.business_latitude = latitude
                         seller.business_longitude = longitude
                         seller.save(update_fields=["business_address", "business_latitude", "business_longitude"])
-                        updated_product.save()
-                        gallery_files = getattr(updated_product, "_shopiva_gallery_files", [])
-                        if gallery_files:
+                        if getattr(updated_product, "_shopiva_gallery_files", []):
                             updated_product.media.all().delete()
-                            for position, image_file in enumerate(gallery_files[:8]):
-                                review = screen_image(image_file)
-                                ProductMedia.objects.create(
-                                    product=updated_product,
-                                    image=enhance_product_image(image_file, f"{updated_product.name}-gallery-{position + 1}"),
-                                    position=position,
-                                    ai_status=review["status"],
-                                    ai_score=review["score"],
-                                    ai_notes=review["notes"],
-                                )
+                        updated_product.save()
                         video_files = getattr(updated_product, "_shopiva_video_files", [])
                         if video_files:
                             updated_product.videos.all().delete()
