@@ -10,11 +10,10 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import SellerProductForm
-from .media_authenticity import screen_image, screen_video
-from .media_pipeline import enhance_product_image
+from .media_authenticity import screen_video
 from .indexnow import submit_urls
 from .models import CustomerAddress, DeliveryAgent, DeliveryLocationPing, Order, Product
-from .models_product_media import ProductMedia, ProductVideo
+from .models_product_media import ProductVideo
 
 logger = logging.getLogger(__name__)
 
