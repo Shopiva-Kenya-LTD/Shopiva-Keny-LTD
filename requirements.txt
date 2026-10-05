@@ -14,3 +14,4 @@ requests==2.34.2
 django-axes==8.3.1
 twilio>=9.0,<10
 mcp>=2,<3
+imageio-ffmpeg>=0.6,<1
