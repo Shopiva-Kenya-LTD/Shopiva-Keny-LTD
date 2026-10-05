@@ -19,6 +19,17 @@ class ProductMedia(models.Model):
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(7)],
     )
+    ai_status = models.CharField(
+        max_length=24,
+        default="needs_review",
+        choices=(
+            ("likely_real", "Likely real"),
+            ("needs_review", "Needs review"),
+            ("likely_ai", "Likely AI-generated"),
+        ),
+    )
+    ai_score = models.PositiveSmallIntegerField(default=50)
+    ai_notes = models.CharField(max_length=500, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
