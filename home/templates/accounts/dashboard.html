@@ -2,40 +2,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Account | Shopiva Kenya</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
-    <style>
-      *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#eef5f1;color:#14201b;position:relative;min-height:100vh;overflow-x:hidden}body:before{content:"";position:fixed;inset:-40px;background-image:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}");background-repeat:repeat;background-position:center;background-size:620px 620px;opacity:.18;filter:blur(1px);pointer-events:none;z-index:0;transform:scale(1.03)}body:after{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(238,245,241,.68),rgba(238,245,241,.80));pointer-events:none;z-index:0}.topbar,main{position:relative;z-index:1}.topbar{background:#087f5b;color:#fff;padding:15px 24px;position:sticky;top:0;z-index:50}.topbar-inner{max-width:1160px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px}.logo{color:#fff;text-decoration:none;font-size:25px;font-weight:900}.logo span{color:#b7f7dc}.shopiva-brand{display:flex;align-items:center;gap:10px}.shopiva-brand>img{width:44px;height:44px;object-fit:contain;border-radius:12px;background:rgba(255,255,255,.12);padding:4px;box-shadow:0 4px 12px rgba(0,0,0,.12)}.top-actions{display:flex;align-items:center;gap:9px}.top-actions a{color:#fff;text-decoration:none;font-weight:800;font-size:13px;padding:9px 12px;border-radius:10px}.top-actions .notice{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24)}.container{max-width:1160px;margin:24px auto;padding:0 18px}.notice-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(220,232,225,.92);border-radius:16px;padding:10px 14px;margin-bottom:14px;box-shadow:0 8px 24px rgba(16,24,40,.06)}.notice-bar a{color:#087f5b;text-decoration:none;font-weight:900;font-size:13px}.welcome{background:rgba(255,255,255,.80);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:22px;padding:25px;margin-bottom:18px;box-shadow:0 12px 35px rgba(16,24,40,.08);border:1px solid rgba(229,235,231,.92)}.welcome h1{margin:0 0 7px;font-size:30px}.welcome p{margin:0;color:#69766f}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}.card{background:rgba(255,255,255,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(226,233,229,.92);border-radius:18px;padding:20px;text-decoration:none;color:inherit;box-shadow:0 8px 25px rgba(16,24,40,.06);transition:.2s}.card:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(16,24,40,.08)}.icon{font-size:27px;margin-bottom:10px}.card h2{font-size:17px;margin:0 0 7px}.card p{color:#6e7b74;font-size:12px;line-height:1.5;margin:0}.shopiva-map-card{margin-top:18px}.location-picker{margin-top:18px;background:rgba(255,255,255,.80);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(220,231,225,.92);border-radius:22px;padding:20px;box-shadow:0 12px 35px rgba(16,24,40,.08)}.location-picker-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.location-picker h2{margin:4px 0;font-size:22px}.location-picker p{margin:0;color:#68766f;font-size:12px}.location-kicker{font-size:10px;font-weight:900;letter-spacing:.14em;color:#059669}.location-live{background:#ecfdf5;color:#047857;border:1px solid #bbf7d0;padding:7px 10px;border-radius:999px;font-size:9px;font-weight:900}.location-search{display:grid;grid-template-columns:1fr auto;gap:8px;margin:14px 0 9px}.location-search input{width:100%;padding:12px 14px;border:1px solid #d6e2dc;border-radius:11px;background:#fbfdfc;font-size:12px;outline:0}.location-search button{border:0;border-radius:11px;padding:11px 16px;background:#0b8f61;color:#fff;font-weight:900;cursor:pointer}.location-tools{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0}.location-tool{border:1px solid #d6e2dc;background:#fff;color:#234035;border-radius:10px;padding:9px 12px;font-weight:800;font-size:10px;cursor:pointer;text-decoration:none}.location-tool.primary{background:#0b8f61;color:#fff;border-color:#0b8f61}.location-map{height:390px;border-radius:16px;overflow:hidden;border:1px solid #dce6e1;background:#eaf1ed}.location-status{margin-top:9px;padding:10px 12px;border-radius:10px;background:#fff8ec;color:#8a5e25;border:1px solid #efdcbf;font-size:10px}.location-status.ok{background:#ecfdf3;color:#166534;border-color:#bbf7d0}.location-note{margin-top:7px;color:#718079;font-size:9px;line-height:1.5}.back-shop{display:inline-block;margin-top:18px;color:#087f5b;text-decoration:none;font-weight:800}
-      @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.ai-form{grid-template-columns:1fr 1fr}.ai-form input{grid-column:1/-1}}@media(max-width:580px){.topbar-inner{align-items:flex-start;flex-direction:column}.top-actions{width:100%;justify-content:space-between}.cards{grid-template-columns:1fr}.ai-head,.location-picker-head{flex-direction:column}.ai-form{grid-template-columns:1fr}.container{padding:0 12px}.welcome h1{font-size:25px}.notice-bar{align-items:flex-start;flex-direction:column}.location-search{grid-template-columns:1fr}.location-map{height:320px}}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account | Shopiva Kenya</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+<style>
+*{box-sizing:border-box}
+:root{--green:#087f5b;--green2:#0b9a6d;--soft:#effaf6;--ink:#18241f;--muted:#6c7d75;--line:#dce9e3;--paper:#f7faf8;--white:#fff;--shadow:0 18px 45px rgba(19,50,39,.07)}
+body{margin:0;background:linear-gradient(180deg,#f4faf7 0%,#fff 42%);color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 20%,rgba(8,127,91,.055),transparent 35%);pointer-events:none;z-index:0}
+a{text-decoration:none;color:inherit}
+.topbar{position:relative;z-index:2;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar-inner{width:min(900px,calc(100% - 32px));min-height:86px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.brand{display:flex;align-items:center;gap:11px}
+.brand img{width:47px;height:47px;object-fit:contain;border-radius:14px;box-shadow:0 7px 18px rgba(8,127,91,.15)}
+.brand-name{font-size:20px;font-weight:950;letter-spacing:-.03em}
+.brand-name span{color:var(--green)}
+.top-actions{display:flex;align-items:center;gap:8px}
+.top-actions a,.top-actions button{border:1px solid #cfe3da;background:#fff;color:var(--green);border-radius:11px;padding:10px 13px;font-size:11px;font-weight:900;cursor:pointer}
+.top-actions .notice{background:var(--green);border-color:var(--green);color:#fff}
+.container{width:min(900px,calc(100% - 32px));margin:26px auto 60px;position:relative;z-index:1}
+.panel{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:25px;box-shadow:var(--shadow);overflow:hidden}
+.hero{padding:34px 34px 29px;background:linear-gradient(135deg,#f1fbf7 0%,#fff 68%);border-bottom:1px solid var(--line)}
+.hero-row{display:flex;align-items:flex-start;gap:19px}
+.hero-logo{width:66px;height:66px;border-radius:20px;object-fit:contain;flex:0 0 66px;box-shadow:0 10px 24px rgba(8,127,91,.16)}
+.kicker{font-size:10px;font-weight:1000;letter-spacing:.18em;color:var(--green);margin:1px 0 6px}
+.hero h1{margin:0 0 9px;font-size:clamp(32px,5vw,48px);line-height:1;letter-spacing:-.055em}
+.hero p{margin:0;color:var(--muted);font-size:13px;line-height:1.7;max-width:690px}
+.body{padding:26px 34px 32px}
+.notice-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f6fbf8;border:1px solid #dcece5;border-radius:15px;padding:11px 13px;margin-bottom:18px;font-size:11px}
+.notice-bar a{color:var(--green);font-weight:950}
+.section-title{font-size:16px;margin:0 0 12px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+.card{display:flex;align-items:flex-start;gap:13px;background:#fff;border:1px solid var(--line);border-radius:17px;padding:16px;text-decoration:none;transition:.18s;min-height:100px}
+.card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(19,50,39,.08);border-color:#c9dfd5}
+.icon-box{width:43px;height:43px;border-radius:13px;background:var(--soft);display:grid;place-items:center;font-size:21px;flex:0 0 43px}
+.card h2{font-size:14px;margin:1px 0 6px}
+.card p{font-size:10px;line-height:1.55;color:var(--muted);margin:0}
+.nia-widget{margin:0 0 20px}
+.location-picker{margin-top:20px;border:1px solid var(--line);border-radius:20px;background:#fff;overflow:hidden}
+.location-head{padding:19px 20px;background:#f2faf6;border-bottom:1px solid var(--line)}
+.location-head h2{margin:3px 0 5px;font-size:18px}
+.location-head p{margin:0;color:var(--muted);font-size:10px;line-height:1.55}
+.location-tools-wrap{padding:18px 20px}
+.location-search{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:9px}
+.location-search input{width:100%;padding:12px 14px;border:1px solid #d6e2dc;border-radius:11px;background:#fbfdfc;font-size:11px;outline:0}
+.location-search button{border:0;border-radius:11px;padding:11px 15px;background:var(--green);color:#fff;font-weight:900;cursor:pointer}
+.location-tools{display:flex;flex-wrap:wrap;gap:8px;margin:9px 0}
+.location-tool{border:1px solid #d6e2dc;background:#fff;color:#234035;border-radius:10px;padding:9px 12px;font-weight:800;font-size:10px;cursor:pointer}
+.location-tool.primary{background:var(--green);color:#fff;border-color:var(--green)}
+.location-map{height:330px;border-radius:14px;overflow:hidden;border:1px solid #dce6e1;background:#eaf1ed}
+.location-status{margin-top:9px;padding:10px 12px;border-radius:10px;background:#fff8ec;color:#8a5e25;border:1px solid #efdcbf;font-size:10px}
+.location-status.ok{background:#ecfdf3;color:#166534;border-color:#bbf7d0}
+.back-shop{display:inline-block;margin-top:18px;color:var(--green);font-weight:900;font-size:11px}
+@media(max-width:620px){.topbar-inner{min-height:76px}.top-actions a:not(.notice),.top-actions form{display:none}.container{width:min(100% - 20px,900px);margin-top:14px}.hero{padding:25px 20px}.body{padding:20px}.hero-row{gap:13px}.hero-logo{width:56px;height:56px;flex-basis:56px;border-radius:17px}.hero h1{font-size:31px}.cards{grid-template-columns:1fr}.location-search{grid-template-columns:1fr}.location-map{height:290px}}
+</style>
 </head>
 <body>
-<header class="topbar"><div class="topbar-inner"><a href="/" class="logo shopiva-brand"><img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva logo"><span>Shopiva<span>Kenya</span></span></a><div class="top-actions"><a class="notice" href="{% url 'customer_notifications' %}">🔔 Notifications</a><form method="post" action="{% url 'customer_logout' %}" style="display:inline">{% csrf_token %}<button type="submit" class="link-button">Sign out</button></form></div></div></header>
+<header class="topbar">
+ <div class="topbar-inner">
+  <a href="/" class="brand"><img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya logo"><span class="brand-name">Shopiva<span>Kenya</span></span></a>
+  <div class="top-actions">
+   <a class="notice" href="{% url 'customer_notifications' %}">🔔 Notifications</a>
+   <form method="post" action="{% url 'customer_logout' %}" style="display:inline">{% csrf_token %}<button type="submit">Sign out</button></form>
+  </div>
+ </div>
+</header>
 <main class="container">
-  <div class="notice-bar"><span>🔔 Stay updated on orders, payments and delivery.</span><a href="{% url 'customer_notifications' %}">Open Notification Center →</a></div>
-  <section class="welcome"><h1>Welcome, {{ request.user.username }} 👋</h1><p>Your Shopiva customer account is ready. Manage orders, delivery and notifications from one place.</p></section>
-  <section class="nia-widget" data-nia-widget data-role="customer" data-csrf-token="{{ csrf_token }}" aria-label="Nia live customer copilot"></section>
-  <link rel="stylesheet" href="/static/shopiva/nia-widget.css?v=nia-20260929">
-  <script src="/static/shopiva/nia-widget.js?v=nia-20260929"></script>
-  <section class="cards">
-    <a href="{% url 'customer_orders' %}" class="card"><div class="icon">📦</div><h2>My Orders</h2><p>View purchases, order status and delivery events.</p></a>
-    <a href="{% url 'customer_profile' %}" class="card"><div class="icon">👤</div><h2>My Profile</h2><p>Manage your personal account information.</p></a>
-    <a href="{% url 'customer_addresses' %}" class="card"><div class="icon">📍</div><h2>Saved Addresses</h2><p>Manage your delivery addresses.</p></a>
-    <a href="{% url 'customer_wishlist' %}" class="card"><div class="icon">❤️</div><h2>Wishlist</h2><p>Keep products you want to buy later.</p></a>
-    <a href="{% url 'support_center' %}" class="card"><div class="icon">🎧</div><h2>Contact Center</h2><p>Get help, report an issue and follow your support cases.</p></a>
-  </section>
-  <section class="location-picker" aria-label="Customer delivery location picker">
-    <div class="location-picker-head"><div><span class="location-kicker">SHOPIVA SMART LOCATION</span><h2>📍 Delivery Location</h2><p>Search Kenya, click the map, drag the pin, or use your current location — the same experience as the seller location picker.</p></div><span class="location-live">● MAP READY</span></div>
-    <div class="location-search"><input id="customer-dashboard-place-search" type="search" placeholder="Search Kenya: estate, street, town or landmark" autocomplete="off"><button type="button" id="customer-dashboard-search-btn">Search map</button></div>
-    <div class="location-tools"><button type="button" class="location-tool primary" id="customer-dashboard-gps">⌖ Use my current location</button><button type="button" class="location-tool" id="customer-dashboard-clear">Clear pin</button><a class="location-tool" id="customer-dashboard-google" href="https://www.google.com/maps/search/?api=1&query=-1.2921,36.8219" target="_blank" rel="noopener">Open Google Maps ↗</a></div>
-    <div id="customer-dashboard-map" class="location-map"></div>
-    <div id="customer-dashboard-status" class="location-status">Select a place or click the map to set your exact delivery location.</div>
-    <div class="location-note">You can use this picker to verify a location before shopping. The checkout page remains the final step that attaches the selected coordinates to a new order.</div>
-  </section>
-  {% include "includes/delivery_network_map.html" %}
-  <a href="/" class="back-shop">← Continue shopping</a>
+ <section class="panel">
+  <div class="hero">
+   <div class="hero-row">
+    <img class="hero-logo" src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya">
+    <div>
+     <div class="kicker">SHOPIVA CUSTOMER ACCOUNT</div>
+     <h1>Welcome, {{ request.user.username }} 👋</h1>
+     <p>Your Shopiva account is your control center. Manage your orders, payments, delivery, saved addresses, wishlist and support from one place.</p>
+    </div>
+   </div>
+  </div>
+  <div class="body">
+   <div class="notice-bar"><span>🔔 Stay updated on orders, payments and delivery.</span><a href="{% url 'customer_notifications' %}">Open Notification Center →</a></div>
+   <h2 class="section-title">Your Shopiva account</h2>
+   <section class="cards">
+    <a href="{% url 'customer_orders' %}" class="card"><div class="icon-box">📦</div><div><h2>My Orders</h2><p>View purchases, payment state, order status and delivery events.</p></div></a>
+    <a href="{% url 'customer_profile' %}" class="card"><div class="icon-box">👤</div><div><h2>My Profile</h2><p>Manage your personal account information and details.</p></div></a>
+    <a href="{% url 'customer_addresses' %}" class="card"><div class="icon-box">📍</div><div><h2>Saved Addresses</h2><p>Keep delivery locations ready for faster checkout.</p></div></a>
+    <a href="{% url 'customer_wishlist' %}" class="card"><div class="icon-box">❤️</div><div><h2>Wishlist</h2><p>Save products you want to compare or buy later.</p></div></a>
+    <a href="{% url 'support_center' %}" class="card"><div class="icon-box">🎧</div><div><h2>Contact Center</h2><p>Get help, report an issue and follow your support cases.</p></div></a>
+    <a href="{% url 'products' %}" class="card"><div class="icon-box">🛍️</div><div><h2>Continue Shopping</h2><p>Browse the Shopiva marketplace and discover products.</p></div></a>
+   </section>
+   <section class="nia-widget" data-nia-widget data-role="customer" data-csrf-token="{{ csrf_token }}" aria-label="Nia live customer copilot"></section>
+   <link rel="stylesheet" href="/static/shopiva/nia-widget.css?v=nia-20260929">
+   <script src="/static/shopiva/nia-widget.js?v=nia-20260929"></script>
+   <section class="location-picker" aria-label="Customer delivery location picker">
+    <div class="location-head"><div class="kicker">SHOPIVA SMART LOCATION</div><h2>📍 Delivery Location</h2><p>Search Kenya, click the map, drag the pin, or use your current location.</p></div>
+    <div class="location-tools-wrap">
+     <div class="location-search"><input id="customer-dashboard-place-search" type="search" placeholder="Search Kenya: estate, street, town or landmark" autocomplete="off"><button type="button" id="customer-dashboard-search-btn">Search map</button></div>
+     <div class="location-tools"><button type="button" class="location-tool primary" id="customer-dashboard-gps">⌖ Use my current location</button><button type="button" class="location-tool" id="customer-dashboard-clear">Clear pin</button><a class="location-tool" id="customer-dashboard-google" href="https://www.google.com/maps/search/?api=1&query=-1.2921,36.8219" target="_blank" rel="noopener">Open Google Maps ↗</a></div>
+     <div id="customer-dashboard-map" class="location-map"></div>
+     <div id="customer-dashboard-status" class="location-status">Select a place or click the map to set your exact delivery location.</div>
+    </div>
+   </section>
+   {% include "includes/delivery_network_map.html" %}
+   <a href="/" class="back-shop">← Continue shopping</a>
+  </div>
+ </section>
 </main>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script>
@@ -44,13 +115,13 @@
  if(!mapEl||typeof L==='undefined')return;
  const home=[-1.2921,36.8219];let map=L.map(mapEl,{scrollWheelZoom:false,zoomControl:true,minZoom:3,maxZoom:19}).setView(home,6);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);let marker=null,userMarker=null;
  const icon=L.divIcon({className:'customer-dashboard-pin',html:'📍',iconSize:[34,34],iconAnchor:[17,30]});const userIcon=L.divIcon({className:'customer-dashboard-user-pin',html:'🔵',iconSize:[30,30],iconAnchor:[15,15]});
- function setStatus(t,ok){status.className='location-status'+(ok?' ok':'');status.textContent=t;}
- function setPoint(a,b,text){a=Number(a);b=Number(b);if(!Number.isFinite(a)||!Number.isFinite(b))return;if(!marker){marker=L.marker([a,b],{icon,draggable:true}).addTo(map);marker.on('dragend',()=>{const p=marker.getLatLng();setPoint(p.lat,p.lng,search.value||'Pinned delivery location')});}else marker.setLatLng([a,b]);if(text)search.value=text;map.setView([a,b],15);googleLink.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a+','+b);setStatus('✓ Exact delivery location pinned: '+a.toFixed(6)+', '+b.toFixed(6),true);}
+ function setStatus(t,ok){status.className='location-status'+(ok?' ok':'');status.textContent=t}
+ function setPoint(a,b,text){a=Number(a);b=Number(b);if(!Number.isFinite(a)||!Number.isFinite(b))return;if(!marker){marker=L.marker([a,b],{icon,draggable:true}).addTo(map);marker.on('dragend',()=>{const p=marker.getLatLng();setPoint(p.lat,p.lng,search.value||'Pinned delivery location')})}else marker.setLatLng([a,b]);if(text)search.value=text;map.setView([a,b],15);googleLink.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(a+','+b);setStatus('✓ Exact delivery location pinned: '+a.toFixed(6)+', '+b.toFixed(6),true)}
  map.on('click',e=>setPoint(e.latlng.lat,e.latlng.lng,search.value||'Pinned delivery location'));
- async function searchPlace(){const q=(search.value||'').trim();if(!q){setStatus('Enter a Kenyan estate, street, town or landmark to search.');return;}setStatus('Searching the map…');try{const url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=ke&limit=6&q='+encodeURIComponent(q);const r=await fetch(url,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error();const results=await r.json();if(!results.length){setStatus('No Kenyan location matched that search. Try a nearby town, estate, street or landmark.');return;}const best=results[0];setPoint(best.lat,best.lon,best.display_name||q);}catch(_){setStatus('Map search is temporarily unavailable. You can still click the map or use GPS.');}}
+ async function searchPlace(){const q=(search.value||'').trim();if(!q){setStatus('Enter a Kenyan estate, street, town or landmark to search.');return}setStatus('Searching the map…');try{const url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=ke&limit=6&q='+encodeURIComponent(q);const rr=await fetch(url,{headers:{Accept:'application/json'}});if(!rr.ok)throw new Error();const results=await rr.json();if(!results.length){setStatus('No Kenyan location matched that search. Try a nearby town, estate, street or landmark.');return}const best=results[0];setPoint(best.lat,best.lon,best.display_name||q)}catch(_){setStatus('Map search is temporarily unavailable. You can still click the map or use GPS.')}}
  searchBtn.onclick=searchPlace;search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchPlace()}});
- gps.onclick=()=>{if(!navigator.geolocation){setStatus('This browser does not support device location.');return;}setStatus('Finding your current location…');navigator.geolocation.getCurrentPosition(p=>{if(userMarker)userMarker.setLatLng([p.coords.latitude,p.coords.longitude]);else userMarker=L.marker([p.coords.latitude,p.coords.longitude],{icon:userIcon}).addTo(map).bindPopup('📍 Your current location');setPoint(p.coords.latitude,p.coords.longitude,'Current device location')},()=>setStatus('Location permission was denied or unavailable. You can still search or tap the map.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});};
- clear.onclick=()=>{search.value='';if(marker){map.removeLayer(marker);marker=null}map.setView(home,6);googleLink.href='https://www.google.com/maps/search/?api=1&query=-1.2921,36.8219';setStatus('Select a place or click the map to set your exact delivery location.');};
+ gps.onclick=()=>{if(!navigator.geolocation){setStatus('This browser does not support device location.');return}setStatus('Finding your current location…');navigator.geolocation.getCurrentPosition(p=>{if(userMarker)userMarker.setLatLng([p.coords.latitude,p.coords.longitude]);else userMarker=L.marker([p.coords.latitude,p.coords.longitude],{icon:userIcon}).addTo(map).bindPopup('📍 Your current location');setPoint(p.coords.latitude,p.coords.longitude,'Current device location')},()=>setStatus('Location permission was denied or unavailable. You can still search or tap the map.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000})};
+ clear.onclick=()=>{search.value='';if(marker){map.removeLayer(marker);marker=null}map.setView(home,6);googleLink.href='https://www.google.com/maps/search/?api=1&query=-1.2921,36.8219';setStatus('Select a place or click the map to set your exact delivery location.')};
  setTimeout(()=>map.invalidateSize(),300);
 })();
 </script>
