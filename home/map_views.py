@@ -9,9 +9,12 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import SellerProductForm\nfrom .media_authenticity import screen_image, screen_video
+from .forms import SellerProductForm
+from .media_authenticity import screen_image, screen_video
+from .media_pipeline import enhance_product_image
 from .indexnow import submit_urls
 from .models import CustomerAddress, DeliveryAgent, DeliveryLocationPing, Order, Product
+from .models_product_media import ProductMedia, ProductVideo
 
 logger = logging.getLogger(__name__)
 
