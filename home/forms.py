@@ -11,6 +11,7 @@ from PIL import Image, UnidentifiedImageError
 
 from .models import Product, ProductReview
 from .media_pipeline import enhance_product_image, upload_product_image
+from .media_authenticity import screen_image
 from .shopiva_seller_catalog import (
     catalog_search_choices as base_catalog_search_choices,
     resolve_catalog_item as base_resolve_catalog_item,
@@ -488,6 +489,10 @@ class SellerProductForm(forms.ModelForm):
 
         uploaded_main = self.files.get("image")
         if uploaded_main:
+            review = screen_image(uploaded_main)
+            product.media_ai_status = review["status"]
+            product.media_ai_score = review["score"]
+            product.media_ai_notes = review["notes"]
             enhanced = enhance_product_image(uploaded_main, product.name)
             try:
                 # Store the Cloudinary public ID as text in CloudinaryField.
