@@ -38,12 +38,12 @@ def notification_center(request):
             notification_id = request.POST.get("notification_id")
             if notification_id:
                 Notification.objects.filter(id=notification_id, user=request.user, is_read=False).update(is_read=True)
-        elif action == "delete" and role == "seller":
+        elif action == "delete" and role != "admin":
             notification_id = request.POST.get("notification_id")
             if notification_id:
                 Notification.objects.filter(id=notification_id, user=request.user).delete()
                 messages.success(request, "Notification deleted.")
-        elif action == "delete_selected" and role == "seller":
+        elif action == "delete_selected" and role != "admin":
             notification_ids = request.POST.getlist("notification_ids")
             if notification_ids:
                 deleted_count, _ = Notification.objects.filter(
@@ -53,7 +53,7 @@ def notification_center(request):
                 messages.success(request, f"{deleted_count} notification(s) deleted.")
             else:
                 messages.info(request, "Select at least one notification to delete.")
-        elif action == "delete_all" and role == "seller":
+        elif action == "delete_all" and role != "admin":
             deleted_count, _ = Notification.objects.filter(user=request.user).delete()
             messages.success(request, f"{deleted_count} notification(s) deleted.")
         return redirect(request.path)
