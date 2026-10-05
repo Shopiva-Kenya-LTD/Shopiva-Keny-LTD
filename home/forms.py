@@ -11,6 +11,7 @@ from PIL import Image, UnidentifiedImageError
 
 from .models import Product, ProductReview
 from .media_pipeline import enhance_product_image, upload_product_image
+from .media_authenticity import screen_image
 from .shopiva_seller_catalog import (
     catalog_search_choices as base_catalog_search_choices,
     resolve_catalog_item as base_resolve_catalog_item,
@@ -398,6 +399,12 @@ class SellerProductForm(forms.ModelForm):
         label="Additional product photos (up to 8)",
         help_text="Use real photos of the same product. Shopiva automatically enhances them for the marketplace gallery.",
     )
+    product_videos = forms.FileField(
+        required=False,
+        label="Product videos (up to 5)",
+        widget=MultipleImageInput(attrs={"accept": "video/mp4,video/webm,video/quicktime"}),
+        help_text="Upload short videos of the exact product. MP4, WebM or MOV; up to 50 MB each.",
+    )
 
     class Meta:
         model = Product
@@ -415,6 +422,7 @@ class SellerProductForm(forms.ModelForm):
             "promo_text",
             "image",
             "gallery_images",
+            "product_videos",
             "is_active",
             "is_featured",
         )
@@ -427,6 +435,20 @@ class SellerProductForm(forms.ModelForm):
             "mpn": forms.TextInput(attrs={"placeholder": "Manufacturer part number (leave blank if none)"}),
             "image": forms.ClearableFileInput(attrs={"accept": "image/*"}),
         }
+
+
+    def clean_product_videos(self):
+        videos = self.files.getlist("product_videos") if self.files else []
+        if len(videos) > 5:
+            raise forms.ValidationError("Upload a maximum of 5 product videos.")
+        allowed = {"video/mp4", "video/webm", "video/quicktime"}
+        for video in videos:
+            if video.size > 50 * 1024 * 1024:
+                raise forms.ValidationError("Each product video must be 50 MB or smaller.")
+            content_type = (getattr(video, "content_type", "") or "").lower()
+            if content_type not in allowed:
+                raise forms.ValidationError("Videos must be MP4, WebM or MOV files.")
+        return videos
 
     def clean_catalog_product(self):
         raw = self.cleaned_data.get("catalog_product", "").strip()
@@ -468,6 +490,10 @@ class SellerProductForm(forms.ModelForm):
 
         uploaded_main = self.files.get("image")
         if uploaded_main:
+            review = screen_image(uploaded_main)
+            product.media_ai_status = review["status"]
+            product.media_ai_score = review["score"]
+            product.media_ai_notes = review["notes"]
             enhanced = enhance_product_image(uploaded_main, product.name)
             try:
                 # Store the Cloudinary public ID as text in CloudinaryField.

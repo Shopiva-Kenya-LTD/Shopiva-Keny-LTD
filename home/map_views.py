@@ -10,8 +10,10 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import SellerProductForm
+from .media_authenticity import screen_video
 from .indexnow import submit_urls
 from .models import CustomerAddress, DeliveryAgent, DeliveryLocationPing, Order, Product
+from .models_product_media import ProductVideo
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +75,19 @@ def seller_product_add_map(request):
                         seller.business_longitude = longitude
                         seller.save(update_fields=["business_address", "business_latitude", "business_longitude"])
                         product.save()
+                        video_files = getattr(product, "_shopiva_video_files", [])
+                        if video_files:
+                            product.videos.all().delete()
+                            for position, video_file in enumerate(video_files[:5]):
+                                review = screen_video(video_file)
+                                ProductVideo.objects.create(
+                                    product=product,
+                                    video=video_file,
+                                    position=position,
+                                    ai_status=review["status"],
+                                    ai_score=review["score"],
+                                    ai_notes=review["notes"],
+                                )
                 except Exception as exc:
                     logger.exception("Seller product save failed", exc_info=exc)
                     messages.error(request, "The product could not be saved. Please correct the listing and try again.")
@@ -120,7 +135,22 @@ def seller_product_edit_map(request, product_id):
                         seller.business_latitude = latitude
                         seller.business_longitude = longitude
                         seller.save(update_fields=["business_address", "business_latitude", "business_longitude"])
+                        if getattr(updated_product, "_shopiva_gallery_files", []):
+                            updated_product.media.all().delete()
                         updated_product.save()
+                        video_files = getattr(updated_product, "_shopiva_video_files", [])
+                        if video_files:
+                            updated_product.videos.all().delete()
+                            for position, video_file in enumerate(video_files[:5]):
+                                review = screen_video(video_file)
+                                ProductVideo.objects.create(
+                                    product=updated_product,
+                                    video=video_file,
+                                    position=position,
+                                    ai_status=review["status"],
+                                    ai_score=review["score"],
+                                    ai_notes=review["notes"],
+                                )
                 except Exception as exc:
                     logger.exception("Seller product update failed", exc_info=exc)
                     messages.error(request, "The product update could not be completed. Please try again.")

@@ -2,6 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .media_pipeline import enhance_product_image
+from .media_authenticity import screen_image
 from .models import Product
 from .models_product_media import ProductMedia
 
@@ -27,10 +28,14 @@ def persist_product_gallery(sender, instance, **kwargs):
                 break
             try:
                 enhanced = enhance_product_image(uploaded, instance.name)
+                review = screen_image(uploaded)
                 media = ProductMedia(
                     product=instance,
                     image=enhanced,
                     position=position,
+                    ai_status=review["status"],
+                    ai_score=review["score"],
+                    ai_notes=review["notes"],
                 )
                 media.save()
                 position += 1

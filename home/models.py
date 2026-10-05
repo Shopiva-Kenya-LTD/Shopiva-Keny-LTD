@@ -68,6 +68,9 @@ class Product(models.Model):
     discount_percent = models.PositiveIntegerField(default=0)
     promo_text = models.CharField(max_length=120, blank=True)
     is_featured = models.BooleanField(default=False)
+    media_ai_status = models.CharField(max_length=24, default="needs_review", choices=(("likely_real", "Likely real"), ("needs_review", "Needs review"), ("likely_ai", "Likely AI-generated")))
+    media_ai_score = models.PositiveSmallIntegerField(default=50)
+    media_ai_notes = models.CharField(max_length=500, blank=True)
     seller = models.ForeignKey(SellerProfile, on_delete=models.SET_NULL, null=True, blank=True, related_name="products")
     PACKAGE_MICRO = "micro"
     PACKAGE_SMALL = "small"
@@ -1111,3 +1114,7 @@ class NiaTask(models.Model):
 
     def __str__(self):
         return f"{self.title} · {self.user_id}"
+
+
+# Keep seller product media models registered with Django's app registry.
+from .models_product_media import ProductMedia, ProductVideo
