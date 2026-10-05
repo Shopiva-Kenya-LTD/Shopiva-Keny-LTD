@@ -820,7 +820,7 @@ class AdminPortalBoundaryTests(TestCase):
 
     def test_admin_logout_clears_session_and_returns_to_admin_login(self):
         self.client.force_login(self.admin)
-        response = self.client.get(reverse("customer_logout"), secure=True)
+        response = self.client.post(reverse("customer_logout"), secure=True)
         self.assertRedirects(response, reverse("admin_login"), fetch_redirect_response=False)
         response = self.client.get(reverse("customer_dashboard"), secure=True)
         self.assertRedirects(response, f"{reverse('customer_login')}?next=%2Faccount%2F", fetch_redirect_response=False)
