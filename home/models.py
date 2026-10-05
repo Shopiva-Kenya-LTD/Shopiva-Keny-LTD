@@ -1114,3 +1114,7 @@ class NiaTask(models.Model):
 
     def __str__(self):
         return f"{self.title} · {self.user_id}"
+
+
+# Keep seller product media models registered with Django's app registry.
+from .models_product_media import ProductMedia, ProductVideo
