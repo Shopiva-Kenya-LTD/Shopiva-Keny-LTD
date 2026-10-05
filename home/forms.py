@@ -449,7 +449,8 @@ class SellerProductForm(forms.ModelForm):
             if content_type not in allowed:
                 raise forms.ValidationError("Videos must be MP4, WebM or MOV files.")
         return videos
-\n    def clean_catalog_product(self):
+
+    def clean_catalog_product(self):
         raw = self.cleaned_data.get("catalog_product", "").strip()
         if not raw or raw.upper().startswith("CUSTOM PRODUCT"):
             return ""
