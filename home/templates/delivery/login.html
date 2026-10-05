@@ -8,63 +8,52 @@
 <title>Shopiva Delivery | Rider Login</title>
 <style>
 *{box-sizing:border-box}
-:root{--green:#087f5b;--green2:#18c777;--dark:#073526;--ink:#17352a;--muted:#64786f;--line:#dbeae3}
-body{margin:0;min-height:100vh;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:#edf8f3;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:-8vh -6vw;z-index:-2;pointer-events:none;background-image:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}");background-size:760px auto;background-position:center -105px;background-repeat:repeat-x;opacity:.11;filter:blur(3px);transform:scale(1.04)}
-body:after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.46),rgba(244,250,247,.78) 50%,rgba(255,255,255,.9))}
-.page{min-height:100vh;padding:24px 32px 28px;display:flex;flex-direction:column}
-.topbar{display:flex;align-items:center;justify-content:space-between;max-width:1420px;width:100%;margin:0 auto 18px}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink)}
-.brand-mark{width:50px;height:50px;border-radius:15px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 8px 20px rgba(8,127,91,.13);border:1px solid #e2eee8}
+:root{--green:#10b968;--green2:#35e58a;--deep:#063525;--ink:#102d23}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100vh;background:#06150f;color:#fff;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;z-index:-3;background:linear-gradient(90deg,rgba(2,20,13,.93) 0%,rgba(3,28,18,.78) 38%,rgba(2,18,12,.48) 100%),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600") center/cover no-repeat;filter:saturate(.8) contrast(1.04)}
+body:after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 73% 28%,rgba(22,211,119,.22),transparent 22%),linear-gradient(90deg,rgba(1,16,10,.32),transparent 55%,rgba(1,13,9,.25))}
+.page{min-height:100vh;display:flex;flex-direction:column;padding:22px 42px 24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1450px;margin:0 auto;position:relative;z-index:5}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+.brand-mark{width:52px;height:52px;border-radius:15px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 10px 25px rgba(0,0,0,.2)}
 .brand-mark img{width:100%;height:100%;object-fit:contain}
-.brand-copy b{display:block;font-size:18px;line-height:1;color:#0d3528}
-.brand-copy span{display:block;margin-top:4px;font-size:9px;letter-spacing:.2em;font-weight:900;color:var(--green)}
-.locale{display:flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #d8e8e1;border-radius:999px;background:rgba(255,255,255,.72);font-size:12px;font-weight:800;color:#466157}
-.main{flex:1;display:grid;grid-template-columns:minmax(230px,1fr) minmax(400px,520px) minmax(230px,1fr);gap:38px;align-items:center;max-width:1420px;width:100%;margin:0 auto}
-.intro{padding:18px 12px 18px 0}
-.delivery-logo{width:150px;height:150px;border-radius:42px;background:linear-gradient(145deg,#087f5b,#043d2b);display:grid;place-items:center;box-shadow:0 22px 55px rgba(8,127,91,.22);border:1px solid rgba(255,255,255,.75);margin-bottom:22px}
+.brand-copy b{display:block;font-size:18px;line-height:1}.brand-copy span{display:block;margin-top:4px;font-size:9px;letter-spacing:.2em;font-weight:900;color:#7df1ae}
+.locale{padding:10px 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(0,0,0,.18);font-size:12px;font-weight:800;backdrop-filter:blur(10px)}
+.main{flex:1;display:grid;grid-template-columns:minmax(260px,.8fr) minmax(390px,530px) minmax(260px,.8fr);gap:44px;align-items:center;max-width:1450px;width:100%;margin:0 auto}
+.intro{padding:10px 0;color:#fff}
+.delivery-logo{width:150px;height:150px;border-radius:42px;background:linear-gradient(145deg,#0a815b,#032d1e);display:grid;place-items:center;box-shadow:0 25px 55px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.18);margin-bottom:24px}
 .delivery-logo svg{width:120px;height:120px}
-.kicker{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--green);font-weight:950}
-.intro h2{font-size:46px;line-height:1.02;letter-spacing:-.055em;margin:8px 0 13px;color:#10392b;max-width:410px}
-.intro p{font-size:16px;line-height:1.6;color:#61766d;max-width:400px;margin:0}
-.features{margin-top:28px;display:grid;gap:14px}
+.kicker{font-size:11px;letter-spacing:.23em;text-transform:uppercase;color:#67efa4;font-weight:950}
+.intro h2{font-size:54px;line-height:.98;letter-spacing:-.055em;margin:9px 0 16px;max-width:440px;color:#fff}
+.intro p{font-size:15px;line-height:1.6;color:#d0ded8;max-width:410px;margin:0}
+.features{margin-top:27px;display:grid;gap:15px}
 .feature{display:flex;gap:12px;align-items:center}
-.feature-icon{width:42px;height:42px;border-radius:14px;flex:0 0 42px;display:grid;place-items:center;background:#e5f8ef;border:1px solid #cfeee0;font-size:20px}
-.feature b{display:block;font-size:13px;color:#24483b}.feature span{display:block;font-size:11px;color:#71837c;margin-top:2px}
-.login-card{position:relative;padding:34px 36px;border-radius:32px;background:rgba(255,255,255,.91);border:1px solid rgba(255,255,255,.98);box-shadow:0 30px 90px rgba(14,73,51,.19);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.login-card:before{content:"";position:absolute;right:-120px;top:-120px;width:270px;height:270px;border-radius:50%;background:radial-gradient(circle,rgba(24,199,119,.14),transparent 68%);pointer-events:none}
-.card-head{text-align:center;position:relative;z-index:1}
-.mini-logo{width:88px;height:88px;margin:0 auto 15px;border-radius:27px;background:linear-gradient(145deg,#087f5b,#053b29);display:grid;place-items:center;box-shadow:0 15px 34px rgba(8,127,91,.2)}
-.mini-logo svg{width:70px;height:70px}
-.card-head h1{font-size:31px;letter-spacing:-.045em;margin:0;color:#14382b}.card-head p{font-size:13px;line-height:1.55;color:#6a7c75;margin:9px auto 23px;max-width:370px}
-label{display:block;margin:14px 0 7px;font-size:12px;font-weight:900;color:#294c3f}
-input{width:100%;height:52px;border:1px solid #ccdfd6;border-radius:15px;background:#fbfefc;color:#18382c;padding:0 15px;font-size:16px;outline:none}
-input:focus{border-color:#1bc97a;box-shadow:0 0 0 4px rgba(27,201,122,.11);background:#fff}
-.row{display:flex;justify-content:space-between;align-items:center;margin-top:11px;font-size:12px;color:#71847b}
-.check{display:flex;align-items:center;gap:7px}.check input{width:16px;height:16px;margin:0;accent-color:var(--green)}
-.row a{color:var(--green);font-weight:850;text-decoration:none}
-button{width:100%;height:55px;border:0;border-radius:15px;margin-top:19px;background:linear-gradient(135deg,#1ddd7a,#0eb766);color:#052b1d;font-size:16px;font-weight:950;cursor:pointer;box-shadow:0 15px 30px rgba(14,183,102,.22)}
-button:hover{filter:brightness(1.02);transform:translateY(-1px)}
-.signup{text-align:center;margin:16px 0 0;font-size:13px;color:#6c7e76}.signup a{color:var(--green);font-weight:900;text-decoration:none}
-.or{display:flex;align-items:center;gap:10px;margin:18px 0;color:#9aa9a3;font-size:11px}.or:before,.or:after{content:"";height:1px;background:#e0eae5;flex:1}
-.phone{width:100%;height:48px;border:1px solid #bfe7d4;border-radius:14px;background:#f5fcf8;color:var(--green);font-size:13px;font-weight:900}
+.feature-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(12,187,103,.16);border:1px solid rgba(86,239,157,.25);font-size:19px}
+.feature b{display:block;font-size:13px;color:#fff}.feature span{display:block;font-size:10px;color:#b6c9c1;margin-top:2px}
+.login-card{position:relative;padding:30px 36px 27px;border-radius:30px;background:rgba(255,255,255,.97);color:var(--ink);border:1px solid rgba(255,255,255,.98);box-shadow:0 35px 90px rgba(0,0,0,.34)}
+.card-head{text-align:center}
+.mini-logo{width:94px;height:94px;margin:0 auto 15px;border-radius:29px;background:linear-gradient(145deg,#087f5b,#043525);display:grid;place-items:center;box-shadow:0 15px 35px rgba(8,127,91,.22)}
+.mini-logo svg{width:76px;height:76px}
+.card-head h1{font-size:31px;letter-spacing:-.045em;margin:0;color:#102f24}.card-head p{font-size:13px;line-height:1.5;color:#718079;margin:9px auto 21px;max-width:375px}
+label{display:block;margin:13px 0 7px;font-size:12px;font-weight:900;color:#29483d}
+input{width:100%;height:52px;border:1px solid #cbded5;border-radius:14px;background:#f9fcfb;color:#17362b;padding:0 15px;font-size:16px;outline:none}
+input:focus{border-color:#19c878;box-shadow:0 0 0 4px rgba(25,200,120,.11);background:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;margin-top:11px;color:#718079;font-size:11px}
+button{width:100%;height:55px;border:0;border-radius:14px;margin-top:18px;background:linear-gradient(135deg,#28e283,#10bb69);color:#05291b;font-size:16px;font-weight:950;cursor:pointer;box-shadow:0 15px 30px rgba(16,187,105,.24)}
+.signup{text-align:center;margin-top:15px;font-size:12px;color:#718079}.signup a{color:#087f5b;font-weight:900;text-decoration:none}
 .errors{margin-bottom:12px;padding:11px 13px;border-radius:12px;background:#fff0f0;border:1px solid #efc7c7;color:#9a2e2e;font-size:12px}
-.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}
-.trust div{padding:11px 5px;text-align:center;border-radius:13px;background:#f5faf7;border:1px solid #e2ece7;color:#708179;font-size:9px}.trust b{display:block;font-size:15px;color:var(--green);margin-bottom:3px}
-.rider{min-height:500px;position:relative;border-radius:36px;overflow:hidden;background:linear-gradient(160deg,#06432f,#087f5b 58%,#0a6848);box-shadow:0 25px 70px rgba(8,72,50,.18);display:flex;align-items:flex-end;justify-content:center;padding:28px}
-.rider:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 68% 20%,rgba(255,224,107,.35),transparent 18%),linear-gradient(140deg,rgba(255,255,255,.10),transparent 45%);pointer-events:none}
-.city{position:absolute;inset:0;opacity:.22;background:linear-gradient(90deg,transparent 0 8%,#d7f2e5 8% 12%,transparent 12% 18%,#c3e8d9 18% 26%,transparent 26% 35%,#d7f2e5 35% 41%,transparent 41% 52%,#bde4d3 52% 61%,transparent 61% 72%,#d7f2e5 72% 80%,transparent 80%) bottom/100% 42% no-repeat}
-.rider-copy{position:absolute;left:28px;top:28px;color:#fff;z-index:2}.rider-copy b{display:block;font-size:13px;letter-spacing:.16em;text-transform:uppercase}.rider-copy span{display:block;margin-top:6px;font-size:12px;color:#c9f7dd}
-.rider-art{position:relative;z-index:2;width:235px;height:300px;border-radius:100px 100px 35px 35px;background:linear-gradient(180deg,#182a24,#0c1d18);border:7px solid #d9e8e1;box-shadow:0 18px 35px rgba(0,0,0,.24)}
-.rider-art:before{content:"";position:absolute;width:112px;height:112px;border-radius:50%;background:#17251f;left:54px;top:-80px;border:8px solid #cbded6;box-shadow:0 0 0 10px #087f5b}
-.rider-art:after{content:"S";position:absolute;left:57px;top:92px;width:100px;height:100px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,#0ba96a,#087f5b);color:#fff;font-size:64px;font-weight:950;box-shadow:0 12px 25px rgba(0,0,0,.18)}
-.bag{position:absolute;z-index:3;width:175px;height:150px;left:30px;bottom:25px;border-radius:24px;background:linear-gradient(145deg,#087f5b,#06442f);border:4px solid #dceae4;box-shadow:0 15px 30px rgba(0,0,0,.2);display:grid;place-items:center;color:#fff;font-size:36px;font-weight:950}
-.bag small{display:block;position:absolute;bottom:16px;font-size:8px;letter-spacing:.16em}
-.quote{position:absolute;bottom:24px;right:24px;color:#fff;text-align:right;font-weight:900;font-size:14px;max-width:180px;line-height:1.4;z-index:4}
-.footer{text-align:center;color:#809189;font-size:10px;padding-top:18px;max-width:1420px;width:100%;margin:auto}
-@media(max-width:1050px){.main{grid-template-columns:1fr minmax(390px,520px);gap:26px}.rider{display:none}.intro h2{font-size:40px}}
-@media(max-width:760px){.page{padding:16px 12px}.topbar{margin-bottom:12px}.main{display:block}.intro{display:none}.login-card{max-width:520px;margin:30px auto 0;padding:28px 22px}.footer{padding-bottom:8px}.brand-copy b{font-size:16px}.locale{font-size:11px;padding:8px 10px}}
-@media(max-width:480px){.login-card{border-radius:24px}.card-head h1{font-size:27px}.trust{grid-template-columns:1fr}.brand-mark{width:44px;height:44px}.locale{display:none}}
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:17px}
+.trust div{padding:10px 5px;text-align:center;border-radius:12px;background:#f5faf7;border:1px solid #e1ebe6;color:#718079;font-size:9px}.trust b{display:block;color:#087f5b;font-size:15px;margin-bottom:3px}
+.rider{height:560px;border-radius:34px;position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(3,61,40,.76),rgba(8,127,91,.62));box-shadow:0 30px 75px rgba(0,0,0,.3);background-image:linear-gradient(180deg,rgba(3,52,35,.18),rgba(2,30,20,.58)),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600");background-size:cover;background-position:center}
+.rider:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(2,28,18,.8) 100%)}
+.rider-copy{position:absolute;top:24px;left:24px;z-index:2;color:#fff}.rider-copy b{display:block;font-size:12px;letter-spacing:.17em}.rider-copy span{display:block;margin-top:6px;font-size:11px;color:#d0f7df}
+.badge{position:absolute;bottom:22px;left:22px;right:22px;z-index:3;padding:15px 16px;border-radius:18px;background:rgba(3,35,23,.78);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px)}
+.badge strong{display:block;font-size:14px}.badge span{display:block;margin-top:4px;font-size:10px;color:#b8d0c5}
+.footer{text-align:center;color:#c0cec8;font-size:9px;padding-top:15px;max-width:1450px;width:100%;margin:auto}
+@media(max-width:1120px){.main{grid-template-columns:1fr minmax(390px,530px);gap:30px}.rider{display:none}.intro h2{font-size:48px}}
+@media(max-width:760px){.page{padding:15px 12px}.locale{display:none}.main{display:block}.intro{display:none}.login-card{max-width:530px;margin:55px auto 20px;padding:27px 21px}.footer{padding-bottom:8px}}
+@media(max-width:480px){.login-card{border-radius:24px}.card-head h1{font-size:27px}.trust{grid-template-columns:1fr}.brand-mark{width:45px;height:45px}}
 </style>
 </head>
 <body>
