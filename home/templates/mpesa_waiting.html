@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,9 +24,8 @@
         .shell{min-height:100vh;padding:30px 16px 48px}
         .topbar{max-width:900px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
         .brand{display:flex;align-items:center;gap:10px;color:var(--ink);font-weight:950;letter-spacing:-.02em}
-        .mark{
-            width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
-            color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand2));
+         .mark{
+            width:44px;height:44px;border-radius:13px;display:block;object-fit:cover;
             box-shadow:0 9px 20px rgba(8,127,91,.2)
         }
         .toplink{
@@ -98,7 +98,7 @@
 <body>
 <div class="shell">
     <div class="topbar">
-        <a href="{% url 'home' %}" class="brand"><span class="mark">S</span><span>Shopiva Kenya</span></a>
+        <a href="{% url 'home' %}" class="brand" aria-label="Shopiva Kenya home"><img class="mark" src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya logo"><span>Shopiva Kenya</span></a>
         <a href="{% url 'home' %}" class="toplink">Continue shopping →</a>
     </div>
 
