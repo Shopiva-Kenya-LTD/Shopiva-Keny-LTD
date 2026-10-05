@@ -1,4 +1,5 @@
-from django.db import migrations, models\nimport django.core.validators
+from django.db import migrations, models
+import django.core.validators
 import cloudinary.models
 
 
