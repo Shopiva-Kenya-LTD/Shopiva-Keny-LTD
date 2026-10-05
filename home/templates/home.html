@@ -151,6 +151,7 @@ footer:after{content:"";position:absolute;width:300px;height:300px;border-radius
 <body>
 <header class="nav"><div class="wrap nav-in">
 <a class="brand" href="{% url 'home' %}" aria-label="Shopiva Kenya LTD home">
+<img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya LTD logo">
 <span class="brand-copy"><b>Shop<span>iva</span></b><small>KENYA LTD</small></span>
 </a>
 <form class="search" action="{% url 'products' %}" method="get"><input name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search products, brands, deals and more..." autocomplete="off"><button type="submit">🔍 Search</button></form>
