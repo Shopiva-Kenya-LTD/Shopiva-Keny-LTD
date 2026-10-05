@@ -66,7 +66,10 @@ a{text-decoration:none;color:inherit}.page{width:min(1120px,calc(100% - 32px));m
   const selectAll = document.getElementById('selectAllNotifications');
   const deleteSelected = document.getElementById('deleteSelectedNotifications');
   if (!form || !selectAll) return;
-  const boxes = () => Array.from(form.querySelectorAll('.notification-select'));
+  // Notification checkboxes live in each notification card and use the
+  // HTML form attribute to submit with the bulk form, so they are not
+  // descendants of the toolbar form. Query the document, not the form.
+  const boxes = () => Array.from(document.querySelectorAll('.notification-select'));
   function sync() {
     const all = boxes();
     const checked = all.filter(box => box.checked);
@@ -78,7 +81,7 @@ a{text-decoration:none;color:inherit}.page{width:min(1120px,calc(100% - 32px));m
     boxes().forEach(box => { box.checked = selectAll.checked; });
     sync();
   });
-  form.addEventListener('change', function (event) {
+  document.addEventListener('change', function (event) {
     if (event.target.classList.contains('notification-select')) sync();
   });
   if (deleteSelected) {
