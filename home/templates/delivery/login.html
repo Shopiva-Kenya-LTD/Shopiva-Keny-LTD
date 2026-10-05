@@ -11,47 +11,47 @@
 :root{--green:#10b968;--green2:#35e58a;--deep:#063525;--ink:#102d23}
 html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 body{min-height:100vh;background:#06150f;color:#fff;overflow-x:hidden}
-body:before{content:"";position:fixed;inset:0;z-index:-3;background:linear-gradient(90deg,rgba(2,20,13,.93) 0%,rgba(3,28,18,.78) 38%,rgba(2,18,12,.48) 100%),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600") center/cover no-repeat;filter:saturate(.8) contrast(1.04)}
-body:after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 73% 28%,rgba(22,211,119,.22),transparent 22%),linear-gradient(90deg,rgba(1,16,10,.32),transparent 55%,rgba(1,13,9,.25))}
-.page{min-height:100vh;display:flex;flex-direction:column;padding:22px 42px 24px}
-.topbar{display:flex;align-items:center;justify-content:space-between;width:100%;max-width:1450px;margin:0 auto;position:relative;z-index:5}
-.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+body:before{content:"";position:fixed;inset:0;z-index:-3;background:linear-gradient(90deg,rgba(2,20,13,.84) 0%,rgba(3,28,18,.52) 34%,rgba(2,18,12,.16) 68%,rgba(2,18,12,.40) 100%),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600") center/cover no-repeat;filter:saturate(.92) contrast(1.05)}
+body:after{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 78% 30%,rgba(29,225,133,.22),transparent 25%),linear-gradient(90deg,rgba(2,24,16,.18),transparent 50%,rgba(2,18,12,.28) 100%)}
+.page{min-height:100vh;display:flex;flex-direction:column;padding:24px 54px 20px}
+.topbar{display:flex;align-items:center;justify-content:flex-end;width:100%;max-width:1450px;margin:0 auto;position:relative;z-index:5}
+.brand{display:none;align-items:center;gap:12px;text-decoration:none;color:#fff}
 .brand-mark{width:52px;height:52px;border-radius:15px;background:#fff;display:grid;place-items:center;padding:5px;box-shadow:0 10px 25px rgba(0,0,0,.2)}
 .brand-mark img{width:100%;height:100%;object-fit:contain}
 .brand-copy b{display:block;font-size:18px;line-height:1}.brand-copy span{display:block;margin-top:4px;font-size:9px;letter-spacing:.2em;font-weight:900;color:#7df1ae}
-.locale{padding:10px 14px;border:1px solid rgba(255,255,255,.18);border-radius:999px;background:rgba(0,0,0,.18);font-size:12px;font-weight:800;backdrop-filter:blur(10px)}
-.main{flex:1;display:grid;grid-template-columns:minmax(260px,.8fr) minmax(390px,530px) minmax(260px,.8fr);gap:44px;align-items:center;max-width:1450px;width:100%;margin:0 auto}
-.intro{padding:10px 0;color:#fff}
-.delivery-logo{width:150px;height:150px;border-radius:42px;background:linear-gradient(145deg,#0a815b,#032d1e);display:grid;place-items:center;box-shadow:0 25px 55px rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.18);margin-bottom:24px}
-.delivery-logo svg{width:120px;height:120px}
+.locale{padding:12px 17px;border:1px solid rgba(255,255,255,.30);border-radius:999px;background:rgba(255,255,255,.90);color:#18251f;font-size:13px;font-weight:850;box-shadow:0 8px 25px rgba(0,0,0,.12);backdrop-filter:blur(12px)}
+.main{flex:1;display:grid;grid-template-columns:minmax(290px,.86fr) minmax(430px,555px) minmax(300px,.88fr);gap:38px;align-items:center;max-width:1450px;width:100%;margin:0 auto}
+.intro{padding:20px 0 10px;color:#fff;max-width:450px}
+.delivery-logo{width:245px;height:150px;border-radius:0;background:transparent;display:grid;place-items:start;box-shadow:none;border:0;margin-bottom:5px}
+.delivery-logo svg{width:235px;height:145px}
 .kicker{font-size:11px;letter-spacing:.23em;text-transform:uppercase;color:#67efa4;font-weight:950}
-.intro h2{font-size:54px;line-height:.98;letter-spacing:-.055em;margin:9px 0 16px;max-width:440px;color:#fff}
-.intro p{font-size:15px;line-height:1.6;color:#d0ded8;max-width:410px;margin:0}
-.features{margin-top:27px;display:grid;gap:15px}
-.feature{display:flex;gap:12px;align-items:center}
-.feature-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:rgba(12,187,103,.16);border:1px solid rgba(86,239,157,.25);font-size:19px}
-.feature b{display:block;font-size:13px;color:#fff}.feature span{display:block;font-size:10px;color:#b6c9c1;margin-top:2px}
-.login-card{position:relative;padding:30px 36px 27px;border-radius:30px;background:rgba(255,255,255,.97);color:var(--ink);border:1px solid rgba(255,255,255,.98);box-shadow:0 35px 90px rgba(0,0,0,.34)}
+.intro h2{font-size:55px;line-height:.98;letter-spacing:-.055em;margin:7px 0 13px;max-width:440px;color:#fff}
+.intro p{font-size:15px;line-height:1.55;color:#edf7f2;max-width:410px;margin:0}
+.features{margin-top:28px;display:grid;gap:17px}
+.feature{display:flex;gap:15px;align-items:center}
+.feature-icon{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;background:rgba(4,46,31,.55);border:2px solid #16d779;box-shadow:inset 0 0 0 6px rgba(22,215,121,.06);font-size:23px;flex:0 0 54px}
+.feature b{display:block;font-size:16px;color:#fff}.feature span{display:block;font-size:12px;color:#e0eee8;margin-top:3px;line-height:1.4}
+.login-card{position:relative;padding:31px 38px 25px;border-radius:29px;background:rgba(255,255,255,.985);color:var(--ink);border:1px solid rgba(255,255,255,.98);box-shadow:0 35px 90px rgba(0,0,0,.34)}
 .card-head{text-align:center}
-.mini-logo{width:94px;height:94px;margin:0 auto 15px;border-radius:29px;background:linear-gradient(145deg,#087f5b,#043525);display:grid;place-items:center;box-shadow:0 15px 35px rgba(8,127,91,.22)}
-.mini-logo svg{width:76px;height:76px}
-.card-head h1{font-size:31px;letter-spacing:-.045em;margin:0;color:#102f24}.card-head p{font-size:13px;line-height:1.5;color:#718079;margin:9px auto 21px;max-width:375px}
+.mini-logo{width:112px;height:112px;margin:0 auto 12px;border-radius:30px;background:linear-gradient(145deg,#087f5b,#043525);display:grid;place-items:center;box-shadow:0 15px 35px rgba(8,127,91,.22)}
+.mini-logo svg{width:91px;height:91px}
+.card-head h1{font-size:32px;letter-spacing:-.045em;margin:0;color:#102f24}.card-head p{font-size:14px;line-height:1.48;color:#718079;margin:8px auto 20px;max-width:390px}
 label{display:block;margin:13px 0 7px;font-size:12px;font-weight:900;color:#29483d}
-input{width:100%;height:52px;border:1px solid #cbded5;border-radius:14px;background:#f9fcfb;color:#17362b;padding:0 15px;font-size:16px;outline:none}
+input{width:100%;height:54px;border:1px solid #cbded5;border-radius:15px;background:#f9fcfb;color:#17362b;padding:0 15px;font-size:16px;outline:none}
 input:focus{border-color:#19c878;box-shadow:0 0 0 4px rgba(25,200,120,.11);background:#fff}
 .row{display:flex;justify-content:space-between;align-items:center;margin-top:11px;color:#718079;font-size:11px}
-button{width:100%;height:55px;border:0;border-radius:14px;margin-top:18px;background:linear-gradient(135deg,#28e283,#10bb69);color:#05291b;font-size:16px;font-weight:950;cursor:pointer;box-shadow:0 15px 30px rgba(16,187,105,.24)}
+button{width:100%;height:58px;border:0;border-radius:15px;margin-top:18px;background:linear-gradient(135deg,#23df7f,#08a85d);color:#fff;font-size:17px;font-weight:950;cursor:pointer;box-shadow:0 15px 30px rgba(16,187,105,.24)}
 .signup{text-align:center;margin-top:15px;font-size:12px;color:#718079}.signup a{color:#087f5b;font-weight:900;text-decoration:none}
 .errors{margin-bottom:12px;padding:11px 13px;border-radius:12px;background:#fff0f0;border:1px solid #efc7c7;color:#9a2e2e;font-size:12px}
 .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:17px}
-.trust div{padding:10px 5px;text-align:center;border-radius:12px;background:#f5faf7;border:1px solid #e1ebe6;color:#718079;font-size:9px}.trust b{display:block;color:#087f5b;font-size:15px;margin-bottom:3px}
-.rider{height:560px;border-radius:34px;position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(3,61,40,.76),rgba(8,127,91,.62));box-shadow:0 30px 75px rgba(0,0,0,.3);background-image:linear-gradient(180deg,rgba(3,52,35,.18),rgba(2,30,20,.58)),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600");background-size:cover;background-position:center}
-.rider:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(2,28,18,.8) 100%)}
-.rider-copy{position:absolute;top:24px;left:24px;z-index:2;color:#fff}.rider-copy b{display:block;font-size:12px;letter-spacing:.17em}.rider-copy span{display:block;margin-top:6px;font-size:11px;color:#d0f7df}
+.trust div{padding:11px 5px;text-align:center;border-radius:12px;background:#f5faf7;border:1px solid #e1ebe6;color:#718079;font-size:10px}.trust b{display:block;color:#087f5b;font-size:16px;margin-bottom:3px}
+.rider{height:650px;border-radius:36px;position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(3,61,40,.50),rgba(8,127,91,.52));box-shadow:0 30px 75px rgba(0,0,0,.34);background-image:linear-gradient(180deg,rgba(3,52,35,.06),rgba(2,30,20,.72)),url("https://s.wsj.net/public/resources/images/B3-AN330_JUMIA__8SR_20180522141701.jpg?height=1600&width=1600");background-size:cover;background-position:center}
+.rider:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(1,30,20,.05),transparent 42%,rgba(2,28,18,.84) 100%);pointer-events:none}
+.rider-copy{position:absolute;top:24px;left:24px;z-index:2;color:#fff}.rider-copy b{display:block;font-size:13px;letter-spacing:.18em}.rider-copy span{display:block;margin-top:6px;font-size:12px;color:#d0f7df}
 .badge{position:absolute;bottom:22px;left:22px;right:22px;z-index:3;padding:15px 16px;border-radius:18px;background:rgba(3,35,23,.78);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px)}
 .badge strong{display:block;font-size:14px}.badge span{display:block;margin-top:4px;font-size:10px;color:#b8d0c5}
-.footer{text-align:center;color:#c0cec8;font-size:9px;padding-top:15px;max-width:1450px;width:100%;margin:auto}
-@media(max-width:1120px){.main{grid-template-columns:1fr minmax(390px,530px);gap:30px}.rider{display:none}.intro h2{font-size:48px}}
+.footer{text-align:center;color:#d0ded8;font-size:10px;padding-top:10px;max-width:1450px;width:100%;margin:auto}
+@media(max-width:1120px){.main{grid-template-columns:1fr minmax(390px,530px);gap:30px}.rider{display:none}.intro h2{font-size:48px}.intro{max-width:520px}}
 @media(max-width:760px){.page{padding:15px 12px}.locale{display:none}.main{display:block}.intro{display:none}.login-card{max-width:530px;margin:55px auto 20px;padding:27px 21px}.footer{padding-bottom:8px}}
 @media(max-width:480px){.login-card{border-radius:24px}.card-head h1{font-size:27px}.trust{grid-template-columns:1fr}.brand-mark{width:45px;height:45px}}
 </style>
@@ -59,23 +59,20 @@ button{width:100%;height:55px;border:0;border-radius:14px;margin-top:18px;backgr
 <body>
 <div class="page">
 <header class="topbar">
-<a class="brand" href="{% url 'home' %}">
-<span class="brand-mark"><img src="{% static 'shopiva/shopiva-shopping-logo.svg' %}" alt="Shopiva Kenya logo"></span>
-<span class="brand-copy"><b>Shopiva Delivery</b><span>KENYA LTD • RIDER NETWORK</span></span>
-</a>
-<div class="locale">🇰🇪 Kenya (EN)⌄</div>
+<div class="locale">🇰🇪 &nbsp; Kenya (EN) &nbsp;⌄</div>
 </header>
 
 <main class="main">
 <section class="intro">
 <div class="delivery-logo">
-<svg viewBox="0 0 128 128" aria-label="Shopiva Delivery logo">
+<svg viewBox="0 0 250 150" aria-label="Shopiva Delivery logo">
 <defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff3a2"/><stop offset=".5" stop-color="#ffd45a"/><stop offset="1" stop-color="#d99b22"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffffff"/><stop offset="1" stop-color="#dfffee"/></linearGradient></defs>
+<g transform="translate(42 2) scale(.88)">
 <path d="M64 8l6 15 17-9-5 17 18 4-16 9 12 14-18-4-3 18-11-14-11 14-3-18-18 4 12-14-16-9 18-4-5-17 17 9z" fill="url(#a)"/>
 <path d="M22 51c0-5 4-9 9-9h42l11 13h16c4 0 7 3 7 7v23H91a13 13 0 0 1-25 0H55a13 13 0 0 1-25 0H22z" fill="url(#b)"/>
 <path d="M75 49h8l12 13H75z" fill="#9af4bd"/><path d="M30 59h39" stroke="#22d97d" stroke-width="8" stroke-linecap="round"/><path d="M30 70h36" stroke="#20c975" stroke-width="6" stroke-linecap="round"/>
 <circle cx="43" cy="85" r="9" fill="#073b27"/><circle cx="78" cy="85" r="9" fill="#073b27"/>
-</svg>
+</g></svg>
 </div>
 <div class="kicker">Delivery partner app</div>
 <h2>Deliver smarter.<br>Earn with Shopiva.</h2>
@@ -116,11 +113,8 @@ button{width:100%;height:55px;border:0;border-radius:14px;margin-top:18px;backgr
 </section>
 
 <aside class="rider">
-<div class="city"></div>
 <div class="rider-copy"><b>SHOPIVA DELIVERY</b><span>Delivering a better Kenya</span></div>
-<div class="rider-art"></div>
-<div class="bag">S<small>SHOPIVA DELIVERY</small></div>
-<div class="quote">Every parcel.<br>Every customer.<br>Handled with care.</div>
+<div class="badge"><strong>Every parcel. Every customer.</strong><span>Handled with care.</span></div>
 </aside>
 </main>
 <div class="footer">Only approved Shopiva delivery partners can access customer orders. Location sharing begins after sign-in and GPS permission.</div>
