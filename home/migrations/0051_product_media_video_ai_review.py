@@ -5,7 +5,7 @@ import cloudinary.models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("home", "0025_productmedia"),
+        ("home", "0050_backfill_delivery_wallets"),
     ]
 
     operations = [
