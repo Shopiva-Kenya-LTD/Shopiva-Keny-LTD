@@ -70,8 +70,8 @@
             <section class="panel">
                 <div class="panel-head"><div><h2>⚡ Quick Actions</h2><div class="panel-sub">Common admin tasks, one click away.</div></div></div>
                 <div class="quick-grid">
-                    <a class="quick" href="{% url 'shopiva_admin:home_product_add' %}"><strong>➕ Add Product</strong><span>Create a new marketplace listing.</span></a>
-                    <a class="quick" href="{% url 'shopiva_admin:home_product_changelist' %}"><strong>🛍️ Manage Products</strong><span>Prices, stock, discounts and visibility.</span></a>
+                    <a class="quick" href="{% url 'shopiva_admin:product_add' %}"><strong>➕ Add Product</strong><span>Create a new marketplace listing.</span></a>
+                    <a class="quick" href="{% url 'shopiva_admin:product_manager' %}"><strong>🛍️ Manage Products</strong><span>Prices, stock, discounts and visibility.</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:home_order_changelist' %}"><strong>📦 Manage Orders</strong><span>Review and update order status.</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:home_orderitem_changelist' %}"><strong>🧾 Order Items</strong><span>Inspect items attached to orders.</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:auth_user_changelist' %}"><strong>👥 Users</strong><span>Manage staff and customer accounts.</span></a>
@@ -104,10 +104,10 @@
             </section>
 
             <section class="panel">
-                <div class="panel-head"><div><h2>⚠️ Inventory Watch</h2><div class="panel-sub">Active products with 5 units or fewer.</div></div><a href="{% url 'shopiva_admin:home_product_changelist' %}">Manage stock</a></div>
+                <div class="panel-head"><div><h2>⚠️ Inventory Watch</h2><div class="panel-sub">Active products with 5 units or fewer.</div></div><a href="{% url 'shopiva_admin:product_manager' %}">Manage stock</a></div>
                 {% if low_stock_products %}
                 <div class="table-wrap"><table class="shop-table"><thead><tr><th>Product</th><th>Category</th><th>Stock</th><th>Action</th></tr></thead><tbody>
-                {% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category }}</td><td class="stock-danger">{{ product.stock_quantity }}</td><td><a href="{% url 'shopiva_admin:home_product_change' product.id %}">Edit</a></td></tr>{% endfor %}
+                {% for product in low_stock_products %}<tr><td>{{ product.name }}</td><td>{{ product.category }}</td><td class="stock-danger">{{ product.stock_quantity }}</td><td><a href="{% url 'shopiva_admin:product_edit' product.id %}">Edit</a></td></tr>{% endfor %}
                 </tbody></table></div>
                 {% else %}<div class="notice">Inventory is clear right now. Shopiva will continue monitoring inventory through the admin operations system.</div>{% endif %}
             </section>
@@ -117,7 +117,7 @@
             <section class="panel">
                 <div class="panel-head"><div><h2>🧭 Admin Navigation</h2><div class="panel-sub">Safe paths into the management system.</div></div></div>
                 <div class="quick-grid">
-                    <a class="quick" href="{% url 'shopiva_admin:home_product_changelist' %}"><strong>🛍️ Catalog</strong><span>Products & inventory</span></a>
+                    <a class="quick" href="{% url 'shopiva_admin:product_manager' %}"><strong>🛍️ Catalog</strong><span>Products & inventory</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:home_order_changelist' %}"><strong>📦 Orders</strong><span>Fulfilment workflow</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:auth_user_changelist' %}"><strong>👥 Accounts</strong><span>Users & staff</span></a>
                     <a class="quick" href="{% url 'shopiva_admin:delivery_map' %}"><strong>🧭 Delivery Map</strong><span>Kenya delivery network</span></a>
