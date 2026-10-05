@@ -9,8 +9,9 @@
 <style>
 *{box-sizing:border-box}
 :root{--green:#087f5b;--green2:#0b9a6d;--soft:#effaf6;--ink:#18241f;--muted:#6c7d75;--line:#dce9e3;--paper:#f7faf8;--white:#fff;--shadow:0 18px 45px rgba(19,50,39,.07)}
-body{margin:0;background:linear-gradient(180deg,#f4faf7 0%,#fff 42%);color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh}
-body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 20%,rgba(8,127,91,.055),transparent 35%);pointer-events:none;z-index:0}
+body{margin:0;background:#eef7f3;color:var(--ink);font-family:Inter,Arial,sans-serif;min-height:100vh;position:relative;overflow-x:hidden}
+body:before{content:"";position:fixed;inset:-8vh -6vw;z-index:0;pointer-events:none;background-image:url("{% static 'shopiva/shopiva-shopping-logo.svg' %}");background-size:760px auto;background-position:center -105px;background-repeat:repeat-x;opacity:.14;filter:blur(3px);transform:scale(1.04)}
+body:after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.50),rgba(244,250,247,.72) 48%,rgba(255,255,255,.86))}
 a{text-decoration:none;color:inherit}
 .topbar{position:relative;z-index:2;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .topbar-inner{width:min(900px,calc(100% - 32px));min-height:86px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px}
@@ -22,7 +23,7 @@ a{text-decoration:none;color:inherit}
 .top-actions a,.top-actions button{border:1px solid #cfe3da;background:#fff;color:var(--green);border-radius:11px;padding:10px 13px;font-size:11px;font-weight:900;cursor:pointer}
 .top-actions .notice{background:var(--green);border-color:var(--green);color:#fff}
 .container{width:min(900px,calc(100% - 32px));margin:26px auto 60px;position:relative;z-index:1}
-.panel{background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:25px;box-shadow:var(--shadow);overflow:hidden}
+.panel{background:rgba(255,255,255,.91);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:25px;box-shadow:var(--shadow);overflow:hidden}
 .hero{padding:34px 34px 29px;background:linear-gradient(135deg,#f1fbf7 0%,#fff 68%);border-bottom:1px solid var(--line)}
 .hero-row{display:flex;align-items:flex-start;gap:19px}
 .hero-logo{width:66px;height:66px;border-radius:20px;object-fit:contain;flex:0 0 66px;box-shadow:0 10px 24px rgba(8,127,91,.16)}
