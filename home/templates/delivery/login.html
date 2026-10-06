@@ -15,35 +15,94 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .artboard{position:absolute;inset:0;width:100vw;height:100vh;line-height:0}
 .artboard>img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;user-select:none;-webkit-user-drag:none}
 .overlay{position:absolute;inset:0;z-index:2}
-.login-form{position:absolute;left:32.45%;top:39.65%;width:33.15%;height:24.1%}
-.login-form input{position:absolute;left:8.1%;width:91.5%;height:19%;border:0!important;outline:0;background:transparent!important;color:#526171!important;font-size:clamp(12px,1.35vw,18px);font-family:inherit;font-weight:500;padding:0 4.2%;line-height:1.2;box-shadow:none!important;-webkit-appearance:none;appearance:none}
-.login-form input::placeholder{color:#68798a;opacity:1}
-.login-form input:focus{box-shadow:inset 0 0 0 2px rgba(16,185,105,.32)!important;border-radius:14px;background:rgba(255,255,255,.06)!important}
-.login-form input[name="username"]{top:1%}.login-form input[name="password"]{top:25.5%}
-.login-submit{position:absolute;left:8.1%;top:63%;width:91.5%;height:22%;border:0;background:transparent;border-radius:15px;cursor:pointer;color:transparent;font-size:1px;padding:0}
-.login-submit:focus{outline:3px solid rgba(34,225,128,.8);outline-offset:2px}
-.remember-hit{position:absolute;left:32.45%;top:53.25%;width:3.2%;height:3.8%;cursor:pointer}.remember-hit input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
-.forgot-hit,.signup-hit,.phone-hit{position:absolute;display:block}.forgot-hit{left:54.5%;top:53.3%;width:11%;height:3.4%}.signup-hit{left:49.2%;top:64.9%;width:14%;height:3.2%}.phone-hit{left:32.45%;top:72.2%;width:33.15%;height:5.5%}
-.error-box{position:absolute;left:33%;top:32%;width:34%;padding:10px 14px;background:#fff0f0;border:1px solid #e6aaaa;border-radius:12px;color:#8e2929;font-size:13px;line-height:1.35;z-index:5}
+.login-form{position:absolute;inset:0;margin:0}
+.login-form input{
+  position:absolute;
+  border:0!important;
+  outline:0;
+  background:transparent!important;
+  color:transparent!important;
+  caret-color:#087f5b;
+  font-size:clamp(12px,1.25vw,18px);
+  font-family:inherit;
+  font-weight:600;
+  padding:0 4%;
+  line-height:1.2;
+  box-shadow:none!important;
+  -webkit-appearance:none;
+  appearance:none;
+  border-radius:14px
+}
+.login-form input::placeholder{color:transparent!important;opacity:0}
+.login-form input:focus,
+.login-form input.has-value{
+  color:#526171!important;
+  background:rgba(255,255,255,.94)!important;
+  box-shadow:inset 0 0 0 2px rgba(16,185,105,.45),0 2px 8px rgba(0,0,0,.04)!important
+}
+.login-form input[name="username"]{left:33.2%;top:39.65%;width:32.5%;height:5.7%}
+.login-form input[name="password"]{left:33.2%;top:46.75%;width:32.5%;height:5.7%}
+.login-submit{
+  position:absolute;
+  left:33.2%;
+  top:57.55%;
+  width:32.5%;
+  height:6.15%;
+  border:0;
+  background:transparent;
+  border-radius:16px;
+  cursor:pointer;
+  color:transparent;
+  font-size:1px;
+  padding:0
+}
+.login-submit:focus{outline:3px solid rgba(34,225,128,.85);outline-offset:2px}
+.remember-hit,.forgot-hit,.signup-hit,.phone-hit{position:absolute;display:block}
+.remember-hit{left:32.9%;top:53.35%;width:3%;height:3.5%;cursor:pointer}
+.remember-hit input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer}
+.forgot-hit{left:54.5%;top:53.25%;width:11%;height:3.7%}
+.signup-hit{left:48.5%;top:64.6%;width:16%;height:3.5%}
+.phone-hit{left:33.2%;top:76.15%;width:32.5%;height:5.8%}
+.error-box{position:absolute;left:33%;top:30%;width:34%;padding:10px 14px;background:#fff0f0;border:1px solid #e6aaaa;border-radius:12px;color:#8e2929;font-size:13px;line-height:1.35;z-index:5}
+@media(max-width:700px){
+  .artboard>img{object-fit:cover}
+  .overlay{transform-origin:top left}
+  .login-form input[name="username"],.login-form input[name="password"]{font-size:16px}
+}
 </style>
 </head>
 <body>
-<div class="viewport"><main class="artboard" aria-label="Shopiva Delivery rider login">
-<img src="{% static 'shopiva/delivery-login-final.svg' %}" alt="Shopiva Delivery secure rider login">
-<div class="overlay">
-{% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors }}</div>{% endif %}
-<form class="login-form" method="post" autocomplete="off" novalidate>{% csrf_token %}{{ form.username }}{{ form.password }}<button class="login-submit" type="submit" aria-label="Sign in to Delivery">Sign in to Delivery</button></form>
-<label class="remember-hit" aria-label="Remember me"><input type="checkbox" name="remember_me"></label>
-<a class="forgot-hit" href="#" aria-label="Forgot password"></a>
-<a class="signup-hit" href="{% url 'delivery_signup' %}" aria-label="Create an account"></a>
-<a class="phone-hit" href="tel:+254700000000" aria-label="Sign in with phone number"></a>
-</div></main></div>
+<div class="viewport">
+  <main class="artboard" aria-label="Shopiva Delivery rider login">
+    <img src="https://shopiva-delivery-assets.floot.app/_cdn/static/9ce398e3-6f57-4ac1-9c28-d1391d225958-shopiva-delivery-rider-login-final.png" alt="Shopiva Delivery secure rider login">
+    <div class="overlay">
+      {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors }}</div>{% endif %}
+      <form class="login-form" method="post" autocomplete="off" novalidate>
+        {% csrf_token %}{{ form.username }}{{ form.password }}
+        <button class="login-submit" type="submit" aria-label="Sign in to Delivery">Sign in to Delivery</button>
+      </form>
+      <label class="remember-hit" aria-label="Remember me"><input type="checkbox" name="remember_me"></label>
+      <a class="forgot-hit" href="#" aria-label="Forgot password"></a>
+      <a class="signup-hit" href="{% url 'delivery_signup' %}" aria-label="Create an account"></a>
+      <a class="phone-hit" href="tel:+254700000000" aria-label="Sign in with phone number"></a>
+    </div>
+  </main>
+</div>
 <script>
-(function(){const f=document.querySelector('.login-form');if(!f)return;
-f.querySelectorAll('input[name="username"],input[name="password"]').forEach(el=>{
-el.setAttribute('autocomplete','off');el.setAttribute('autocapitalize','none');el.setAttribute('spellcheck','false');el.setAttribute('readonly','readonly');
-el.addEventListener('focus',()=>el.removeAttribute('readonly'),{once:true});
-});
+(function(){
+  const f=document.querySelector('.login-form');
+  if(!f)return;
+  f.querySelectorAll('input[name="username"],input[name="password"]').forEach(el=>{
+    el.setAttribute('autocomplete','off');
+    el.setAttribute('autocapitalize','none');
+    el.setAttribute('spellcheck','false');
+    el.setAttribute('readonly','readonly');
+    const sync=()=>el.classList.toggle('has-value',!!el.value);
+    el.addEventListener('focus',()=>el.removeAttribute('readonly'),{once:true});
+    el.addEventListener('input',sync);
+    sync();
+  });
 })();
 </script>
-</body></html>
+</body>
+</html>
