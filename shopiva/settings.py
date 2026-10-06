@@ -96,6 +96,7 @@ AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"], "ip_address"]
 AXES_ENABLE_ACCESS_FAILURE_LOG = True
 AXES_RESET_ON_SUCCESS = True
 AXES_ENABLE_ADMIN = True
+AXES_LOCKOUT_CALLABLE = "home.axes_lockout.delivery_lockout"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
