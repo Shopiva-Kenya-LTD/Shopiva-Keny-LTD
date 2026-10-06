@@ -29,7 +29,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 </head>
 <body>
 <div class="viewport"><main class="artboard" aria-label="Shopiva Delivery rider login">
-<img src="https://b310cd3a-839b-4dae-a552-bf2c3083fa90.sandbox.floot.app/_cdn/static/30c734b6-c55b-406e-922a-a6e17084a782-shopiva-delivery-login-16x9-final.png" alt="Shopiva Delivery secure rider login">
+<img src="{% static 'shopiva/delivery-login-final.svg' %}" alt="Shopiva Delivery secure rider login">
 <div class="overlay">
 {% if form.non_field_errors %}<div class="error-box">{{ form.non_field_errors }}</div>{% endif %}
 <form class="login-form" method="post" autocomplete="off" novalidate>{% csrf_token %}{{ form.username }}{{ form.password }}<button class="login-submit" type="submit" aria-label="Sign in to Delivery">Sign in to Delivery</button></form>
