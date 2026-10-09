@@ -17,51 +17,29 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 .artboard>picture>img{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:fill;user-select:none;-webkit-user-drag:none}
 .overlay{position:absolute;inset:0;z-index:2}
 .login-form{position:absolute;inset:0;margin:0}
-.login-form input{
+.login-form input:not([type="checkbox"]){
   position:absolute;
   border:0!important;
   outline:0;
   background:transparent!important;
-  color:transparent!important;
+  color:#344054!important;
   caret-color:#087f5b;
-  background:transparent!important;
   box-shadow:none!important;
-  border:0!important;
   font-size:clamp(12px,1.05vw,16px);
   font-family:inherit;
   font-weight:600;
   padding:1px 13% 0;
   line-height:1.05;
-  box-shadow:none!important;
   -webkit-appearance:none;
   appearance:none;
-  border-radius:14px
+  border-radius:14px;
+  text-shadow:none!important
 }
-.login-form input::placeholder{color:transparent!important;opacity:0}
-.login-form input:focus,
-.login-form input.has-value{
-  color:#526171!important;
-  background:transparent!important;
-  text-shadow:0 0 2px rgba(255,255,255,.95),0 0 1px rgba(255,255,255,.95);
-  box-shadow:none!important;
-  border:0!important;
-}
+.login-form input:not([type="checkbox"])::placeholder{color:#7b8794!important;opacity:1}
+.login-form input:not([type="checkbox"]):focus{outline:0!important;background:transparent!important;box-shadow:none!important}
 .login-form input[name="username"]{left:33.2%;top:39.65%;width:32.5%;height:5.7%}
 .login-form input[name="password"]{left:33.2%;top:46.75%;width:32.5%;height:5.7%}
-.login-submit{
-  position:absolute;
-  left:33.2%;
-  top:57.55%;
-  width:32.5%;
-  height:6.15%;
-  border:0;
-  background:transparent;
-  border-radius:16px;
-  cursor:pointer;
-  color:transparent;
-  font-size:1px;
-  padding:0
-}
+.login-submit{position:absolute;left:33.2%;top:57.55%;width:32.5%;height:6.15%;border:0;background:transparent;border-radius:16px;cursor:pointer;color:transparent;font-size:1px;padding:0}
 .login-submit:focus{outline:3px solid rgba(34,225,128,.85);outline-offset:2px}
 .remember-hit,.forgot-hit,.signup-hit,.phone-hit{position:absolute;display:block}
 .remember-hit{left:32.9%;top:53.35%;width:3%;height:3.5%;cursor:pointer}
@@ -92,7 +70,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
   <main class="artboard" aria-label="Shopiva Delivery rider login">
     <picture>
       <source media="(max-width:700px)" srcset="https://shopiva-delivery-assets.floot.app/_cdn/static/75e90582-243f-4103-9ba1-19a0c0b5362d-shopiva-delivery-rider-login-mobile-9x16.png">
-      <img src="https://shopiva-delivery-assets.floot.app/_cdn/static/9ce398e3-6f57-4ac1-9c28-d1391d225958-shopiva-delivery-rider-login-final.png" alt="Shopiva Delivery secure rider login">
+      <img src="https://shopiva-delivery-assets.floot.app/_cdn/static/a82fb5a4-21df-4a1d-a48d-259b6522b773-shopiva-delivery-login-clean-fields.png" alt="Shopiva Delivery secure rider login">
     </picture>
     <div class="overlay">
       {% if lockout_message %}<div class="error-box lockout-box" role="alert">{{ lockout_message }}</div>
@@ -112,15 +90,16 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 (function(){
   const f=document.querySelector('.login-form');
   if(!f)return;
+  const username=f.querySelector('input[name="username"]');
+  const password=f.querySelector('input[name="password"]');
+  if(username){username.setAttribute('placeholder','Shopiva username');username.setAttribute('aria-label','Shopiva username');}
+  if(password){password.setAttribute('placeholder','Password');password.setAttribute('aria-label','Password');}
   f.querySelectorAll('input[name="username"],input[name="password"]').forEach(el=>{
     el.setAttribute('autocomplete','off');
     el.setAttribute('autocapitalize','none');
     el.setAttribute('spellcheck','false');
     el.setAttribute('readonly','readonly');
-    const sync=()=>el.classList.toggle('has-value',!!el.value);
     el.addEventListener('focus',()=>el.removeAttribute('readonly'),{once:true});
-    el.addEventListener('input',sync);
-    sync();
   });
   const errorBox=document.querySelector('.error-box');
   if(errorBox){
